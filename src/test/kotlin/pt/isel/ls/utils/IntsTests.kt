@@ -47,4 +47,11 @@ class IntsTests {
         val ix: Int = indexOfBinary(v, 1, 1, 2)
         assertTrue(ix < 0)
     }
+
+    @Test
+    fun checking_indexOfBinaryBug(){
+        val v = intArrayOf(1,2,3,4,5,6,7,8,9,10,11)
+        val ix: Int = indexOfBinary(v,2,5, 3)
+        assertTrue(ix==2)
+    }
 }
