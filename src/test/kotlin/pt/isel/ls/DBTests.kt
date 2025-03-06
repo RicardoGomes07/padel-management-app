@@ -42,4 +42,43 @@ class DBTests {
         println("/*************/")
     }
 
+    @Test
+    fun create_new_table_classroom_insert_tuple_update_same_tuple_then_delete_it(){
+        dataSource.connection.use {
+            val stmt = it.createStatement()
+
+            val deletePreviousCMD = "drop table if exists classroom"
+
+            stmt.executeUpdate(deletePreviousCMD)
+
+            val createClassroomCMD = "create table classroom (\n" +
+                    "  classroom_id serial primary key,\n" +
+                    "  name varchar(80),\n" +
+                    "  num_of_students integer" +
+                    ");"
+
+            val res1 = stmt.executeUpdate(createClassroomCMD)
+
+            assertTrue(res1 == 0)
+
+            val fillClassroomCMD = "insert into classroom(name, num_of_students) values ('42D', 30), ('41N', 15)"
+
+            val res2 = stmt.executeUpdate(fillClassroomCMD)
+
+            assertTrue(res2 == 2)
+
+            val updateClassroomNumOfStudentsCMD = "update classroom set num_of_students = 35 where classroom_id = 1"
+
+            val res3 = stmt.executeUpdate(updateClassroomNumOfStudentsCMD)
+
+            assertTrue(res3 == 1)
+
+            val deleteClassroomCMD = "delete from classroom where classroom_id = 1"
+
+            val res4 = stmt.executeUpdate(deleteClassroomCMD)
+
+            assertTrue(res4 == 1)
+        }
+    }
+
 }
