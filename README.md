@@ -1,2 +1,3 @@
-# 2425-2-common
-Software Laboratory, 2024/2025, Spring semester
+# Leonel Correia 50552
+# Paulo Carvalho 50494
+# Ricardo Gomes 50549
