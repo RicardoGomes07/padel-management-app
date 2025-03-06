@@ -1,9 +1,9 @@
 package pt.isel.ls
 
+import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import org.postgresql.ds.PGSimpleDataSource
 import java.sql.ResultSet
-import kotlin.test.assertTrue
 
 class DBTests {
     private val dataSource = PGSimpleDataSource()
@@ -20,12 +20,12 @@ class DBTests {
             println("Initial Students:")
             displayStudents(oldStudents)
             val stm = it.prepareStatement("insert into students values (1, 'João', 1)").executeUpdate()
-            assertTrue(stm == 1)
+            kotlin.test.assertTrue(stm == 1)
             val newStudents = it.prepareStatement("select * from students").executeQuery()
             println("Students after insert:")
             displayStudents(newStudents)
             val stm2 = it.prepareStatement("delete from students where name = 'João'").executeUpdate()
-            assertTrue(stm2 == 1)
+            kotlin.test.assertTrue(stm2 == 1)
             val students = it.prepareStatement("select * from students").executeQuery()
             println("Students after delete:")
             displayStudents(students)
@@ -42,4 +42,16 @@ class DBTests {
         println("/*************/")
     }
 
+    @Test
+    fun create_new_course_and_update_the_courses() {
+        dataSource.connection.use { connection ->
+            val oldStudents = connection.prepareStatement("SELECT * FROM students").executeQuery()
+            displayStudents(oldStudents)
+            val changedStudent = connection.prepareStatement("UPDATE students set name='Ricardo' where name='Bob'").executeUpdate()
+            assertTrue(changedStudent == 1)
+            val newStudents = connection.prepareStatement("SELECT * FROM students").executeQuery()
+            displayStudents(newStudents)
+        }
+
+    }
 }
