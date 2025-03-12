@@ -1,5 +1,6 @@
 package pt.isel.ls
 
+import junit.framework.TestCase
 import org.junit.Test
 import org.postgresql.ds.PGSimpleDataSource
 import java.sql.ResultSet
@@ -79,6 +80,19 @@ class DBTests {
 
             assertTrue(res4 == 1)
         }
+    }
+
+    @Test
+    fun create_new_course_and_update_the_courses() {
+        dataSource.connection.use { connection ->
+            val oldStudents = connection.prepareStatement("SELECT * FROM students").executeQuery()
+            displayStudents(oldStudents)
+            val changedStudent = connection.prepareStatement("UPDATE students set name='Ricardo' where name='Bob'").executeUpdate()
+            TestCase.assertTrue(changedStudent == 1)
+            val newStudents = connection.prepareStatement("SELECT * FROM students").executeQuery()
+            displayStudents(newStudents)
+        }
+
     }
 
 }
