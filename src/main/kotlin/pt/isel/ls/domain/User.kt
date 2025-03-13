@@ -1,4 +1,9 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package pt.isel.ls.domain
+
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents a user.
@@ -10,4 +15,5 @@ data class User(
     val uid: UInt,
     val name: Name,
     val email: Email,
+    val token: Uuid,
 )

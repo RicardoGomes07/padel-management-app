@@ -13,6 +13,6 @@ interface CourtRepository : Repository<Court> {
      */
     fun createCourt(
         name: String,
-        clubId: Int,
+        clubId: UInt,
     ): Court
 }

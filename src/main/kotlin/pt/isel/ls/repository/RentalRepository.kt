@@ -16,7 +16,20 @@ interface RentalRepository : Repository<Rental> {
     fun createRental(
         date: LocalDate,
         duration: LocalTime,
-        renterId: Int,
-        courtId: Int,
+        renterId: UInt,
+        courtId: UInt,
     ): Rental
+
+    fun availableHoursForACourt(
+        crid: UInt,
+        date: LocalDate,
+    ): List<LocalTime>?
+
+    fun findByCridAndDate(
+        crid: UInt,
+        date: LocalDate,
+    ): Rental?
+
+    //
+    fun findAllRentalsByRenterId(renter: UInt): List<Rental>?
 }

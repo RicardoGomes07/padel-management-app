@@ -13,6 +13,6 @@ interface ClubRepository : Repository<Club> {
      */
     fun createClub(
         name: String,
-        ownerId: Int,
+        ownerId: UInt,
     ): Club
 }
