@@ -12,13 +12,12 @@ import kotlin.uuid.Uuid
 interface UserRepository : Repository<User> {
     /**
      * Function that creates a User.
-     * Returns the created element.
      * uid is automatically incremented so it's not received as a parameter to the function.
      */
     fun createUser(
         name: String,
         email: String,
-    ): User
+    )
 
     fun findUserBYToken(token: Uuid): User?
 }

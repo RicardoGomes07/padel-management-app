@@ -10,7 +10,6 @@ import pt.isel.ls.domain.Rental
 interface RentalRepository : Repository<Rental> {
     /**
      * Function that creates a new Rental.
-     * Returns the created element.
      * rid is automatically incremented so it's not received as a parameter to the function.
      */
     fun createRental(
@@ -18,9 +17,9 @@ interface RentalRepository : Repository<Rental> {
         duration: LocalTime,
         renterId: UInt,
         courtId: UInt,
-    ): Rental
+    )
 
-    fun availableHoursForACourt(
+    fun findAvailableHoursForACourt(
         crid: UInt,
         date: LocalDate,
     ): List<LocalTime>?
@@ -30,6 +29,5 @@ interface RentalRepository : Repository<Rental> {
         date: LocalDate,
     ): Rental?
 
-    //
     fun findAllRentalsByRenterId(renter: UInt): List<Rental>?
 }

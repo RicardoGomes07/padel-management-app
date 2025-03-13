@@ -8,13 +8,12 @@ import pt.isel.ls.domain.Club
 interface ClubRepository : Repository<Club> {
     /**
      * Function that creates a new Club.
-     * Returns the created element.
      * cid is automatically incremented so it's not received as a parameter to the function.
      */
     fun createClub(
         name: String,
         ownerId: UInt,
-    ): Club
+    )
 
-    fun findClubByName(name: String): Club
+    fun findClubByName(name: String): Club?
 }

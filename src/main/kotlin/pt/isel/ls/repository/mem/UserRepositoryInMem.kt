@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class, ExperimentalUuidApi::class)
 
 package pt.isel.ls.repository.mem
 
@@ -17,7 +17,7 @@ object UserRepositoryInMem : UserRepository {
     override fun createUser(
         name: String,
         email: String,
-    ): User {
+    ) {
         val validEmail = Email(email)
         require(users.all { it.email != validEmail })
         currId += 1u
@@ -31,21 +31,11 @@ object UserRepositoryInMem : UserRepository {
             )
 
         users.add(user)
-
-        return user
     }
 
-    override fun findUserBYToken(token: Uuid): User {
-        val user = users.find { it.token == token }
+    override fun findUserBYToken(token: Uuid): User? = users.firstOrNull{ it.token == token }
 
-        if (user != null) {
-            return user
-        } else {
-            throw NoSuchElementException("Element Not Found.")
-        }
-    }
-
-    override fun save(element: User): User {
+    override fun save(element: User) {
         val findUser = users.find { it.uid == element.uid }
 
         // user exists, so update
@@ -61,30 +51,13 @@ object UserRepositoryInMem : UserRepository {
             // add element to the user list
             users.add(element)
         }
-
-        return element
     }
 
-    override fun findByIdentifier(id: UInt): User {
-        val user = users.find { it.uid == id }
-
-        if (user != null) {
-            return user
-        } else {
-            throw NoSuchElementException("Element Not Found.")
-        }
-    }
+    override fun findByIdentifier(id: UInt): User? = users.firstOrNull { it.uid == id }
 
     override fun findAll(): List<User> = users
 
-    override fun deleteByIdentifier(id: UInt): User {
-        val user = users.find { it.uid == id }
-
-        if (user != null) {
-            users.removeIf { it.uid == user.uid }
-            return user
-        } else {
-            throw NoSuchElementException("Element Not Found.")
-        }
+    override fun deleteByIdentifier(id: UInt) {
+        users.removeIf { it.uid == id }
     }
 }

@@ -13,7 +13,7 @@ object ClubRepositoryInMem : ClubRepository {
     override fun createClub(
         name: String,
         ownerId: UInt,
-    ): Club {
+    ) {
         val validName = Name(name)
 
         require(clubs.all { it.name != validName })
@@ -32,23 +32,15 @@ object ClubRepositoryInMem : ClubRepository {
             )
 
         clubs.add(club)
-
-        return club
     }
 
-    override fun findClubByName(name: String): Club {
+    override fun findClubByName(name: String): Club? {
         val validName = Name(name)
 
-        val club = clubs.find { it.name == validName }
-
-        if (club != null) {
-            return club
-        } else {
-            throw NoSuchElementException("Element Not Found.")
-        }
+        return clubs.firstOrNull { it.name == validName }
     }
 
-    override fun save(element: Club): Club {
+    override fun save(element: Club) {
         val findClub = clubs.find { it.cid == element.cid }
 
         // club exists, so update
@@ -64,30 +56,13 @@ object ClubRepositoryInMem : ClubRepository {
             // add element to the user list
             clubs.add(element)
         }
-
-        return element
     }
 
-    override fun findByIdentifier(id: UInt): Club? {
-        val club = clubs.find { it.cid == id }
-
-        if (club != null) {
-            return club
-        } else {
-            throw NoSuchElementException("Element Not Found.")
-        }
-    }
+    override fun findByIdentifier(id: UInt): Club? = clubs.firstOrNull { it.cid == id }
 
     override fun findAll(): List<Club> = clubs
 
-    override fun deleteByIdentifier(id: UInt): Club {
-        val club = clubs.find { it.cid == id }
-
-        if (club != null) {
-            clubs.removeIf { it.cid == club.cid }
-            return club
-        } else {
-            throw NoSuchElementException("Element Not Found.")
-        }
+    override fun deleteByIdentifier(id: UInt) {
+        clubs.removeIf { it.cid == id }
     }
 }

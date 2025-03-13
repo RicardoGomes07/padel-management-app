@@ -6,9 +6,8 @@ package pt.isel.ls.repository
 interface Repository<T> {
     /**
      * Function that updates an element if it already exists, otherwise creates one.
-     * Returns the updated element.
      */
-    fun save(element: T): T
+    fun save(element: T)
 
     /**
      * Function that finds a specific element.
@@ -24,7 +23,6 @@ interface Repository<T> {
 
     /**
      * Function that deletes an element.
-     * Returns the deleted element.
      */
-    fun deleteByIdentifier(id: UInt): T
+    fun deleteByIdentifier(id: UInt)
 }
