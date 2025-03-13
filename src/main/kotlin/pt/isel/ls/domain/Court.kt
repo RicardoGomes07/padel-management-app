@@ -7,7 +7,7 @@ package pt.isel.ls.domain
  * @property club Club that owns the court.
  */
 data class Court(
-    val crid: Int,
-    val name: String,
+    val crid: UInt,
+    val name: Name,
     val club: Club,
 )

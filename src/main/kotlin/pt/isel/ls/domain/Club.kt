@@ -7,7 +7,7 @@ package pt.isel.ls.domain
  * @property owner User that owns the club.
  */
 data class Club(
-    val cid: Int,
-    val name: String,
+    val cid: UInt,
+    val name: Name,
     val owner: User,
 )
