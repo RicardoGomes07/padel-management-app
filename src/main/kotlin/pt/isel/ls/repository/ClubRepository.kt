@@ -15,4 +15,6 @@ interface ClubRepository : Repository<Club> {
         name: String,
         ownerId: UInt,
     ): Club
+
+    fun findClubByName(name: String): Club
 }

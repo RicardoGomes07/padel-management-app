@@ -9,8 +9,8 @@ import pt.isel.ls.repository.UserRepository
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class UserRepositoryInMem : UserRepository {
-    private val users = mutableListOf<User>()
+object UserRepositoryInMem : UserRepository {
+    val users = mutableListOf<User>()
 
     private var currId: UInt = 0u
 
@@ -18,15 +18,14 @@ class UserRepositoryInMem : UserRepository {
         name: String,
         email: String,
     ): User {
-        val validName = Name(name)
         val validEmail = Email(email)
-        requireNotNull(users.first { it.email != validEmail })
+        require(users.all { it.email != validEmail })
         currId += 1u
         val token = Uuid.random()
         val user =
             User(
                 uid = currId,
-                name = validName,
+                name = Name(name),
                 email = validEmail,
                 token = token,
             )
