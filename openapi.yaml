@@ -45,6 +45,8 @@ paths:
                 $ref: '#/components/schemas/Token'
   /me:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - User
       summary: Returns user information
@@ -59,6 +61,8 @@ paths:
 
   /user/rentals:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Rental
       summary: Get a list with the rentals of a user
@@ -98,6 +102,8 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /clubs:
     post:
+      security:
+        - bearerAuth: []
       tags:
         - Club
       summary: Creates a new club
@@ -117,6 +123,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClubCreationOutputModel'
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Club
       summary: List clubs
@@ -144,6 +152,8 @@ paths:
                 $ref: '#/components/schemas/ClubsOutputModel'
   /clubs/{cid}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Club
       summary: Get Club Details
@@ -171,6 +181,8 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /courts:
     post:
+      security:
+        - bearerAuth: []
       tags:
         - Court
       summary: Create new court
@@ -197,6 +209,8 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /courts/{cid}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Court
       summary: List Courts of a club
@@ -236,6 +250,8 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /courts/{crid}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Court
       summary: Get court details
@@ -263,6 +279,8 @@ paths:
                 $ref: '#/components/schemas/Problem'
   /rentals:
     post:
+      security:
+        - bearerAuth: []
       tags:
         - Rental
       summary: Create a new rental
@@ -287,7 +305,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /rentals/clubs/{cid}/courts/{crid}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Rental
       summary: Get a list with the rentals
@@ -342,6 +363,8 @@ paths:
 
   /rentals/{rid}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Rental
       summary: Get rental details
@@ -360,7 +383,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalDetailsModel'
+                $ref: '#/components/schemas/RentalDetailsOutputModel'
         404:
           description: rental not found
           content:
@@ -370,6 +393,8 @@ paths:
 
   /clubs/{cid}/courts/{crid}/available:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - Rental
       summary: Get available hours for court rental
@@ -410,6 +435,10 @@ paths:
                 $ref: '#/components/schemas/Problem'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
     Token:
       type: string
@@ -469,18 +498,28 @@ components:
           type: string
           example: Fly Padel
         uid:
+          type: object
+          ref: '#/components/schemas/OwnerOutputModel'
+
+    OwnerOutputModel:
+      type: object
+      properties:
+        uid:
           type: string
-          example: sajdnadhaodeuadbf
+          example: 1234
+        name:
+          type: string
+          example: John Doe
 
     ClubCreationOutputModel:
       type: object
       properties:
         cid:
-          type: string
+          type: integer
           description: Club identifier
           example: 1
 
-    ClubDetailsModel:
+    ClubDetailsOutputModel:
       type: object
       properties:
         cid:
@@ -489,9 +528,9 @@ components:
         name:
           type: string
           example: Fly Padel
-        uid:
-          type: string
-          example: sajdnadhaodeuadbf
+        owner:
+          type: object
+          ref: '#/components/schemas/OwnerOutputModel'
 
     ClubsOutputModel:
       type: array
@@ -517,7 +556,7 @@ components:
           example: 1
           description: Court Identifier
 
-    CourtDetailsModel:
+    CourtDetailsOutputModel:
       type: object
       properties:
         crid:
@@ -527,10 +566,9 @@ components:
         name:
           type: string
           example: Court 1
-        cid:
-          type: integer
-          example: 1
-          description: Club Identifier
+        club:
+          type: object
+          ref: '#/components/schemas/ClubDetailsOutputModel'
 
     CourtsOutputModel:
       type: array
@@ -549,12 +587,12 @@ components:
           example: 1
           description: Court Identifier
         date:
-          type: string
-          example: 10/3 - 21h
+          type: object
+          example: LocalDate
           description: Rental date with initial hour
         duration:
-          type: integer
-          example: 1h
+          type: object
+          example: LocalTime
           description: Duration in hours
 
     RentalCreationOutputModel:
@@ -565,36 +603,37 @@ components:
           example: 1
           description: Rental identifier
 
-    RentalDetailsModel:
+    RentalDetailsOutputModel:
       type: object
       properties:
-        cid:
-          type: integer
-          example: 1
-          description: Club Identifier
-        crid:
-          type: integer
-          example: 1
-          description: Court Identifier
+        club:
+          type: object
+          ref: '#/components/schemas/ClubDetailsOutputModel'
+        court:
+          type: object
+          ref: '#/components/schemas/CourtDetailsOutputModel'
         date:
-          type: string
-          example: 10/3 - 21h
+          type: object
+          example: LocalDate
           description: Rental date with initial hour
         duration:
-          type: integer
-          example: 1h
+          type: object
+          example: LocalTime
           description: Duration in hours
 
     RentalsOutputModel:
       type: array
       items:
-        $ref: '#/components/schemas/RentalDetailsModel'
+        $ref: '#/components/schemas/RentalDetailsOutputModel'
 
 
 
     Problem:
       type: object
       properties:
+        title:
+          type: string
+          example: Invalid Request
         description:
           type: string
           example: Something went wrong
