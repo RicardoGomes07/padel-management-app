@@ -1,0 +1,600 @@
+openapi: 3.0.3
+info:
+  title: DRAFT - OpenAPI 3.0
+  description: |-
+    This is Padel Clubs Management API based on the OpenAPI 3.0 specification.  
+    Some useful links:
+    - [DRAFT repository](https://github.com/isel-leic-ls/2425-2-LEIC42D-G10)
+  contact:
+    email: a50494@alunos.isel.pt
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+servers:
+  - url: https://localhost:8080
+tags:
+  - name: User
+    description: User Managment
+  - name: Club
+    description: Club Management
+  - name: Court
+    description: Court Mangement
+  - name: Rental
+    description: Rental Management
+paths:
+  /user:
+    post:
+      tags:
+        - User
+      summary: Create user
+      description: This operation create's a new user in the system.
+      operationId: createUser
+      requestBody:
+        description: User creation info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        201:
+          description: User creation was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+  /me:
+    get:
+      tags:
+        - User
+      summary: Returns user information
+      operationId: me
+      responses:
+        200:
+          description: A user was found with the given token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserInfoModel'
+
+  /user/rentals:
+    get:
+      tags:
+        - Rental
+      summary: Get a list with the rentals of a user
+      description: Get all rentals associated with the authenticated user
+      operationId: listUserRentals
+      parameters:
+        - in: query
+          name: skip
+          schema:
+            type: integer
+          required: false
+          description: Start position of the subsequence
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Length of the subsequence
+      responses:
+        200:
+          description: The list of rentals for the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RentalsOutputModel'
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        404:
+          description: Rentals Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /clubs:
+    post:
+      tags:
+        - Club
+      summary: Creates a new club
+      description: Create a new club with the info received in the body
+      operationId: clubCreation
+      requestBody:
+        description: Club Info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubCreationInputModel'
+      responses:
+        200:
+          description: Club creation was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubCreationOutputModel'
+    get:
+      tags:
+        - Club
+      summary: List clubs
+      description: Get a list with the clubs
+      operationId: listClubs
+      parameters:
+        - in: query
+          name: skip
+          schema:
+            type: integer
+          required: false
+          description: Start position of the subsequence
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: length of the subsequence
+      responses:
+        200:
+          description: The list of clubs with the given query parameteres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubsOutputModel'
+  /clubs/{cid}:
+    get:
+      tags:
+        - Club
+      summary: Get Club Details
+      description: Get the details of a club
+      operationId: clubDetails
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club id to search the details
+      responses:
+        200:
+          description: A club was found with the given cid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubDetailsModel'
+        404:
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /courts:
+    post:
+      tags:
+        - Court
+      summary: Create new court
+      description: Create new court with the given details
+      operationId: courtCreation
+      requestBody:
+        description: Court creation info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourtCreationInputModel'
+      responses:
+        201:
+          description: Court creation was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourtCreationOutputModel'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /courts/{cid}:
+    get:
+      tags:
+        - Court
+      summary: List Courts of a club
+      description: Get a list with the courts of a certain club given the id
+      operationId: listCourts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: club id to search the court details
+        - in: query
+          name: skip
+          schema:
+            type: integer
+          required: false
+          description: Start position of the subsequence
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: length of the subsequence
+      responses:
+        200:
+          description: The list of courts with the given query parameteres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourtsOutputModel'
+        404:
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /courts/{crid}:
+    get:
+      tags:
+        - Court
+      summary: Get court details
+      description: Get the detais of a court
+      operationId: courtDetails
+      parameters:
+        - in: path
+          name: crid
+          schema:
+            type: integer
+          required: true
+          description: Court id to search the court details
+      responses:
+        200:
+          description: A court was found with the given crid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourtDetailsModel'
+        404:
+          description: Court not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /rentals:
+    post:
+      tags:
+        - Rental
+      summary: Create a new rental
+      description: Create a new rental with the given details
+      operationId: rentalCreation
+      requestBody:
+        description: Rental Creation Info
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RentalCreationInputModel'
+      responses:
+        201:
+          description: Rental creation was successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RentalCreationOutputModel'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    get:
+      tags:
+        - Rental
+      summary: Get a list with the rentals
+      description: Get a list with the rentals, given the following parameters
+      operationId: listRentals
+      parameters:
+        - in: query
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club id to search the rental details
+        - in: query
+          name: crid
+          schema:
+            type: integer
+          required: true
+          description: Court id to search the rental details
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          required: false
+          description: Filter rentals by date
+        - in: query
+          name: skip
+          schema:
+            type: integer
+          required: false
+          description: Start position of the subsequence
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Length of the subsequence
+      responses:
+        200:
+          description: The list of rentals with the given query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RentalsOutputModel'
+        404:
+          description: Rentals Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+
+  /rentals/{rid}:
+    get:
+      tags:
+        - Rental
+      summary: Get rental details
+      description: Get the detais of a rental
+      operationId: rentalDetails
+      parameters:
+        - in: path
+          name: rid
+          schema:
+            type: integer
+          required: true
+          description: rental id to search for rental details
+      responses:
+        200:
+          description: A rental was found with the given rid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RentalDetailsModel'
+        404:
+          description: rental not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /clubs/{cid}/courts/{crid}/available:
+    get:
+      tags:
+        - Rental
+      summary: Get available hours for court rental
+      description: Get a list with the available hours to rent a court of a club on a specific date
+      operationId: listAvailableHours
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club id
+        - in: path
+          name: crid
+          schema:
+            type: integer
+          required: true
+          description: Court id
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+          required: true
+          description: Date to check availability
+      responses:
+        200:
+          description: List of available time slots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailableHoursOutputModel'
+        404:
+          description: Club or Court not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+components:
+  schemas:
+    Token:
+      type: string
+      example: ahsbcmesece
+    UserInfoModel:
+      type: object
+      properties:
+        id:
+          type: number
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          example: jonhdoe@email.com
+
+    AvailableHoursOutputModel:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: The date for which availability was checked
+        availableSlots:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlotModel'
+
+    TimeSlotModel:
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: time
+          description: Start time of the available slot (HH:MM)
+        endTime:
+          type: string
+          format: time
+          description: End time of the available slot (HH:MM)
+
+    UserInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          example: "jonhdoe@email.com"
+
+    ClubCreationInputModel:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Fly Padel
+        uid:
+          type: string
+          example: sajdnadhaodeuadbf
+
+    ClubCreationOutputModel:
+      type: object
+      properties:
+        cid:
+          type: string
+          description: Club identifier
+          example: 1
+
+    ClubDetailsModel:
+      type: object
+      properties:
+        cid:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Fly Padel
+        uid:
+          type: string
+          example: sajdnadhaodeuadbf
+
+    ClubsOutputModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/ClubDetailsModel'
+
+    CourtCreationInputModel:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Court 1
+        cid:
+          type: integer
+          example: 1
+          description: Club Indetifier
+
+    CourtCreationOutputModel:
+      type: object
+      properties:
+        crid:
+          type: integer
+          example: 1
+          description: Court Identifier
+
+    CourtDetailsModel:
+      type: object
+      properties:
+        crid:
+          type: integer
+          example: 1
+          description: Court Identifier
+        name:
+          type: string
+          example: Court 1
+        cid:
+          type: integer
+          example: 1
+          description: Club Identifier
+
+    CourtsOutputModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/CourtDetailsModel'
+
+    RentalCreationInputModel:
+      type: object
+      properties:
+        cid:
+          type: integer
+          example: 1
+          description: Club Identifier
+        crid:
+          type: integer
+          example: 1
+          description: Court Identifier
+        date:
+          type: string
+          example: 10/3 - 21h
+          description: Rental date with initial hour
+        duration:
+          type: integer
+          example: 1h
+          description: Duration in hours
+
+    RentalCreationOutputModel:
+      type: object
+      properties:
+        rid:
+          type: integer
+          example: 1
+          description: Rental identifier
+
+    RentalDetailsModel:
+      type: object
+      properties:
+        cid:
+          type: integer
+          example: 1
+          description: Club Identifier
+        crid:
+          type: integer
+          example: 1
+          description: Court Identifier
+        date:
+          type: string
+          example: 10/3 - 21h
+          description: Rental date with initial hour
+        duration:
+          type: integer
+          example: 1h
+          description: Duration in hours
+
+    RentalsOutputModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/RentalDetailsModel'
+
+
+
+    Problem:
+      type: object
+      properties:
+        description:
+          type: string
+          example: Something went wrong
