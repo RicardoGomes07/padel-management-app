@@ -2,6 +2,8 @@
 
 package pt.isel.ls.repository
 
+import pt.isel.ls.domain.Email
+import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -15,8 +17,8 @@ interface UserRepository : Repository<User> {
      * uid is automatically incremented so it's not received as a parameter to the function.
      */
     fun createUser(
-        name: String,
-        email: String,
+        name: Name,
+        email: Email,
     )
 
     fun findUserBYToken(token: Uuid): User?

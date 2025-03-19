@@ -15,25 +15,24 @@ object UserRepositoryInMem : UserRepository {
     private var currId: UInt = 0u
 
     override fun createUser(
-        name: String,
-        email: String,
+        name: Name,
+        email: Email,
     ) {
-        val validEmail = Email(email)
-        require(users.all { it.email != validEmail })
+        require(users.all { it.email != email })
         currId += 1u
         val token = Uuid.random()
         val user =
             User(
                 uid = currId,
-                name = Name(name),
-                email = validEmail,
+                name = name,
+                email = email,
                 token = token,
             )
 
         users.add(user)
     }
 
-    override fun findUserBYToken(token: Uuid): User? = users.firstOrNull{ it.token == token }
+    override fun findUserBYToken(token: Uuid): User? = users.firstOrNull { it.token == token }
 
     override fun save(element: User) {
         val findUser = users.find { it.uid == element.uid }

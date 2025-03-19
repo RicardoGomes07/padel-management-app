@@ -53,7 +53,7 @@ object ClubRepositoryInMem : ClubRepository {
                 }
             }
         } else {
-            // add element to the user list
+            // add element to the club list
             clubs.add(element)
         }
     }
