@@ -34,21 +34,8 @@ object CourtRepositoryInMem : CourtRepository {
     override fun findByClubIdentifier(cid: UInt): List<Court> = courts.filter { it.club.cid == cid }
 
     override fun save(element: Court) {
-        val findCourt = courts.find { it.crid == element.crid }
-
-        // court exists, so update
-        if (findCourt != null) {
-            courts.map { court ->
-                if (court.crid == element.crid) {
-                    element
-                } else {
-                    court
-                }
-            }
-        } else {
-            // add element to the court list
-            courts.add(element)
-        }
+        courts.removeIf { it.crid == element.crid }
+        courts.add(element)
     }
 
     override fun findByIdentifier(id: UInt): Court? = courts.firstOrNull { it.crid == id }
@@ -57,5 +44,9 @@ object CourtRepositoryInMem : CourtRepository {
 
     override fun deleteByIdentifier(id: UInt) {
         courts.removeIf { it.crid == id }
+    }
+
+    override fun clear() {
+        courts.clear()
     }
 }

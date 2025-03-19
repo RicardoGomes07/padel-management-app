@@ -15,5 +15,10 @@ interface ClubRepository : Repository<Club> {
         ownerId: UInt,
     ): Club
 
+    /**
+     * Function that search for a Club by a given name.
+     * @param name the name of the Club to search for.
+     * @return the Club with the given name or null if it doesn't exist.
+     */
     fun findClubByName(name: String): Club?
 }

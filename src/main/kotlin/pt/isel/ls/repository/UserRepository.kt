@@ -21,5 +21,10 @@ interface UserRepository : Repository<User> {
         email: Email,
     ): User
 
-    fun findUserBYToken(token: Uuid): User?
+    /**
+     * Function that finds a User by its token.
+     * @param token the token of the User to find.
+     * @return the User with the token or null if it doesn't exist.
+     */
+    fun findUserByToken(token: Uuid): User?
 }

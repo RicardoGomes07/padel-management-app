@@ -33,24 +33,11 @@ object UserRepositoryInMem : UserRepository {
         return user
     }
 
-    override fun findUserBYToken(token: Uuid): User? = users.firstOrNull { it.token == token }
+    override fun findUserByToken(token: Uuid): User? = users.firstOrNull { it.token == token }
 
     override fun save(element: User) {
-        val findUser = users.find { it.uid == element.uid }
-
-        // user exists, so update
-        if (findUser != null) {
-            users.map { user ->
-                if (user.uid == element.uid) {
-                    element
-                } else {
-                    user
-                }
-            }
-        } else {
-            // add element to the user list
-            users.add(element)
-        }
+        users.removeIf { it.uid == element.uid }
+        users.add(element)
     }
 
     override fun findByIdentifier(id: UInt): User? = users.firstOrNull { it.uid == id }
@@ -59,5 +46,8 @@ object UserRepositoryInMem : UserRepository {
 
     override fun deleteByIdentifier(id: UInt) {
         users.removeIf { it.uid == id }
+    }
+    override fun clear() {
+        users.clear()
     }
 }

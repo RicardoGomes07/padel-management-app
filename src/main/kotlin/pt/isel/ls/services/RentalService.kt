@@ -5,6 +5,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.repository.RentalRepository
+import kotlin.time.Duration
 
 sealed class RentalError {
     data object RentalNotFound : RentalError()
@@ -21,7 +22,7 @@ class RentalService(
      */
     fun getRentals(
         crid: UInt,
-        date: LocalDate?,
+        date: LocalDateTime?,
     ): List<Rental> = rentalRepo.findByCridAndDate(crid, date)
 
     /**
@@ -44,7 +45,7 @@ class RentalService(
      */
     fun createRental(
         date: LocalDateTime,
-        duration: LocalTime,
+        duration: Duration,
         renterId: UInt,
         courtId: UInt,
     ): Rental = rentalRepo.createRental(date, duration, renterId, courtId)

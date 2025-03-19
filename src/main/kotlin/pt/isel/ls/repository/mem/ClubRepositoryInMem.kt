@@ -41,21 +41,8 @@ object ClubRepositoryInMem : ClubRepository {
     }
 
     override fun save(element: Club) {
-        val findClub = clubs.find { it.cid == element.cid }
-
-        // club exists, so update
-        if (findClub != null) {
-            clubs.map { club ->
-                if (club.cid == element.cid) {
-                    element
-                } else {
-                    club
-                }
-            }
-        } else {
-            // add element to the club list
-            clubs.add(element)
-        }
+        clubs.removeIf { it.cid == element.cid }
+        clubs.add(element)
     }
 
     override fun findByIdentifier(id: UInt): Club? = clubs.firstOrNull { it.cid == id }
@@ -64,5 +51,9 @@ object ClubRepositoryInMem : ClubRepository {
 
     override fun deleteByIdentifier(id: UInt) {
         clubs.removeIf { it.cid == id }
+    }
+
+    override fun clear() {
+        clubs.clear()
     }
 }

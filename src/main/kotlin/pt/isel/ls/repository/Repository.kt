@@ -25,4 +25,9 @@ interface Repository<T> {
      * Function that deletes an element.
      */
     fun deleteByIdentifier(id: UInt)
+
+    /**
+     * Function that deletes every element.
+     */
+    fun clear()
 }

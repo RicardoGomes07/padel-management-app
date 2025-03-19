@@ -10,7 +10,7 @@ import kotlin.uuid.Uuid
 sealed class UserErrors {
     data object UserEmailAlreadyExists : UserErrors()
 }
-
+@OptIn(ExperimentalUuidApi::class)
 class UserService(
     private val userRepo: UserRepository,
 ) {
@@ -38,6 +38,5 @@ class UserService(
      * @param token the user token
      * @return the user if the token is valid, null otherwise
      */
-    @OptIn(ExperimentalUuidApi::class)
-    fun validateUser(token: Uuid): User? = userRepo.findUserBYToken(token)
+    fun validateUser(token: Uuid): User? = userRepo.findUserByToken(token)
 }

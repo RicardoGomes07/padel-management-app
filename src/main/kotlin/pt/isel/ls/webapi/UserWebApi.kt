@@ -20,7 +20,7 @@ import kotlin.uuid.Uuid
 /**
  * This is the User Management Api, where you can see details about a user or create one.
  */
-
+@OptIn(ExperimentalUuidApi::class)
 class UserWebApi {
     private val userService = UserService(UserRepositoryInMem)
     private val rentalService = RentalService(RentalRepositoryInMem)
@@ -34,23 +34,22 @@ class UserWebApi {
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
+
     fun getUserInfo(request: Request): Response {
         Utils.logRequest(request)
         val userInfo = Utils.verifyToken(request)
-            ?.let {token -> Uuid.parse(token) }
-            ?.let {userToken -> userService.validateUser(userToken) }
+            ?.let { token -> Uuid.parse(token) }
+            ?.let { userToken -> userService.validateUser(userToken) }
             ?: return Response(Status.UNAUTHORIZED).body("No Authorization")
         return Response(Status.OK).body(Json.encodeToString(userInfo))
 
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     fun getUserRentals(request: Request): Response {
         Utils.logRequest(request)
         val userInfo = Utils.verifyToken(request)
-            ?.let {token -> Uuid.parse(token) }
-            ?.let {userToken -> userService.validateUser(userToken) }
+            ?.let { token -> Uuid.parse(token) }
+            ?.let { userToken -> userService.validateUser(userToken) }
             ?: return Response(Status.UNAUTHORIZED).body("No Authorization")
         return when (val rentals = rentalService.getUserRentals(userInfo.uid)) {
             is Either.Left -> Response(Status.NOT_FOUND).body("No rentals found")
