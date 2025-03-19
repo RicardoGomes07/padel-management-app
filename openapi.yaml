@@ -207,7 +207,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /courts/{cid}:
+  /courts/clubs/{cid}:
     get:
       security:
         - bearerAuth: []
@@ -315,13 +315,13 @@ paths:
       description: Get a list with the rentals, given the following parameters
       operationId: listRentals
       parameters:
-        - in: query
+        - in: path
           name: cid
           schema:
             type: integer
           required: true
           description: Club id to search the rental details
-        - in: query
+        - in: path
           name: crid
           schema:
             type: integer

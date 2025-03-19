@@ -1,0 +1,81 @@
+### Creates a new user
+POST http://localhost:8080/user
+Content-Type: application/json
+
+{
+    "name": "Riczão",
+    "email": "ric@gmail.com"
+}
+
+### Returns user information
+GET http://localhost:8080/me
+
+### Get a list with the rentals of a user
+GET http://localhost:8080/user/rentals
+
+### Get a list with the rentals of a user with pagination
+GET http://localhost:8080/user/rentals?skip=0&limit=10
+
+### Creates a new club
+POST http://localhost:8080/clubs
+Content-Type: application/json
+
+{
+    "name": "Benfica",
+    "owner": {
+        "name": "Riczão",
+        "uid": "1234"
+    }
+}
+
+### List clubs
+GET http://localhost:8080/clubs
+
+
+### List clubs with pagination
+GET http://localhost:8080/clubs?skip=0&limit=10
+
+
+### Get Club Details by ID
+GET http://localhost:8080/clubs/1
+
+### Create new court
+POST http://localhost:8080/courts
+Content-Type: application/json
+
+{
+    "name": "Pista1",
+    "cid": 1 
+}
+
+### List Courts of a club
+GET http://localhost:8080/courts/clubs/1
+
+### List Courts of a club with pagination
+GET http://localhost:8080/courts/clubs/1?skip=0&limit=10
+
+### Get court details
+GET http://localhost:8080/courts/1
+
+### Create a new rental
+POST http://localhost:8080/rentals
+Content-Type: application/json
+
+{
+    "cid": 1,
+    "crid": 1,
+    "date": "2025-03-19",
+    "duration": "01:00"
+}
+
+### Get a list with the rentals
+GET http://localhost:8080/rentals/clubs/1/courts/1
+
+### Get a list with the rentals filtered by date with pagination
+GET http://localhost:8080/rentals/clubs/1/courts/1?date=2025-03-19&skip=0&limit=10
+
+### Get rental details
+GET http://localhost:8080/rentals/1
+
+### Get available hours for court rental
+GET http://localhost:8080/clubs/1/courts/1/available?date=2025-03-19
