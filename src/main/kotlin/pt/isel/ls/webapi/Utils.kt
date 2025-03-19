@@ -19,4 +19,8 @@ object Utils {
             request.header("accept"),
         )
     }
+    fun verifyToken(request: Request): String? {
+        val token = request.header("Authorization") ?: return null
+        return token
+    }
 }
