@@ -1,4 +1,4 @@
-package pt.isel.ls.WebApi
+package pt.isel.ls.webApi
 
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -8,19 +8,19 @@ import org.http4k.core.Response
  */
 
 class RentalWebApi {
-    //private val rentalService = TODO()
+    // private val rentalService = TODO()
 
-    fun createRental(request: Request) : Response {
+    fun createRental(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getAllRentals(request: Request) : Response {
+    fun getAllRentals(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getRentalInfo(request: Request) : Response {
+    fun getRentalInfo(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }

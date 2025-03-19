@@ -1,9 +1,6 @@
-package pt.isel.ls.DomainTests
+package pt.isel.ls.domain
 
 import org.junit.Test
-import pt.isel.ls.domain.Email
-import pt.isel.ls.domain.Name
-import pt.isel.ls.domain.User
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.uuid.ExperimentalUuidApi
@@ -43,7 +40,7 @@ class DomainModelTests {
                 name = Name("Ricardo"),
                 email = Email("ric@gmail.com"),
                 token = Uuid.random(),
-            )
+            ),
         )
     }
 }

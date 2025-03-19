@@ -1,23 +1,27 @@
 package pt.isel.ls.repository.mem
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
+import kotlinx.datetime.atTime
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.repository.RentalRepository
 import pt.isel.ls.repository.mem.CourtRepositoryInMem.courts
 import pt.isel.ls.repository.mem.UserRepositoryInMem.users
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 object RentalRepositoryInMem : RentalRepository {
-    val rentals = mutableListOf<Rental>()
+    private val rentals = mutableListOf<Rental>()
 
     private var currId = 0u
 
     override fun createRental(
         date: LocalDateTime,
-        duration: LocalTime,
+        duration: Duration,
         renterId: UInt,
         courtId: UInt,
-    ) {
+    ): Rental {
         currId += 1u
 
         val renter = users.firstOrNull { it.uid == renterId }
@@ -38,62 +42,46 @@ object RentalRepositoryInMem : RentalRepository {
             )
 
         rentals.add(rental)
+        return rental
     }
 
     override fun findAvailableHoursForACourt(
         crid: UInt,
         date: LocalDateTime,
     ): List<LocalTime> {
-        val court = courts.firstOrNull { it.crid == crid }
-
-        requireNotNull(court)
+        val court = courts.firstOrNull { it.crid == crid } ?: return emptyList()
 
         val rentalsOnCourtAtDay =
             rentals
-                .filter {
-                    it.court == court && it.date.dayOfYear == date.dayOfYear
-                }.sortedBy { it.date }
+                .filter { it.court == court && it.date.date == date.date }
+                .map { rental ->
+                    val rentalStart = rental.date.time
+                    val rentalEnd = rental.date + rental.duration
+                    rentalStart to rentalEnd
+                }
 
-        val availableHours = mutableListOf<LocalTime>()
-
-        val day = date.toLocalDate()
-
-        val startOfDay = day.atStartOfDay()
-        val endOfDay = startOfDay.plusDays(1).toLocalTime()
-
-        var currentHour = startOfDay.toLocalTime()
-
-        while (currentHour.isBefore(endOfDay)) {
-            val hourStart = currentHour.atDate(day)
-            val hourEnd = hourStart.plusHours(1)
-
-            var isAvailable = true
-
-            for ((_, rDate, rDuration, _, _) in rentalsOnCourtAtDay) {
-                val rentalEnd = rDate.plusSeconds(rDuration.toSecondOfDay().toLong())
-
-                // check if hour overlaps with rental
-                if (!hourEnd.isBefore(rDate) || hourStart.isAfter(rentalEnd)) {
-                    isAvailable = false
-                    break
+        return (0..23)
+            .map { LocalTime(it, 0) }
+            .filter { hour ->
+                // Combine hour with the same date and add 1 hour to it
+                val hourEnd =
+                    date.date
+                        .atTime(hour)
+                        .plus(1.toDuration(DurationUnit.HOURS))
+                        .time
+                rentalsOnCourtAtDay.none { (rentalStart, rentalEnd) ->
+                    hour < rentalEnd.time && hourEnd > rentalStart
                 }
             }
-
-            if (isAvailable) {
-                availableHours.add(currentHour)
-            }
-
-            currentHour = currentHour.plusHours(1)
-        }
-
-        return availableHours
     }
+
+    private operator fun LocalDateTime.plus(duration: Duration): LocalDateTime = this.plus(duration)
 
     override fun findByCridAndDate(
         crid: UInt,
-        date: LocalDateTime,
-    ): Rental? =
-        rentals.firstOrNull {
+        date: LocalDateTime?,
+    ): List<Rental> =
+        rentals.filter {
             it.court.crid == crid && it.date == date
         }
 

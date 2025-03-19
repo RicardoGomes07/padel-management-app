@@ -1,4 +1,4 @@
-package pt.isel.ls.WebApi
+package pt.isel.ls.webApi
 
 import org.http4k.core.Request
 import org.slf4j.LoggerFactory

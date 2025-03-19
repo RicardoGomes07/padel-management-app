@@ -19,7 +19,7 @@ interface UserRepository : Repository<User> {
     fun createUser(
         name: Name,
         email: Email,
-    )
+    ): User
 
     fun findUserBYToken(token: Uuid): User?
 }

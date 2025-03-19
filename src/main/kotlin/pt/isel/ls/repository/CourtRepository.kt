@@ -14,5 +14,12 @@ interface CourtRepository : Repository<Court> {
     fun createCourt(
         name: Name,
         clubId: UInt,
-    )
+    ): Court
+
+    /**
+     * Function that returns all courts in the system.
+     * @param cid the club identifier
+     * @return list of courts
+     */
+    fun findByClubIdentifier(cid: UInt): List<Court>
 }

@@ -1,4 +1,4 @@
-package pt.isel.ls.WebApi
+package pt.isel.ls.webApi
 
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -8,19 +8,19 @@ import org.http4k.core.Response
  */
 
 class CourtWebApi {
-    //private val courtService = TODO()
+    // private val courtService = TODO()
 
-    fun createCourt(request: Request) : Response {
+    fun createCourt(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getCourtsByClub(request: Request) : Response {
+    fun getCourtsByClub(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getCourtInfo(request: Request) : Response {
+    fun getCourtInfo(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }

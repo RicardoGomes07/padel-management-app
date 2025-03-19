@@ -13,7 +13,7 @@ object CourtRepositoryInMem : CourtRepository {
     override fun createCourt(
         name: Name,
         clubId: UInt,
-    ) {
+    ): Court {
         val club = clubs.firstOrNull { it.cid == clubId }
 
         requireNotNull(club)
@@ -28,7 +28,10 @@ object CourtRepositoryInMem : CourtRepository {
             )
 
         courts.add(court)
+        return court
     }
+
+    override fun findByClubIdentifier(cid: UInt): List<Court> = courts.filter { it.club.cid == cid }
 
     override fun save(element: Court) {
         val findCourt = courts.find { it.crid == element.crid }

@@ -1,4 +1,4 @@
-package pt.isel.ls.WebApi
+package pt.isel.ls.webApi
 
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -8,24 +8,24 @@ import org.http4k.core.Response
  */
 
 class ClubWebApi {
-    //private val clubService = TODO() // service
+    // private val clubService = TODO() // service
 
-    fun createClub (request: Request) : Response {
+    fun createClub(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getAllClubs (request: Request) : Response {
+    fun getAllClubs(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getClubInfo (request: Request) : Response {
+    fun getClubInfo(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }
 
-    fun getAvailableHours (request: Request) : Response {
+    fun getAvailableHours(request: Request): Response {
         Utils.logRequest(request)
         return TODO()
     }

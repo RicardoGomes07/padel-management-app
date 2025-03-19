@@ -13,7 +13,7 @@ interface ClubRepository : Repository<Club> {
     fun createClub(
         name: String,
         ownerId: UInt,
-    )
+    ): Club
 
     fun findClubByName(name: String): Club?
 }

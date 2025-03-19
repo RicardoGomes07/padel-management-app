@@ -1,8 +1,8 @@
-package pt.isel.ls.WebApi.Dto
+package pt.isel.ls.webApi.Dto
 
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class RentalsOutput(
-    val rentals: List<RentalDetailsOutput>
+    val rentals: List<RentalDetailsOutput>,
 )

@@ -13,7 +13,7 @@ object ClubRepositoryInMem : ClubRepository {
     override fun createClub(
         name: String,
         ownerId: UInt,
-    ) {
+    ): Club {
         val validName = Name(name)
 
         require(clubs.all { it.name != validName })
@@ -32,11 +32,11 @@ object ClubRepositoryInMem : ClubRepository {
             )
 
         clubs.add(club)
+        return club
     }
 
     override fun findClubByName(name: String): Club? {
         val validName = Name(name)
-
         return clubs.firstOrNull { it.name == validName }
     }
 

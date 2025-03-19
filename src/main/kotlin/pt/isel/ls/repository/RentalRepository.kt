@@ -1,8 +1,9 @@
 package pt.isel.ls.repository
 
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import pt.isel.ls.domain.Rental
-import java.time.LocalDateTime
-import java.time.LocalTime
+import kotlin.time.Duration
 
 /**
  * Generic Interface for a Rental repository that supports CRUD operations.
@@ -14,10 +15,10 @@ interface RentalRepository : Repository<Rental> {
      */
     fun createRental(
         date: LocalDateTime,
-        duration: LocalTime,
+        duration: Duration,
         renterId: UInt,
         courtId: UInt,
-    )
+    ): Rental
 
     fun findAvailableHoursForACourt(
         crid: UInt,
@@ -26,8 +27,8 @@ interface RentalRepository : Repository<Rental> {
 
     fun findByCridAndDate(
         crid: UInt,
-        date: LocalDateTime,
-    ): Rental?
+        date: LocalDateTime?,
+    ): List<Rental>
 
     fun findAllRentalsByRenterId(renter: UInt): List<Rental>
 }

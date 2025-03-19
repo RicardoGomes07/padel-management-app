@@ -1,4 +1,4 @@
-package pt.isel.ls.WebApi.Dto
+package pt.isel.ls.webApi.Dto
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -9,5 +9,5 @@ data class RentalCreationInput(
     val cid: Int,
     val crid: Int,
     val date: LocalDate,
-    val duration: LocalTime
+    val duration: LocalTime,
 )

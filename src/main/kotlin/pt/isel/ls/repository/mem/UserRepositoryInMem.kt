@@ -17,7 +17,7 @@ object UserRepositoryInMem : UserRepository {
     override fun createUser(
         name: Name,
         email: Email,
-    ) {
+    ): User {
         require(users.all { it.email != email })
         currId += 1u
         val token = Uuid.random()
@@ -30,6 +30,7 @@ object UserRepositoryInMem : UserRepository {
             )
 
         users.add(user)
+        return user
     }
 
     override fun findUserBYToken(token: Uuid): User? = users.firstOrNull { it.token == token }
