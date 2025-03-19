@@ -1,10 +1,10 @@
-package pt.isel.ls.webApi
+package pt.isel.ls.webapi
 
 import kotlinx.serialization.json.Json
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.CREATED
-import pt.isel.ls.webApi.dto.UserInput
+import pt.isel.ls.webapi.dto.UserInput
 
 /**
  * This is the User Management Api, where you can see details about a user or create one.

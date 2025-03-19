@@ -1,4 +1,4 @@
-package pt.isel.ls.webApi.dto
+package pt.isel.ls.webapi.dto
 
 import kotlinx.serialization.Serializable
 
