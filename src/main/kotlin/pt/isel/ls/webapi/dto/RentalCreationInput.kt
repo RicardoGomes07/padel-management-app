@@ -1,4 +1,4 @@
-package pt.isel.ls.webApi.Dto
+package pt.isel.ls.webApi.dto
 
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
