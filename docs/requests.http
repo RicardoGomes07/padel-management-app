@@ -1,5 +1,7 @@
+@authToken = e6359511-087a-4cb1-a7a7-6fa78b805843
+
 ### Creates a new user
-POST http://localhost:8080/user
+POST http://localhost:8080/users
 Content-Type: application/json
 
 {
@@ -8,40 +10,42 @@ Content-Type: application/json
 }
 
 ### Returns user information
-GET http://localhost:8080/me
+GET http://localhost:8080/users/me
+Authorization: {{authToken}}
 
 ### Get a list with the rentals of a user
-GET http://localhost:8080/user/rentals
+GET http://localhost:8080/users/rentals
+Authorization: {{authToken}}
 
 ### Get a list with the rentals of a user with pagination
-GET http://localhost:8080/user/rentals?skip=0&limit=10
+GET http://localhost:8080/users/rentals?skip=0&limit=10
+Authorization: {{authToken}}
 
 ### Creates a new club
 POST http://localhost:8080/clubs
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
-    "name": "Benfica",
-    "owner": {
-        "name": "Riczão",
-        "uid": "1234"
-    }
+    "name": "Benfica"
 }
 
 ### List clubs
 GET http://localhost:8080/clubs
-
+Authorization: {{authToken}}
 
 ### List clubs with pagination
 GET http://localhost:8080/clubs?skip=0&limit=10
-
+Authorization:  {{authToken}}
 
 ### Get Club Details by ID
 GET http://localhost:8080/clubs/1
+Authorization: {{authToken}}
 
 ### Create new court
 POST http://localhost:8080/courts
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
     "name": "Pista1",
@@ -50,32 +54,40 @@ Content-Type: application/json
 
 ### List Courts of a club
 GET http://localhost:8080/courts/clubs/1
+Authorization: {{authToken}}
 
 ### List Courts of a club with pagination
 GET http://localhost:8080/courts/clubs/1?skip=0&limit=10
+Authorization: {{authToken}}
 
 ### Get court details
 GET http://localhost:8080/courts/1
+Authorization: {{authToken}}
 
 ### Create a new rental
 POST http://localhost:8080/rentals
 Content-Type: application/json
+Authorization: {{authToken}}
 
 {
     "cid": 1,
     "crid": 1,
-    "date": "2025-03-19",
-    "duration": "01:00"
+    "date": "2025-03-22T10:00:00",
+    "duration": "1h"
 }
 
 ### Get a list with the rentals
 GET http://localhost:8080/rentals/clubs/1/courts/1
+Authorization: Bearer {{authToken}}
 
 ### Get a list with the rentals filtered by date with pagination
 GET http://localhost:8080/rentals/clubs/1/courts/1?date=2025-03-19&skip=0&limit=10
+Authorization: Bearer {{authToken}}
 
 ### Get rental details
 GET http://localhost:8080/rentals/1
+Authorization: Bearer {{authToken}}
 
 ### Get available hours for court rental
 GET http://localhost:8080/clubs/1/courts/1/available?date=2025-03-19
+Authorization: Bearer {{authToken}}

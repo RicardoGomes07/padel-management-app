@@ -4,10 +4,7 @@ import kotlinx.datetime.*
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.repository.RentalRepository
 import pt.isel.ls.repository.mem.CourtRepositoryInMem.courts
-import pt.isel.ls.repository.mem.UserRepositoryInMem.users
 import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 object RentalRepositoryInMem : RentalRepository {
     private val rentals = mutableListOf<Rental>()
@@ -25,11 +22,13 @@ object RentalRepositoryInMem : RentalRepository {
      * @throws IllegalArgumentException If the renter or court does not exist.
      */
     override fun createRental(
-        date: LocalDateTime,
-        duration: Duration,
+        date: LocalDate,
+        duration: IntRange,
         renterId: UInt,
         courtId: UInt,
     ): Rental {
+        throw NotImplementedError()
+        /*
         require(date >= Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())) {
             "Rental date must be in the future"
         }
@@ -54,6 +53,7 @@ object RentalRepositoryInMem : RentalRepository {
 
         rentals.add(rental)
         return rental
+         */
     }
 
     /**
@@ -71,6 +71,8 @@ object RentalRepositoryInMem : RentalRepository {
         // or 11:30.
         val court = courts.firstOrNull { it.crid == crid } ?: return emptyList()
 
+        TODO("Fix the code below")
+        /*
         val rentalsOnCourtAtDay =
             rentals
                 .filter { it.court == court && it.date.date == date.date }
@@ -92,6 +94,8 @@ object RentalRepositoryInMem : RentalRepository {
                     hour < rentalEnd.time && hourEnd > rentalStart
                 }
             }
+
+         */
     }
 
     /**
@@ -103,10 +107,12 @@ object RentalRepositoryInMem : RentalRepository {
     override fun findByCridAndDate(
         crid: UInt,
         date: LocalDateTime?,
-    ): List<Rental> =
-        rentals.filter {
-            it.court.crid == crid && it.date == date
+    ): List<Rental> {
+        throw NotImplementedError("Fix this code")
+        return rentals.filter {
+            it.court.crid == crid // && it.date == date
         }
+    }
 
     /**
      * Finds all rentals by a renter id.
@@ -167,7 +173,8 @@ object RentalRepositoryInMem : RentalRepository {
  */
 fun LocalDateTime.plusDuration(
     duration: Duration,
-    timeZone: TimeZone = TimeZone.currentSystemDefault()): LocalDateTime {
+    timeZone: TimeZone = TimeZone.currentSystemDefault(),
+): LocalDateTime {
     val instant = this.toInstant(timeZone)
     val newInstant = instant + duration
     return newInstant.toLocalDateTime(timeZone)

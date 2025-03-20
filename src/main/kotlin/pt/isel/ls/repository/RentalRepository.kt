@@ -1,9 +1,9 @@
 package pt.isel.ls.repository
 
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import pt.isel.ls.domain.Rental
-import kotlin.time.Duration
 
 /**
  * Generic Interface for a Rental repository that supports CRUD operations.
@@ -14,8 +14,8 @@ interface RentalRepository : Repository<Rental> {
      * rid is automatically incremented so it's not received as a parameter to the function.
      */
     fun createRental(
-        date: LocalDateTime,
-        duration: Duration,
+        date: LocalDate,
+        rentalTime: IntRange,
         renterId: UInt,
         courtId: UInt,
     ): Rental

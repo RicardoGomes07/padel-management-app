@@ -5,7 +5,6 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.repository.RentalRepository
-import kotlin.time.Duration
 
 sealed class RentalError {
     data object RentalNotFound : RentalError()
@@ -38,17 +37,17 @@ class RentalService(
     /**
      * Function that creates a new rental in the system
      * @param date the rental date
-     * @param duration the rental duration
+     * @param rentTime the rental time in range of hours
      * @param renterId the renter identifier
      * @param courtId the court identifier
      * @return the new rental
      */
     fun createRental(
-        date: LocalDateTime,
-        duration: Duration,
+        date: LocalDate,
+        rentTime: IntRange,
         renterId: UInt,
         courtId: UInt,
-    ): Rental = rentalRepo.createRental(date, duration, renterId, courtId)
+    ): Rental = rentalRepo.createRental(date, rentTime, renterId, courtId)
 
     /**
      * Get the available hours for a court in a specific date

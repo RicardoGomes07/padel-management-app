@@ -25,8 +25,8 @@ class UserRepositoryTests {
     @Test
     fun `user creation with valid Name and Email`() {
         val user = userRepo.createUser(Name("user"), Email("user@email.com"))
-        assertEquals(Name("user"),user.name)
-        assertEquals(Email("user@email.com"),user.email)
+        assertEquals(Name("user"), user.name)
+        assertEquals(Email("user@email.com"), user.email)
     }
 
     @Test
@@ -73,7 +73,6 @@ class UserRepositoryTests {
         userRepo.deleteByIdentifier(user.uid)
         assertEquals(0, userRepo.findAll().size)
     }
-
 
     @Test
     fun `save updates existing user`() {

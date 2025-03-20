@@ -1,7 +1,6 @@
 package pt.isel.ls.domain
 
-import kotlinx.datetime.LocalDateTime
-import kotlin.time.Duration
+import kotlinx.datetime.LocalDate
 
 /**
  * Represents a rental.
@@ -13,8 +12,8 @@ import kotlin.time.Duration
  */
 data class Rental(
     val rid: UInt,
-    val date: LocalDateTime,
-    val duration: Duration,
+    val date: LocalDate,
+    val rentTime: IntRange,
     val renter: User,
     val court: Court,
 )

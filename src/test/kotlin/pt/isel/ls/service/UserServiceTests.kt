@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.service
 
 import org.junit.Before
@@ -5,7 +7,6 @@ import org.junit.Test
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.mem.UserRepositoryInMem
-import pt.isel.ls.services.Failure
 import pt.isel.ls.services.Success
 import pt.isel.ls.services.UserService
 import kotlin.test.*

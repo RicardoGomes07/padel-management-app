@@ -3,6 +3,7 @@ package pt.isel.ls.webapi
 import org.http4k.core.Request
 import org.slf4j.LoggerFactory
 import pt.isel.ls.domain.User
+import java.sql.SQLException
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -22,9 +23,33 @@ object Utils {
             request.header("accept"),
         )
     }
-    fun verifyAndValidateUser(request: Request, validateUser: (Uuid) -> User?): User? {
-        return request.header("Authorization")
+
+    fun verifyAndValidateUser(
+        request: Request,
+        validateUser: (Uuid) -> User?,
+    ): User? =
+        request
+            .header("Authorization")
             ?.let { token -> Uuid.parse(token) }
             ?.let { userToken -> validateUser(userToken) }
+
+    fun runWithExceptionHandling(block: () -> Unit) {
+        try {
+            block()
+        } catch (e: Exception) {
+            when {
+                e is SQLException -> {
+                    logger.error(
+                        "SQL Exception: state={}, code={}, message={}",
+                        e.sqlState,
+                        e.errorCode,
+                        e.message,
+                    )
+                }
+                else -> throw e
+            }
+        }
     }
 }
+
+

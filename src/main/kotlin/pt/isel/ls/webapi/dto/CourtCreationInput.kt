@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CourtCreationInput(
+    val cid: UInt,
     val name: String,
-    val cid: Int,
 )
