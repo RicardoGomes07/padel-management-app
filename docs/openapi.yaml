@@ -23,7 +23,7 @@ tags:
   - name: Rental
     description: Rental Management
 paths:
-  /user:
+  /users:
     post:
       tags:
         - User
@@ -59,7 +59,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserInfoModel'
 
-  /user/rentals:
+  /users/rentals:
     get:
       security:
         - bearerAuth: []
