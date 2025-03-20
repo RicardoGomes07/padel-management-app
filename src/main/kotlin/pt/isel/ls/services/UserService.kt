@@ -2,15 +2,14 @@ package pt.isel.ls.services
 
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
 import pt.isel.ls.repository.UserRepository
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 sealed class UserErrors {
     data object UserEmailAlreadyExists : UserErrors()
 }
-@OptIn(ExperimentalUuidApi::class)
+
 class UserService(
     private val userRepo: UserRepository,
 ) {
@@ -38,5 +37,5 @@ class UserService(
      * @param token the user token
      * @return the user if the token is valid, null otherwise
      */
-    fun validateUser(token: Uuid): User? = userRepo.findUserByToken(token)
+    fun validateUser(token: Token): User? = userRepo.findUserByToken(token)
 }

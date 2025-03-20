@@ -68,8 +68,5 @@ class RentalService(
      * @param uid the user identifier
      * @return either the rentals or an error indicating that the user has no rentals
      */
-    fun getUserRentals(uid: UInt): Either<RentalError.RentalNotFound, List<Rental>> {
-        val rentals = rentalRepo.findAllRentalsByRenterId(uid) ?: return failure(RentalError.RentalNotFound)
-        return success(rentals)
-    }
+    fun getUserRentals(uid: UInt): List<Rental> = rentalRepo.findAllRentalsByRenterId(uid)
 }

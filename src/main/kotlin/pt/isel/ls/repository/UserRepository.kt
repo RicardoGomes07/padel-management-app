@@ -1,12 +1,9 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package pt.isel.ls.repository
 
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Generic Interface for a User repository that supports CRUD operations.
@@ -26,5 +23,5 @@ interface UserRepository : Repository<User> {
      * @param token the token of the User to find.
      * @return the User with the token or null if it doesn't exist.
      */
-    fun findUserByToken(token: Uuid): User?
+    fun findUserByToken(token: Token): User?
 }

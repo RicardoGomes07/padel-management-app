@@ -6,7 +6,6 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.CREATED
-import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.path
@@ -17,12 +16,10 @@ import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
 import pt.isel.ls.webapi.dto.toRentalsOutput
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * This is the Rental Management Api, where you can see details about a rental or create one.
  */
-@OptIn(ExperimentalUuidApi::class)
 class RentalWebApi(
     private val rentalService: RentalService,
     private val userService: UserService,
@@ -51,10 +48,8 @@ class RentalWebApi(
         val userInfo =
             Utils.verifyAndValidateUser(request, userService::validateUser)
                 ?: return Response(UNAUTHORIZED).body("No Authorization")
-        return when (val rentals = rentalService.getUserRentals(userInfo.uid)) {
-            is Failure -> Response(NOT_FOUND).body("No rentals found")
-            is Success -> Response(OK).body(Json.encodeToString(rentals.value.toRentalsOutput()))
-        }
+        val rentals = rentalService.getUserRentals(userInfo.uid)
+        return Response(OK).body(Json.encodeToString(rentals.toRentalsOutput()))
     }
 
     fun getRentalInfo(request: Request): Response {

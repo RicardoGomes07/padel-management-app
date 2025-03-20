@@ -6,7 +6,7 @@ import kotlinx.datetime.LocalDate
  * Represents a rental.
  * @property rid Unique identifier for a rental.
  * @property date Date of the rental.
- * @property duration Duration of the rental.
+ * @property rentTime range of hours.
  * @property renter User that is renting.
  * @property court Court that is being rented.
  */

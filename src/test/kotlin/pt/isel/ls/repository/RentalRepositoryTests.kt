@@ -5,7 +5,11 @@ package pt.isel.ls.repository
 import kotlinx.datetime.*
 import org.junit.Assert.*
 import org.junit.Before
+import pt.isel.ls.domain.Email
+import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.mem.*
+import kotlin.test.Test
+import kotlin.test.assertFailsWith
 
 class RentalRepositoryTests {
     private val rentalRepo = RentalRepositoryInMem
@@ -21,21 +25,26 @@ class RentalRepositoryTests {
         courtRepo.clear()
     }
 
-    private val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    /*
+    private val tomorrowDate =
+        Clock
+            .System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .let { LocalDate(it.year, it.month, it.dayOfMonth).plus(1, DateTimeUnit.DAY) }
+
     @Test
     fun `create rental with valid renter and court`() {
         val renter = userRepo.createUser(Name("John Doe"), Email("john@example.com"))
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val rentalDate = Clock.System.now().plus(1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
-        val duration = 2.hours
+        val rentalDate = tomorrowDate
+        val rentalTime = 10..12 // 2-hour rental from 10:00 to 12:00
 
-        val rental = rentalRepo.createRental(rentalDate, duration, renter.uid, court.crid)
+        val rental = rentalRepo.createRental(rentalDate, rentalTime, renter.uid, court.crid)
 
         assertEquals(rentalDate, rental.date)
-        assertEquals(duration, rental.duration)
+        assertEquals(rentalTime, rental.rentTime)
         assertEquals(renter, rental.renter)
         assertEquals(court, rental.court)
     }
@@ -46,19 +55,10 @@ class RentalRepositoryTests {
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val pastDate = Clock.System.now().minus(1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
+        val pastDate = tomorrowDate.minus(2, DateTimeUnit.DAY)
 
         assertFailsWith<IllegalArgumentException> {
-            rentalRepo.createRental(pastDate, 2.hours, renter.uid, court.crid)
-        }
-    }
-
-    @Test
-    fun `create rental with non-existent court should fail`() {
-        val renter = userRepo.createUser(Name("John Doe"), Email("john@example.com"))
-
-        assertFailsWith<IllegalArgumentException> {
-            rentalRepo.createRental(currentDateTime, 2.hours, renter.uid, 999u)
+            rentalRepo.createRental(pastDate, 10..12, renter.uid, court.crid)
         }
     }
 
@@ -68,10 +68,8 @@ class RentalRepositoryTests {
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val rentalDate = Clock.System.now().plus(2.hours).toLocalDateTime(TimeZone.currentSystemDefault())
-
-        rentalRepo.createRental(rentalDate, 1.hours, renter.uid, court.crid)
-        rentalRepo.createRental(rentalDate.plusDuration(1.hours), 2.hours, renter.uid, court.crid)
+        rentalRepo.createRental(tomorrowDate, 9..10, renter.uid, court.crid)
+        rentalRepo.createRental(tomorrowDate, 11..13, renter.uid, court.crid)
 
         val rentals = rentalRepo.findAllRentalsByRenterId(renter.uid)
         assertEquals(2, rentals.size)
@@ -83,15 +81,10 @@ class RentalRepositoryTests {
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val date = Clock.System.now().plus(2.hours).toLocalDateTime(TimeZone.currentSystemDefault())
+        rentalRepo.createRental(tomorrowDate, 14..16, renter.uid, court.crid)
 
-        rentalRepo.createRental(date, 2.hours, renter.uid, court.crid)
-
-        val foundRentals = rentalRepo.findByCridAndDate(court.crid, date)
+        val foundRentals = rentalRepo.findByCridAndDate(court.crid, null)
         assertEquals(1, foundRentals.size)
-
-        val allRentals = rentalRepo.findAll()
-        assertEquals(1, allRentals.size)
     }
 
     @Test
@@ -100,23 +93,17 @@ class RentalRepositoryTests {
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val date = Clock.System.now().plus(1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
+        rentalRepo.createRental(tomorrowDate, 10..12, renter.uid, court.crid)
 
-        rentalRepo.createRental(date, 2.hours, renter.uid, court.crid).also {
-            println("Rental Start: ${it.date}")
-            println("Rental Duration: ${it.duration}")
-        }
+        val availableHours =
+            rentalRepo.findAvailableHoursForACourt(
+                court.crid,
+                Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            )
 
-        val availableHours = rentalRepo.findAvailableHoursForACourt(court.crid, date)
-
-        println("Available hours:")
-        availableHours.forEach {
-            println(it.hour)
-        }
-
-        assertFalse(availableHours.contains(LocalTime(date.hour, 0)))
-        assertFalse(availableHours.contains(LocalTime(date.hour + 1, 0)))
-        assertTrue(availableHours.contains(LocalTime(date.hour + 3, 0)))
+        assertFalse(availableHours.contains(LocalTime(10, 0)))
+        assertFalse(availableHours.contains(LocalTime(11, 0)))
+        assertTrue(availableHours.contains(LocalTime(12, 0)))
     }
 
     @Test
@@ -125,9 +112,7 @@ class RentalRepositoryTests {
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val rentalDate = currentDateTime.plusDuration(1.hours)
-
-        val rental = rentalRepo.createRental(rentalDate, 2.hours, renter.uid, court.crid)
+        val rental = rentalRepo.createRental(tomorrowDate, 10..12, renter.uid, court.crid)
 
         rentalRepo.deleteByIdentifier(rental.rid)
         val foundRental = rentalRepo.findByIdentifier(rental.rid)
@@ -140,16 +125,12 @@ class RentalRepositoryTests {
         val club = clubRepo.createClub("Sports Club", renter.uid)
         val court = courtRepo.createCourt(Name("Court A"), club.cid)
 
-        val rentalDate = currentDateTime.plusDuration(1.hours)
+        val rental = rentalRepo.createRental(tomorrowDate, 10..12, renter.uid, court.crid)
 
-        val rental = rentalRepo.createRental(rentalDate, 2.hours, renter.uid, court.crid)
-
-        val updatedRental = rental.copy(duration = 3.hours)
+        val updatedRental = rental.copy(rentTime = 12..15)
         rentalRepo.save(updatedRental)
 
         val retrievedRental = rentalRepo.findByIdentifier(rental.rid)
-        assertEquals(3.hours, retrievedRental?.duration)
+        assertEquals(12..15, retrievedRental?.rentTime)
     }
-
-     */
 }

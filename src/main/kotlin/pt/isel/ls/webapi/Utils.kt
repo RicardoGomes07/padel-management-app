@@ -2,6 +2,7 @@ package pt.isel.ls.webapi
 
 import org.http4k.core.Request
 import org.slf4j.LoggerFactory
+import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
 import java.sql.SQLException
 import kotlin.uuid.ExperimentalUuidApi
@@ -26,7 +27,7 @@ object Utils {
 
     fun verifyAndValidateUser(
         request: Request,
-        validateUser: (Uuid) -> User?,
+        validateUser: (Token) -> User?,
     ): User? =
         request
             .header("Authorization")
@@ -51,5 +52,3 @@ object Utils {
         }
     }
 }
-
-

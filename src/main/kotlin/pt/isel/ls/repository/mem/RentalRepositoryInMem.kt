@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.repository.mem
 
 import kotlinx.datetime.*
@@ -66,9 +68,6 @@ object RentalRepositoryInMem : RentalRepository {
         crid: UInt,
         date: LocalDateTime,
     ): List<LocalTime> {
-        // TODO: Fix the issue where available hours are only considered if they start on the hour.
-        // Currently, the logic does not support rentals that begin at irregular times, such as 15:30
-        // or 11:30.
         val court = courts.firstOrNull { it.crid == crid } ?: return emptyList()
 
         TODO("Fix the code below")
