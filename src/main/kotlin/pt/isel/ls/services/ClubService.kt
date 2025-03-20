@@ -26,7 +26,8 @@ class ClubService(
         name: String,
         owner: User,
     ): Either<ClubError.ClubAlreadyExists, Club> {
-        clubRepo.findClubByName(name) ?: failure(ClubError.ClubAlreadyExists(name))
+        if(clubRepo.findClubByName(name) != null)
+            return failure(ClubError.ClubAlreadyExists(name))
         val club = clubRepo.createClub(name, owner.uid)
         return success(club)
     }
