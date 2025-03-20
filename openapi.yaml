@@ -497,9 +497,6 @@ components:
         name:
           type: string
           example: Fly Padel
-        uid:
-          type: object
-          ref: '#/components/schemas/OwnerOutputModel'
 
     OwnerOutputModel:
       type: object
