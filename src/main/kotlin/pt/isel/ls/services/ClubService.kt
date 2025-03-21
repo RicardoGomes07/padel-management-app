@@ -1,34 +1,41 @@
 package pt.isel.ls.services
 
 import pt.isel.ls.domain.Club
+import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
 import pt.isel.ls.repository.ClubRepository
-
-sealed class ClubError {
-    data object ClubNotFound : ClubError()
-
-    data class ClubAlreadyExists(
-        val clubName: String,
-    ) : ClubError()
-}
 
 class ClubService(
     private val clubRepo: ClubRepository,
 ) {
-    fun getClubs(): List<Club> = clubRepo.findAll()
+    /**
+     * Function that returns all clubs in the system
+     * @return list of clubs
+     */
+    fun getClubs(
+        limit: Int,
+        skip: Int,
+    ): Result<List<Club>> =
+        runCatching {
+            clubRepo.findAll(limit, skip)
+        }
 
-    fun getClubById(cid: UInt): Either<ClubError.ClubNotFound, Club> {
-        val club = clubRepo.findByIdentifier(cid) ?: return failure(ClubError.ClubNotFound)
-        return success(club)
-    }
+    /**
+     * Function that returns a club by its identifier
+     * @param cid the club identifier
+     * @return either the club or an error indicating that the club was not found
+     */
+    fun getClubById(cid: UInt): Result<Club> =
+        runCatching {
+            checkNotNull(clubRepo.findByIdentifier(cid)) { "Club with $cid not found" }
+        }
 
     fun createClub(
-        name: String,
+        name: Name,
         owner: User,
-    ): Either<ClubError.ClubAlreadyExists, Club> {
-        if(clubRepo.findClubByName(name) != null)
-            return failure(ClubError.ClubAlreadyExists(name))
-        val club = clubRepo.createClub(name, owner.uid)
-        return success(club)
-    }
+    ): Result<Club> =
+        runCatching {
+            require(clubRepo.findClubByName(name) == null) { "Club with name $name already exists" }
+            clubRepo.createClub(name, owner.uid)
+        }
 }

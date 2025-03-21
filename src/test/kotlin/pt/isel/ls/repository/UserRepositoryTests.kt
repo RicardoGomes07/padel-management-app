@@ -1,19 +1,16 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.repository
 
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import pt.isel.ls.domain.Email
-import pt.isel.ls.domain.Name
-import pt.isel.ls.domain.User
+import pt.isel.ls.domain.*
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 class UserRepositoryTests {
     private val userRepo = UserRepositoryInMem
 
@@ -44,7 +41,7 @@ class UserRepositoryTests {
         val user = userRepo.findUserByToken(user1.token)
         assertEquals(user1, user)
 
-        val fakeToken = Uuid.random()
+        val fakeToken = generateToken()
         val invalidUser = userRepo.findUserByToken(fakeToken)
         assertNull(invalidUser)
     }
@@ -86,7 +83,13 @@ class UserRepositoryTests {
 
     @Test
     fun `save adds new user when not existing`() {
-        val newUser = User(uid = 99u, name = Name("newUser"), email = Email("new@email.com"), token = Uuid.random())
+        val newUser =
+            User(
+                uid = 99u,
+                name = Name("newUser"),
+                email = Email("new@email.com"),
+                token = generateToken(),
+            )
         userRepo.save(newUser)
 
         val retrievedUser = userRepo.findByIdentifier(99u)

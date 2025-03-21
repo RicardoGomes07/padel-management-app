@@ -7,6 +7,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.repository.mem.*
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
@@ -127,7 +128,7 @@ class RentalRepositoryTests {
 
         val rental = rentalRepo.createRental(tomorrowDate, 10..12, renter.uid, court.crid)
 
-        val updatedRental = rental.copy(rentTime = 12..15)
+        val updatedRental = rental.copy(rentTime = TimeSlot(12U, 15U))
         rentalRepo.save(updatedRental)
 
         val retrievedRental = rentalRepo.findByIdentifier(rental.rid)

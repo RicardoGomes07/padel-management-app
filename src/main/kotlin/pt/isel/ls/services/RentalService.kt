@@ -1,14 +1,9 @@
 package pt.isel.ls.services
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
 import pt.isel.ls.domain.Rental
+import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.repository.RentalRepository
-
-sealed class RentalError {
-    data object RentalNotFound : RentalError()
-}
 
 class RentalService(
     private val rentalRepo: RentalRepository,
@@ -17,56 +12,75 @@ class RentalService(
      * Function that returns all rentals in of a court in a specific date
      * @param crid the court identifier
      * @param date the date
+     * @param limit the maximum number of rentals to return
+     * @param skip the number of rentals to skip
      * @return list of rentals
      */
     fun getRentals(
         crid: UInt,
-        date: LocalDateTime?,
-    ): List<Rental> = rentalRepo.findByCridAndDate(crid, date)
+        date: LocalDate?,
+        limit: Int,
+        skip: Int,
+    ): Result<List<Rental>> =
+        runCatching {
+            rentalRepo.findByCridAndDate(crid, date, limit, skip)
+        }
 
     /**
      * Function that returns a rental by its identifier
      * @param rid the rental identifier
-     * @return either the rental or an error indicating that the rental was not found
+     * @return result with the rental or an error indicating that the rental was not found
      */
-    fun getRentalById(rid: UInt): Either<RentalError.RentalNotFound, Rental> {
-        val rental = rentalRepo.findByIdentifier(rid) ?: return failure(RentalError.RentalNotFound)
-        return success(rental)
-    }
+    fun getRentalById(rid: UInt): Result<Rental> =
+        runCatching {
+            checkNotNull(rentalRepo.findByIdentifier(rid)) { "Rental with $rid not found" }
+        }
 
     /**
      * Function that creates a new rental in the system
      * @param date the rental date
-     * @param rentTime the rental time in range of hours
+     * @param rentTime the rental time slot
      * @param renterId the renter identifier
      * @param courtId the court identifier
      * @return the new rental
      */
     fun createRental(
         date: LocalDate,
-        rentTime: IntRange,
+        rentTime: TimeSlot,
         renterId: UInt,
         courtId: UInt,
-    ): Rental = rentalRepo.createRental(date, rentTime, renterId, courtId)
+    ): Result<Rental> =
+        runCatching {
+            rentalRepo.createRental(date, rentTime, renterId, courtId)
+        }
 
     /**
      * Get the available hours for a court in a specific date
      * @param crid the court identifier
      * @param date the date
-     * @return either the available hours or an error indicating that there are no available hours
+     * @return the list of available hours
      */
     fun getAvailableHours(
         crid: UInt,
-        date: LocalDateTime,
-    ): List<LocalTime> {
-        val hours = rentalRepo.findAvailableHoursForACourt(crid, date)
-        return hours
-    }
+        date: LocalDate,
+    ): Result<List<UInt>> =
+        runCatching {
+            rentalRepo.findAvailableHoursForACourt(crid, date)
+        }
 
     /**
      * Function that returns all rentals that the user made
      * @param uid the user identifier
-     * @return either the rentals or an error indicating that the user has no rentals
+     * @param limit the maximum number of rentals to return
+     * @param skip the number of rentals to skip
+     * @return the list of rentals that the user made
      */
-    fun getUserRentals(uid: UInt): List<Rental> = rentalRepo.findAllRentalsByRenterId(uid)
+    fun getUserRentals(
+        uid: UInt,
+        limit: Int,
+        skip: Int,
+    ): Result<List<Rental>> =
+        runCatching {
+            rentalRepo.findAllRentalsByRenterId(uid, limit, skip)
+        }
 }

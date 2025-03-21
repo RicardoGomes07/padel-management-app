@@ -19,7 +19,13 @@ interface CourtRepository : Repository<Court> {
     /**
      * Function that returns all courts in the system.
      * @param cid the club identifier
+     * @param limit the maximum number of courts to return
+     * @param offset the number of courts to skip
      * @return list of courts
      */
-    fun findByClubIdentifier(cid: UInt): List<Court>
+    fun findByClubIdentifier(
+        cid: UInt,
+        limit: Int = 30,
+        offset: Int = 0,
+    ): List<Court>
 }

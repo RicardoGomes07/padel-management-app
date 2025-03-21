@@ -105,7 +105,9 @@ object RentalRepositoryInMem : RentalRepository {
      */
     override fun findByCridAndDate(
         crid: UInt,
-        date: LocalDateTime?,
+        date: LocalDate?,
+        limit: Int,
+        offset: Int,
     ): List<Rental> {
         throw NotImplementedError("Fix this code")
         return rentals.filter {

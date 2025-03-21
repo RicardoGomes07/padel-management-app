@@ -6,10 +6,6 @@ import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
 import pt.isel.ls.repository.UserRepository
 
-sealed class UserErrors {
-    data object UserEmailAlreadyExists : UserErrors()
-}
-
 class UserService(
     private val userRepo: UserRepository,
 ) {
@@ -21,15 +17,9 @@ class UserService(
     fun createUser(
         name: Name,
         email: Email,
-    ): Either<UserErrors.UserEmailAlreadyExists, User> =
-        try {
-            val user = userRepo.createUser(name, email)
-            success(user)
-        } catch (ex: Exception) {
-            when (ex) {
-                is IllegalArgumentException -> failure(UserErrors.UserEmailAlreadyExists)
-                else -> throw ex // Other Data Base exceptions
-            }
+    ): Result<User> =
+        runCatching {
+            userRepo.createUser(name, email)
         }
 
     /**
