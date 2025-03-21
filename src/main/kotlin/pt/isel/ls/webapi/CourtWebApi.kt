@@ -23,7 +23,6 @@ import kotlin.uuid.ExperimentalUuidApi
 /**
  * This is the Court Management Api, where you can see details about a court or create one.
  */
-@OptIn(ExperimentalUuidApi::class)
 class CourtWebApi(
     private val courtService: CourtService,
     private val userService: UserService,
@@ -33,8 +32,12 @@ class CourtWebApi(
         val input = Json.decodeFromString<CourtCreationInput>(request.bodyString())
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val court = courtService.createCourt(Name(input.name), (input.cid))
-        return Response(CREATED).body(Json.encodeToString(CourtDetailsOutput(court)))
+
+        return  courtService.createCourt(Name(input.name), (input.cid))
+            .fold(
+                onFailure = { Response(BAD_REQUEST).body("Court already exists") },
+                onSuccess = { Response(CREATED).body(Json.encodeToString(CourtDetailsOutput(it))) }
+            )
     }
 
     fun getCourtsByClub(request: Request): Response {
@@ -42,8 +45,13 @@ class CourtWebApi(
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
         val clubId = request.path("cid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid club id")
-        val courts = courtService.getCourts(clubId)
-        return Response(OK).body(Json.encodeToString(courts.toCourtsOutput()))
+        val limit = request.query("limit")?.toIntOrNull() ?: 10
+        val skip = request.query("skip")?.toIntOrNull() ?: 0
+        return courtService.getCourts(clubId, limit, skip)
+            .fold(
+                onFailure = { Response(NOT_FOUND).body("No courts found") },
+                onSuccess = { Response(OK).body(Json.encodeToString(it.toCourtsOutput())) }
+            )
     }
 
     fun getCourtInfo(request: Request): Response {
@@ -51,9 +59,10 @@ class CourtWebApi(
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
         val courtId = request.path("crid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid court id")
-        return when (val court = courtService.getCourtById(courtId)) {
-            is Failure -> Response(NOT_FOUND).body("Court not found")
-            is Success -> Response(OK).body(Json.encodeToString(CourtDetailsOutput(court.value)))
-        }
+        return courtService.getCourtById(courtId)
+            .fold(
+                onFailure = { Response(NOT_FOUND).body("Court not found") },
+                onSuccess = { Response(OK).body(Json.encodeToString(CourtDetailsOutput(it))) }
+            )
     }
 }

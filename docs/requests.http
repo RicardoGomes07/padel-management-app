@@ -78,16 +78,16 @@ Authorization: {{authToken}}
 
 ### Get a list with the rentals
 GET http://localhost:8080/rentals/clubs/1/courts/1
-Authorization: Bearer {{authToken}}
+Authorization: {{authToken}}
 
 ### Get a list with the rentals filtered by date with pagination
 GET http://localhost:8080/rentals/clubs/1/courts/1?date=2025-03-19&skip=0&limit=10
-Authorization: Bearer {{authToken}}
+Authorization: {{authToken}}
 
 ### Get rental details
 GET http://localhost:8080/rentals/1
-Authorization: Bearer {{authToken}}
+Authorization: {{authToken}}
 
 ### Get available hours for court rental
 GET http://localhost:8080/clubs/1/courts/1/available?date=2025-03-19
-Authorization: Bearer {{authToken}}
+Authorization: {{authToken}}

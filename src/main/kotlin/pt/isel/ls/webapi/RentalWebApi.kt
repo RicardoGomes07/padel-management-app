@@ -1,17 +1,17 @@
 package pt.isel.ls.webapi
 
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.CREATED
+import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.path
-import pt.isel.ls.services.Failure
+import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.services.RentalService
-import pt.isel.ls.services.Success
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
@@ -29,8 +29,11 @@ class RentalWebApi(
         val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val rental = rentalService.createRental(input.date, input.initialHour..input.finalHour, input.cid.toUInt(), input.crid.toUInt())
-        return Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(rental)))
+        return rentalService.createRental(input.date, TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt()), input.cid.toUInt(), input.crid.toUInt())
+            .fold(
+                onFailure = { Response(BAD_REQUEST).body("Rental already exists") },
+                onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) }
+            )
     }
 
     fun getAllRentals(request: Request): Response {
@@ -38,9 +41,14 @@ class RentalWebApi(
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
         val courtId = request.path("crid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid court id")
-        val date = request.query("date")?.let { LocalDateTime.parse(it) }
-        val rentals = rentalService.getRentals(courtId, date)
-        return Response(OK).body(Json.encodeToString(rentals.toRentalsOutput()))
+        val date = request.query("date")?.let { LocalDate.parse(it) }
+        val limit = request.query("limit")?.toIntOrNull() ?: 10
+        val skip = request.query("skip")?.toIntOrNull() ?: 0
+        return rentalService.getRentals(courtId, date, limit, skip)
+            .fold(
+                onFailure = { Response(NOT_FOUND).body("Rentals not found") },
+                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) }
+            )
     }
 
     fun getUserRentals(request: Request): Response {
@@ -48,8 +56,13 @@ class RentalWebApi(
         val userInfo =
             Utils.verifyAndValidateUser(request, userService::validateUser)
                 ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val rentals = rentalService.getUserRentals(userInfo.uid)
-        return Response(OK).body(Json.encodeToString(rentals.toRentalsOutput()))
+        val limit = request.query("limit")?.toIntOrNull() ?: 10
+        val skip = request.query("skip")?.toIntOrNull() ?: 0
+        return rentalService.getUserRentals(userInfo.uid, limit, skip)
+            .fold(
+                onFailure = { Response(NOT_FOUND).body("Rentals not found") },
+                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) }
+            )
     }
 
     fun getRentalInfo(request: Request): Response {
@@ -57,9 +70,10 @@ class RentalWebApi(
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
         val rentalId = request.path("rid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid rental id")
-        return when (val rentalInfo = rentalService.getRentalById(rentalId)) {
-            is Failure -> Response(BAD_REQUEST).body("Rental not found")
-            is Success -> Response(OK).body(Json.encodeToString(RentalDetailsOutput(rentalInfo.value)))
-        }
+        return rentalService.getRentalById(rentalId)
+            .fold(
+                onFailure = { Response(NOT_FOUND).body("Rental not found") },
+                onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) }
+            )
     }
 }

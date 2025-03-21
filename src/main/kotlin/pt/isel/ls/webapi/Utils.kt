@@ -31,7 +31,7 @@ object Utils {
     ): User? =
         request
             .header("Authorization")
-            ?.let { token -> Uuid.parse(token) }
+            ?.let { token -> Token(Uuid.parse(token)) }
             ?.let { userToken -> validateUser(userToken) }
 
     fun runWithExceptionHandling(block: () -> Unit) {

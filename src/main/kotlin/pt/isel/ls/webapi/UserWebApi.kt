@@ -18,17 +18,17 @@ import kotlin.uuid.ExperimentalUuidApi
 /**
  * This is the User Management Api, where you can see details about a user or create one.
  */
-@OptIn(ExperimentalUuidApi::class)
 class UserWebApi(
     private val userService: UserService,
 ) {
     fun createUser(request: Request): Response {
         Utils.logRequest(request)
         val input = Json.decodeFromString<UserInput>(request.bodyString())
-        return when (val user = userService.createUser(Name(input.name), Email(input.email))) {
-            is Failure -> Response(BAD_REQUEST).body("User already exists")
-            is Success -> Response(CREATED).body(Json.encodeToString(UserOutput(user.value)))
-        }
+        return userService.createUser(Name(input.name), Email(input.email))
+            .fold(
+                onFailure = { Response(BAD_REQUEST).body("User already exists") },
+                onSuccess = { Response(CREATED).body(Json.encodeToString(UserOutput(it))) }
+            )
     }
 
     fun getUserInfo(request: Request): Response {
