@@ -37,11 +37,17 @@ interface RentalRepository : Repository<Rental> {
     fun findByCridAndDate(
         crid: UInt,
         date: LocalDate?,
+        limit: Int = 30,
+        offset: Int = 0,
     ): List<Rental>
 
     /**
      * Finds all the rentals of a renter.
      * @param renter The renter id.
      */
-    fun findAllRentalsByRenterId(renter: UInt): List<Rental>
+    fun findAllRentalsByRenterId(
+        renter: UInt,
+        limit: Int = 30,
+        offset: Int = 0,
+    ): List<Rental>
 }
