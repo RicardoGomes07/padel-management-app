@@ -13,7 +13,7 @@ import kotlinx.datetime.LocalDate
 data class Rental(
     val rid: UInt,
     val date: LocalDate,
-    val rentTime: IntRange,
+    val rentTime: TimeSlot,
     val renter: User,
     val court: Court,
 )

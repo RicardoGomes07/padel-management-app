@@ -19,7 +19,10 @@ interface Repository<T> {
      * Function that finds every element.
      * Returns a list with the elements (if no element is on the column yet, returns an empty list).
      */
-    fun findAll(): List<T>
+    fun findAll(
+        limit: Int = 10,
+        offset: Int = 0,
+    ): List<T>
 
     /**
      * Function that deletes an element.

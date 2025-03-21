@@ -1,6 +1,7 @@
 package pt.isel.ls.repository
 
 import pt.isel.ls.domain.Club
+import pt.isel.ls.domain.Name
 
 /**
  * Generic Interface for a Club repository that supports CRUD operations.
@@ -11,7 +12,7 @@ interface ClubRepository : Repository<Club> {
      * cid is automatically incremented so it's not received as a parameter to the function.
      */
     fun createClub(
-        name: String,
+        name: Name,
         ownerId: UInt,
     ): Club
 
@@ -20,5 +21,5 @@ interface ClubRepository : Repository<Club> {
      * @param name the name of the Club to search for.
      * @return the Club with the given name or null if it doesn't exist.
      */
-    fun findClubByName(name: String): Club?
+    fun findClubByName(name: Name): Club?
 }

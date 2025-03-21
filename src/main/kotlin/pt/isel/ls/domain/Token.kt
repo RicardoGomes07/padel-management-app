@@ -11,3 +11,9 @@ import kotlin.uuid.Uuid
 data class Token(
     val value: Uuid,
 )
+
+@OptIn(ExperimentalUuidApi::class)
+fun generateToken() = Token(Uuid.random())
+
+@OptIn(ExperimentalUuidApi::class)
+fun String.toToken() = Token(Uuid.parse(this))
