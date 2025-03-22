@@ -12,6 +12,7 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
 import org.http4k.routing.path
 import pt.isel.ls.domain.Name
 import pt.isel.ls.services.*
@@ -35,7 +36,13 @@ class CourtWebApi(
 
         return  courtService.createCourt(Name(input.name), (input.cid))
             .fold(
-                onFailure = { Response(BAD_REQUEST).body("Court already exists") },
+                onFailure = { ex ->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(CREATED).body(Json.encodeToString(CourtDetailsOutput(it))) }
             )
     }
@@ -49,7 +56,13 @@ class CourtWebApi(
         val skip = request.query("skip")?.toIntOrNull() ?: 0
         return courtService.getCourts(clubId, limit, skip)
             .fold(
-                onFailure = { Response(NOT_FOUND).body("No courts found") },
+                onFailure = { ex->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(OK).body(Json.encodeToString(it.toCourtsOutput())) }
             )
     }
@@ -61,7 +74,13 @@ class CourtWebApi(
         val courtId = request.path("crid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid court id")
         return courtService.getCourtById(courtId)
             .fold(
-                onFailure = { Response(NOT_FOUND).body("Court not found") },
+                onFailure = { ex ->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(OK).body(Json.encodeToString(CourtDetailsOutput(it))) }
             )
     }

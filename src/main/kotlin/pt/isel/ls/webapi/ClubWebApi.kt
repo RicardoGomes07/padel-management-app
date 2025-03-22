@@ -11,6 +11,7 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
 import org.http4k.routing.path
 import pt.isel.ls.domain.Name
 import pt.isel.ls.services.*
@@ -34,7 +35,13 @@ class ClubWebApi(
                 ?: return Response(UNAUTHORIZED).body("No Authorization")
         return clubService.createClub(Name(input.name), user)
             .fold(
-              onFailure =  { Response(BAD_REQUEST).body("Club already exists") },
+              onFailure =  { ex ->
+                  when(ex) {
+                    is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                    is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                    else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                  }
+               },
               onSuccess =  { Response(CREATED).body(Json.encodeToString(ClubDetailsOutput(it))) }
             )
     }
@@ -47,7 +54,13 @@ class ClubWebApi(
         val skip = request.query("skip")?.toIntOrNull() ?: 0
         return clubService.getClubs(limit, skip)
             .fold(
-              onFailure =  { Response(NOT_FOUND).body("No clubs found") },
+              onFailure =  { ex ->
+                  when(ex) {
+                      is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                  }
+               },
               onSuccess =  { Response(OK).body(Json.encodeToString(it.toClubsOutput())) }
             )
     }
@@ -59,7 +72,13 @@ class ClubWebApi(
         val clubId = request.path("cid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid club id")
         return clubService.getClubById(clubId)
             .fold(
-              onFailure =  { Response(NOT_FOUND).body("Club not found") },
+              onFailure =  { ex ->
+                  when(ex){
+                      is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                      is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                      else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                  }
+               },
               onSuccess =  { Response(OK).body(Json.encodeToString(ClubDetailsOutput(it))) }
             )
     }
@@ -78,7 +97,13 @@ class ClubWebApi(
                 ?: return Response(BAD_REQUEST).body("Invalid date")
         return rentalService.getAvailableHours(courtId, date)
             .fold(
-              onFailure =  { Response(NOT_FOUND).body("No available hours found") },
+              onFailure =  { ex->
+                  when(ex){
+                      is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                      is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                      else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                  }
+               },
               onSuccess =  { Response(OK).body(Json.encodeToString(it)) }
             )
     }

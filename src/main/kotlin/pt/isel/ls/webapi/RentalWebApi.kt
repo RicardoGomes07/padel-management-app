@@ -9,6 +9,7 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
+import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.services.RentalService
@@ -31,7 +32,13 @@ class RentalWebApi(
             ?: return Response(UNAUTHORIZED).body("No Authorization")
         return rentalService.createRental(input.date, TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt()), input.cid.toUInt(), input.crid.toUInt())
             .fold(
-                onFailure = { Response(BAD_REQUEST).body("Rental already exists") },
+                onFailure = { ex->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) }
             )
     }
@@ -46,7 +53,13 @@ class RentalWebApi(
         val skip = request.query("skip")?.toIntOrNull() ?: 0
         return rentalService.getRentals(courtId, date, limit, skip)
             .fold(
-                onFailure = { Response(NOT_FOUND).body("Rentals not found") },
+                onFailure = { ex->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) }
             )
     }
@@ -60,7 +73,13 @@ class RentalWebApi(
         val skip = request.query("skip")?.toIntOrNull() ?: 0
         return rentalService.getUserRentals(userInfo.uid, limit, skip)
             .fold(
-                onFailure = { Response(NOT_FOUND).body("Rentals not found") },
+                onFailure = { ex->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) }
             )
     }
@@ -72,7 +91,13 @@ class RentalWebApi(
         val rentalId = request.path("rid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid rental id")
         return rentalService.getRentalById(rentalId)
             .fold(
-                onFailure = { Response(NOT_FOUND).body("Rental not found") },
+                onFailure = { ex->
+                    when(ex){
+                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
+                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
+                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
+                    }
+                },
                 onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) }
             )
     }

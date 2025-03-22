@@ -1,6 +1,9 @@
 package pt.isel.ls.webapi
 
 import junit.framework.TestCase.assertEquals
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.http4k.client.OkHttp
 import org.http4k.core.Method
 import org.http4k.core.Request
@@ -17,7 +20,7 @@ class UserWebApiTests {
             .body("""{"name":"Riczão", "email":"riczao@gmail.com"}""")
         val response = client(request)
 
-        assertEquals(Status.OK, response.status)
+        assertEquals(Status.CREATED, response.status)
         assertEquals("Expected Response Body", response.bodyString())
     }
 
@@ -27,7 +30,7 @@ class UserWebApiTests {
             .header("Content-Type", "application/json")
             .body("""{"name":"Ric", "email":"ric@gmail.com"}""")
         val response = client(request)
-        assertEquals(Status.OK, response.status)
+        assertEquals(Status.CREATED, response.status)
 
         val request1 = Request(Method.POST, "http://localhost:8080/users")
             .header("Content-Type", "application/json")
@@ -51,12 +54,14 @@ class UserWebApiTests {
             .header("Content-Type", "application/json")
             .body("""{"name":"Ric", "email":"ric@gmail.com"}""")
         val response = client(request)
-        assertEquals(Status.OK, response.status)
-        val token= response.bodyString().split("token")[1].split("\"")[2]
+        assertEquals(Status.CREATED, response.status)
 
+        val responseJson = Json.parseToJsonElement(response.bodyString()).jsonObject
+        val token = responseJson["token"]?.jsonPrimitive?.content ?: ""
         val getUserInfoRequest = Request(Method.GET, "http://localhost:8080/users/me")
             .header("Authorization", token)
         val getUserInfoResponse = client(getUserInfoRequest)
+        println(getUserInfoResponse.bodyString())
         assertEquals(Status.OK, getUserInfoResponse.status)
     }
 }
