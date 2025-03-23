@@ -11,12 +11,10 @@ object ClubRepositoryInMem : ClubRepository {
     private var currId = 0u
 
     override fun createClub(
-        name: String,
+        name: Name,
         ownerId: UInt,
     ): Club {
-        val validName = Name(name)
-
-        require(clubs.all { it.name != validName })
+        require(clubs.all { it.name != name })
 
         currId += 1u
 
@@ -27,7 +25,7 @@ object ClubRepositoryInMem : ClubRepository {
         val club =
             Club(
                 cid = currId,
-                name = validName,
+                name = name,
                 owner = owner,
             )
 
@@ -35,10 +33,7 @@ object ClubRepositoryInMem : ClubRepository {
         return club
     }
 
-    override fun findClubByName(name: String): Club? {
-        val validName = Name(name)
-        return clubs.firstOrNull { it.name == validName }
-    }
+    override fun findClubByName(name: Name): Club? = clubs.firstOrNull { it.name == name }
 
     override fun save(element: Club) {
         clubs.removeIf { it.cid == element.cid }
@@ -47,7 +42,10 @@ object ClubRepositoryInMem : ClubRepository {
 
     override fun findByIdentifier(id: UInt): Club? = clubs.firstOrNull { it.cid == id }
 
-    override fun findAll(): List<Club> = clubs
+    override fun findAll(
+        limit: Int,
+        offset: Int,
+    ): List<Club> = clubs.drop(offset).take(limit)
 
     override fun deleteByIdentifier(id: UInt) {
         clubs.removeIf { it.cid == id }

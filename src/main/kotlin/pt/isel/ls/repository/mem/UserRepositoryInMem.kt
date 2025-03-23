@@ -1,16 +1,10 @@
-@file:OptIn(ExperimentalUuidApi::class)
+@file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.repository.mem
 
-import pt.isel.ls.domain.Email
-import pt.isel.ls.domain.Name
-import pt.isel.ls.domain.Token
-import pt.isel.ls.domain.User
+import pt.isel.ls.domain.*
 import pt.isel.ls.repository.UserRepository
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 object UserRepositoryInMem : UserRepository {
     val users = mutableListOf<User>()
 
@@ -22,20 +16,20 @@ object UserRepositoryInMem : UserRepository {
     ): User {
         require(users.all { it.email != email })
         currId += 1u
-        val value = Uuid.random()
+        val token = generateToken()
         val user =
             User(
                 uid = currId,
                 name = name,
                 email = email,
-                token = Token(value),
+                token = token,
             )
 
         users.add(user)
         return user
     }
 
-    override fun findUserByToken(token: Token): User? = users.firstOrNull { it.token.value == token.value }
+    override fun findUserByToken(token: Token): User? = users.firstOrNull { it.token == token }
 
     override fun save(element: User) {
         users.removeIf { it.uid == element.uid }
@@ -44,7 +38,10 @@ object UserRepositoryInMem : UserRepository {
 
     override fun findByIdentifier(id: UInt): User? = users.firstOrNull { it.uid == id }
 
-    override fun findAll(): List<User> = users
+    override fun findAll(
+        limit: Int,
+        offset: Int,
+    ): List<User> = users.drop(offset).take(limit)
 
     override fun deleteByIdentifier(id: UInt) {
         users.removeIf { it.uid == id }

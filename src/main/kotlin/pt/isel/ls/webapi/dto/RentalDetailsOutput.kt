@@ -22,7 +22,7 @@ data class RentalDetailsOutput(
                 rental.court,
             ),
             rental.date,
-            rental.rentTime.first,
-            rental.rentTime.last,
+            rental.rentTime.start.toInt(),
+            rental.rentTime.end.toInt(),
         )
 }

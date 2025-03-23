@@ -24,3 +24,37 @@ tasks.register<Copy>("copyRuntimeDependencies") {
     into("build/libs")
     from(configurations.runtimeClasspath)
 }
+
+tasks.named<Test>("test") {
+    environment("DB_URL", "jdbc:postgresql://localhost:5439/db?user=dbuser&password=changeit")
+    dependsOn("dbTestsWait")
+    finalizedBy("dbTestsDown")
+}
+
+val dockerDir: Directory = project.layout.projectDirectory.dir("src/test/docker/")
+val dockerComposePath = dockerDir.file("docker-compose.yml").toString()
+
+task<Exec>("dbTestsUp") {
+    commandLine(
+        "docker",
+        "compose",
+        "-p",
+        "padel-courts",
+        "-f",
+        dockerComposePath,
+        "up",
+        "-d",
+        "--build",
+        "--force-recreate",
+        "padel-courts-db",
+    )
+}
+
+task<Exec>("dbTestsWait") {
+    commandLine("docker", "exec", "padel-courts-db", "/app/bin/wait-for-postgres.sh", "localhost")
+    dependsOn("dbTestsUp")
+}
+
+task<Exec>("dbTestsDown") {
+    commandLine("docker", "compose", "-p", "padel-courts", "-f", dockerComposePath, "down", "padel-courts-db")
+}

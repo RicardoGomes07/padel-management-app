@@ -1,0 +1,32 @@
+drop table if exists users;
+drop table if exists clubs;
+drop table if exists courts;
+drop table if exists rentals;
+
+create table users (
+    uid serial primary key,
+    name varchar(255) not null,
+    email varchar(255) unique not null,
+    token text unique not null
+);
+
+create table clubs (
+    cid serial primary key,
+    name varchar(80) unique not null,
+    owner int references users(uid) on update cascade on delete set null
+);
+
+create table courts (
+    crid serial primary key,
+    name varchar(255) not null,
+    club_id int references clubs(cid) on update cascade on delete cascade
+);
+
+create table rentals (
+    rid serial primary key,
+    date_ int not null,
+    rd_start int not null,
+    rd_end int not null,
+    renter_id int references users(uid) on update cascade on delete set null,
+    court_id int references courts(cid) on update cascade on delete set null
+);

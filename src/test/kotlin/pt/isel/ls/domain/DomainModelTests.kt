@@ -1,12 +1,9 @@
 package pt.isel.ls.domain
 
-import org.junit.Test
+import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 class DomainModelTests {
     @Test
     fun testCreateUser_with_wrongEmail() {
@@ -15,7 +12,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name("Ricardo"),
                 email = Email("ric.gmail.com"),
-                token = Uuid.random(),
+                token = generateToken(),
             )
         }
     }
@@ -27,7 +24,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name(""),
                 email = Email("ric@gmail.com"),
-                token = Uuid.random(),
+                token = generateToken(),
             )
         }
     }
@@ -39,7 +36,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name("Ricardo"),
                 email = Email("ric@gmail.com"),
-                token = Uuid.random(),
+                token = generateToken(),
             ),
         )
     }

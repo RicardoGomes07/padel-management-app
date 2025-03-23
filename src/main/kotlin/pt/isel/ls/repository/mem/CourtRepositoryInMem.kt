@@ -31,7 +31,11 @@ object CourtRepositoryInMem : CourtRepository {
         return court
     }
 
-    override fun findByClubIdentifier(cid: UInt): List<Court> = courts.filter { it.club.cid == cid }
+    override fun findByClubIdentifier(
+        cid: UInt,
+        limit: Int,
+        offset: Int,
+    ): List<Court> = courts.filter { it.club.cid == cid }.drop(offset).take(limit)
 
     override fun save(element: Court) {
         courts.removeIf { it.crid == element.crid }
@@ -40,7 +44,10 @@ object CourtRepositoryInMem : CourtRepository {
 
     override fun findByIdentifier(id: UInt): Court? = courts.firstOrNull { it.crid == id }
 
-    override fun findAll(): List<Court> = courts
+    override fun findAll(
+        limit: Int,
+        offset: Int,
+    ): List<Court> = courts.drop(offset).take(limit)
 
     override fun deleteByIdentifier(id: UInt) {
         courts.removeIf { it.crid == id }

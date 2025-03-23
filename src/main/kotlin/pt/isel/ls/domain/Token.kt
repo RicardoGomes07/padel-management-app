@@ -10,7 +10,9 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 data class Token(
     val value: Uuid,
-)
+) {
+    override fun toString(): String = value.toString()
+}
 
 @OptIn(ExperimentalUuidApi::class)
 fun generateToken() = Token(Uuid.random())

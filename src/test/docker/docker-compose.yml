@@ -1,0 +1,13 @@
+services:
+  padel-courts-db:
+    container_name: padel-courts-db
+    build:
+      # Change to parent folder
+      context: ../../..
+      dockerfile: src/test/docker/Dockerfile-padel-courts-db
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=changeit
+      - POSTGRES_DB=db
+    ports:
+      - "5439:5432" # Map the host port 5439 to the container port 5432
