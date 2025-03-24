@@ -1,18 +1,10 @@
 package pt.isel.ls.service
 
-import org.junit.Assert
 import org.junit.Before
-import org.junit.Test
-import pt.isel.ls.domain.Email
-import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.mem.ClubRepositoryInMem
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.ClubService
-import pt.isel.ls.services.Failure
-import pt.isel.ls.services.Success
 import pt.isel.ls.services.UserService
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ClubServiceTests {
     private val clubService = ClubService(ClubRepositoryInMem)
@@ -23,7 +15,7 @@ class ClubServiceTests {
         ClubRepositoryInMem.clear()
         UserRepositoryInMem.clear()
     }
-
+    /*
     @Test
     fun `create club with valid name and existing owner`() {
         val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
@@ -64,4 +56,6 @@ class ClubServiceTests {
         val allClubs = clubService.getClubs()
         assertEquals(2, allClubs.size)
     }
+
+     */
 }

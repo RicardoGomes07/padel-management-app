@@ -10,3 +10,5 @@ value class Name(
         require(value.validateName())
     }
 }
+
+fun String.toName() = Name(this)

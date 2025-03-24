@@ -10,7 +10,7 @@ import kotlin.test.*
 
 val DB_URL = System.getenv("DB_URL") ?: throw Exception("Missing env var DB_URL")
 
-class UserRespoitoryTests {
+class UserRepositoryTests {
     private val connection: Connection = DriverManager.getConnection(DB_URL)
     private val userRepository = UserRepositoryJdbc(connection)
 

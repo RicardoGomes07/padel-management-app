@@ -30,16 +30,21 @@ class RentalWebApi(
         val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
-        return rentalService.createRental(input.date, TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt()), input.cid.toUInt(), input.crid.toUInt())
-            .fold(
-                onFailure = { ex->
-                    when(ex){
+        return rentalService
+            .createRental(
+                input.date,
+                TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt()),
+                input.cid.toUInt(),
+                input.crid.toUInt(),
+            ).fold(
+                onFailure = { ex ->
+                    when (ex) {
                         is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
                         is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
                         else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
                     }
                 },
-                onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) }
+                onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) },
             )
     }
 
@@ -51,16 +56,17 @@ class RentalWebApi(
         val date = request.query("date")?.let { LocalDate.parse(it) }
         val limit = request.query("limit")?.toIntOrNull() ?: 10
         val skip = request.query("skip")?.toIntOrNull() ?: 0
-        return rentalService.getRentals(courtId, date, limit, skip)
+        return rentalService
+            .getRentals(courtId, date, limit, skip)
             .fold(
-                onFailure = { ex->
-                    when(ex){
+                onFailure = { ex ->
+                    when (ex) {
                         is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
                         is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
                         else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
                     }
                 },
-                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) }
+                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
             )
     }
 
@@ -71,16 +77,17 @@ class RentalWebApi(
                 ?: return Response(UNAUTHORIZED).body("No Authorization")
         val limit = request.query("limit")?.toIntOrNull() ?: 10
         val skip = request.query("skip")?.toIntOrNull() ?: 0
-        return rentalService.getUserRentals(userInfo.uid, limit, skip)
+        return rentalService
+            .getUserRentals(userInfo.uid, limit, skip)
             .fold(
-                onFailure = { ex->
-                    when(ex){
+                onFailure = { ex ->
+                    when (ex) {
                         is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
                         is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
                         else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
                     }
                 },
-                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) }
+                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
             )
     }
 
@@ -89,16 +96,17 @@ class RentalWebApi(
         Utils.verifyAndValidateUser(request, userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
         val rentalId = request.path("rid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid rental id")
-        return rentalService.getRentalById(rentalId)
+        return rentalService
+            .getRentalById(rentalId)
             .fold(
-                onFailure = { ex->
-                    when(ex){
+                onFailure = { ex ->
+                    when (ex) {
                         is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
                         is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
                         else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
                     }
                 },
-                onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) }
+                onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
             )
     }
 }

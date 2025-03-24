@@ -13,3 +13,5 @@ value class Email(
         require(value.validateEmail())
     }
 }
+
+fun String.toEmail(): Email = Email(this)

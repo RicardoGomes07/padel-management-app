@@ -8,3 +8,5 @@ data class TimeSlot(
         require(start < end && end < 24u)
     }
 }
+
+fun IntRange.toTimeSlot(): TimeSlot = TimeSlot(start.toUInt(), endInclusive.toUInt())

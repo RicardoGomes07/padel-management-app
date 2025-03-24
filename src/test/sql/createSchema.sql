@@ -28,5 +28,5 @@ create table rentals (
     rd_start int not null,
     rd_end int not null,
     renter_id int references users(uid) on update cascade on delete set null,
-    court_id int references courts(cid) on update cascade on delete set null
+    court_id int references courts(crid) on update cascade on delete set null
 );
