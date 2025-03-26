@@ -40,13 +40,13 @@ class UserRepositoryTests {
     @Test
     fun `user creation with invalid Email`() {
         implementations.forEach { userRepo ->
-            if(userRepo == userRepoJdbc) {
+            if (userRepo == userRepoJdbc) {
                 userRepo.createUser("user".toName(), "user@email.com".toEmail())
                 assertFailsWith<IllegalArgumentException> {
                     userRepo.createUser("user".toName(), "user@email.com".toEmail())
                 }
             }
-            /*assertEquals(1, userRepo.findAll().size)*/
+            // assertEquals(1, userRepo.findAll().size)
         }
     }
 

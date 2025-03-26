@@ -6,10 +6,8 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.CREATED
-import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.core.Status.Companion.UNAUTHORIZED
-import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.services.RentalService
@@ -26,10 +24,15 @@ class RentalWebApi(
     private val userService: UserService,
 ) {
     fun createRental(request: Request): Response {
-        Utils.logRequest(request)
-        val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
-        Utils.verifyAndValidateUser(request, userService::validateUser)
+        request.log()
+        request.validateUser(userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
+
+        val input =
+            validateUserInput {
+                Json.decodeFromString<RentalCreationInput>(request.bodyString())
+            }.getOrElse { ex -> return handleUserInputError(ex) }
+
         return rentalService
             .createRental(
                 input.date,
@@ -37,75 +40,57 @@ class RentalWebApi(
                 input.cid.toUInt(),
                 input.crid.toUInt(),
             ).fold(
-                onFailure = { ex ->
-                    when (ex) {
-                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
-                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
-                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
-                    }
-                },
+                onFailure = { ex -> ex.toResponse() },
                 onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) },
             )
     }
 
     fun getAllRentals(request: Request): Response {
-        Utils.logRequest(request)
-        Utils.verifyAndValidateUser(request, userService::validateUser)
+        request.log()
+        request.validateUser(userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val courtId = request.path("crid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid court id")
+        val courtId =
+            request.path("crid")?.toUIntOrNull()
+                ?: return Response(BAD_REQUEST).body("Invalid court id")
         val date = request.query("date")?.let { LocalDate.parse(it) }
-        val limit = request.query("limit")?.toIntOrNull() ?: 10
-        val skip = request.query("skip")?.toIntOrNull() ?: 0
+        val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
+        val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
+
         return rentalService
             .getRentals(courtId, date, limit, skip)
             .fold(
-                onFailure = { ex ->
-                    when (ex) {
-                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
-                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
-                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
-                    }
-                },
+                onFailure = { ex -> ex.toResponse() },
                 onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
             )
     }
 
     fun getUserRentals(request: Request): Response {
-        Utils.logRequest(request)
+        request.log()
         val userInfo =
-            Utils.verifyAndValidateUser(request, userService::validateUser)
+            request.validateUser(userService::validateUser)
                 ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val limit = request.query("limit")?.toIntOrNull() ?: 10
-        val skip = request.query("skip")?.toIntOrNull() ?: 0
+        val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
+        val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
+
         return rentalService
             .getUserRentals(userInfo.uid, limit, skip)
             .fold(
-                onFailure = { ex ->
-                    when (ex) {
-                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
-                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
-                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
-                    }
-                },
+                onFailure = { ex -> ex.toResponse() },
                 onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
             )
     }
 
     fun getRentalInfo(request: Request): Response {
-        Utils.logRequest(request)
-        Utils.verifyAndValidateUser(request, userService::validateUser)
+        request.log()
+        request.validateUser(userService::validateUser)
             ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val rentalId = request.path("rid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid rental id")
+        val rentalId =
+            request.path("rid")?.toUIntOrNull()
+                ?: return Response(BAD_REQUEST).body("Invalid rental id")
         return rentalService
             .getRentalById(rentalId)
             .fold(
-                onFailure = { ex ->
-                    when (ex) {
-                        is IllegalStateException -> Response(NOT_FOUND).body(ex.message!!)
-                        is IllegalArgumentException -> Response(BAD_REQUEST).body(ex.message!!)
-                        else -> Response(UNPROCESSABLE_ENTITY).body(ex.message!!)
-                    }
-                },
+                onFailure = { ex -> ex.toResponse() },
                 onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
             )
     }

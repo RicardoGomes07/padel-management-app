@@ -48,7 +48,7 @@ class ClubRepositoryTests {
     @Test
     fun `create club with duplicate name should fail`() {
         implementations.forEach { (clubRepo, userRepo) ->
-            if(clubRepo == clubRepoJdbc) {
+            if (clubRepo == clubRepoJdbc) {
                 val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
                 clubRepo.createClub("The King of Padel".toName(), owner.uid)
 
@@ -71,7 +71,7 @@ class ClubRepositoryTests {
     @Test
     fun `find club by name`() {
         implementations.forEach { (clubRepo, userRepo) ->
-            if(userRepo == userRepoJdbc){
+            if (userRepo == userRepoJdbc) {
                 val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
                 val club = clubRepo.createClub("Force Club".toName(), owner.uid)
 
@@ -128,7 +128,7 @@ class ClubRepositoryTests {
     @Test
     fun `save updates existing club`() {
         implementations.forEach { (clubRepo, userRepo) ->
-            if(clubRepo == clubRepoJdbc){
+            if (clubRepo == clubRepoJdbc) {
                 val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
                 val club = clubRepo.createClub("Fly Club".toName(), owner.uid)
 
