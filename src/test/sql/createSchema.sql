@@ -7,7 +7,8 @@ create table users (
     uid serial primary key,
     name varchar(255) not null,
     email varchar(255) unique not null,
-    token text unique not null
+    token text unique not null,
+    CONSTRAINT unique_email_token UNIQUE (email, token)
 );
 
 create table clubs (

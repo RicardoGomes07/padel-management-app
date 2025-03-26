@@ -142,10 +142,7 @@ class RentalRepositoryTests {
             val availableHours =
                 rentalRepo.findAvailableHoursForACourt(
                     court.crid,
-                    Clock.System
-                        .now()
-                        .toLocalDateTime(TimeZone.currentSystemDefault())
-                        .date,
+                    tomorrowDate,
                 )
 
             assertFalse(availableHours.contains(10.toUInt()))
@@ -195,7 +192,15 @@ class RentalRepositoryTests {
             val updatedRental = rental.copy(rentTime = TimeSlot(12U, 15U))
             rentalRepo.save(updatedRental)
 
-            val retrievedRental = rentalRepo.findByIdentifier(rental.rid)
+            val retrievedRental =
+                rentalRepo
+                    .findAll()
+                    .firstOrNull {
+                        it.date == updatedRental.date &&
+                            it.rentTime == updatedRental.rentTime &&
+                            it.renter == updatedRental.renter &&
+                            it.court == updatedRental.court
+                    }
             assertEquals((12..15).toTimeSlot(), retrievedRental?.rentTime)
         }
     }

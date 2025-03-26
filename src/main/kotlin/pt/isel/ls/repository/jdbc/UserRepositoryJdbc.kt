@@ -6,18 +6,34 @@ import pt.isel.ls.domain.*
 import pt.isel.ls.repository.UserRepository
 import java.sql.Connection
 import java.sql.ResultSet
-import java.sql.SQLException
 
+/**
+ * Repository in jdbc responsible for direct interactions with the database for users related actions
+ * @param connection The database connection for the SQL queries
+ */
 class UserRepositoryJdbc(
     private val connection: Connection,
 ) : UserRepository {
+    /**
+     * Function responsible for the creation of a user.
+     * @param name Name of the new User
+     * @param email Email of the new User
+     * @return The User created
+     * @throws IllegalArgumentException if the email is not unique
+     */
     override fun createUser(
         name: Name,
         email: Email,
     ): User {
         val token = generateToken()
 
-        val sqlInsert = "INSERT INTO users (name, email, token) VALUES (?, ?, ?) RETURNING *"
+        val sqlInsert =
+            """
+            INSERT INTO users (name, email, token)
+            VALUES (?, ?, ?)
+            ON CONFLICT (email) DO NOTHING
+            RETURNING *;
+            """.trimIndent()
 
         return connection.prepareStatement(sqlInsert).use { stmt ->
             stmt.setString(1, name.value)
@@ -25,15 +41,17 @@ class UserRepositoryJdbc(
             stmt.setString(3, token.toString())
 
             stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    rs.mapUser()
-                } else {
-                    throw SQLException("User creation failed, no ID obtained.")
-                }
+                require(rs.next()) { "User creation failed, email already exists." }
+                rs.mapUser()
             }
         }
     }
 
+    /**
+     * Function that finds a User by a given token.
+     * @param token The token to search respective user
+     * @return The respective User if found, otherwise null
+     */
     override fun findUserByToken(token: Token): User? {
         val sqlSelect = "SELECT * FROM users WHERE token = ?"
 
@@ -45,27 +63,36 @@ class UserRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that creates a new User or updates, with the information given, if one with the uid already exists.
+     * @param element User to be created or updated
+     */
     override fun save(element: User) {
-        val sqlUpdate =
+        val sqlSave =
             """
-            UPDATE users
-            SET name = ?, email = ?, token = ?
-            WHERE uid = ?
+            INSERT INTO users (name, email, token)
+            VALUES (?, ?, ?)
+            ON CONFLICT (email, token)
+            DO UPDATE SET
+                name = EXCLUDED.name,
+                email = EXCLUDED.email,
+                token = EXCLUDED.token;
             """.trimIndent()
 
-        connection.prepareStatement(sqlUpdate).use { stmt ->
+        connection.prepareStatement(sqlSave).use { stmt ->
             stmt.setString(1, element.name.value)
             stmt.setString(2, element.email.value)
             stmt.setString(3, element.token.toString())
-            stmt.setInt(4, element.uid.toInt())
 
-            // if no row was updated, there is no such user, so create one
-            if (stmt.executeUpdate() == 0) {
-                createUser(element.name, element.email)
-            }
+            stmt.executeUpdate()
         }
     }
 
+    /**
+     * Function that finds a User by its uid.
+     * @param id Identifier of the class, corresponding to the PK of the respective table, in this case uid
+     * @return User if found, otherwise null
+     */
     override fun findByIdentifier(id: UInt): User? {
         val sqlSelect = "SELECT * FROM users WHERE uid = ?"
 
@@ -78,6 +105,12 @@ class UserRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that returns limit elements after offset, from latest tuple to be created to oldest
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return List of Users retrieved
+     */
     override fun findAll(
         limit: Int,
         offset: Int,
@@ -103,6 +136,10 @@ class UserRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes a User if exists a tuple with the uid, if it doesn't exist, does nothing
+     * @param id Identifier of the User to delete
+     */
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM users WHERE uid = ?"
 
@@ -112,19 +149,27 @@ class UserRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes every entry of the table,
+     *  resets autoincremented values and any rows that have references to it
+     */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE users RESTART IDENTITY CASCADE"
         connection.prepareStatement(sqlDelete).use { stmt ->
             stmt.executeUpdate()
         }
     }
-
-    // Mapper for User
-    private fun ResultSet.mapUser(): User =
-        User(
-            uid = getInt("uid").toUInt(),
-            name = Name(getString("name")),
-            email = Email(getString("email")),
-            token = getString("token").toToken(),
-        )
 }
+
+/**
+ * Function that maps a ResultSet to a User, according to the name dictionary defined,
+ *  in this case default name of Columns
+ * @return The mapped User
+ */
+fun ResultSet.mapUser(): User =
+    User(
+        uid = getInt("uid").toUInt(),
+        name = getString("name").toName(),
+        email = getString("email").toEmail(),
+        token = getString("token").toToken(),
+    )

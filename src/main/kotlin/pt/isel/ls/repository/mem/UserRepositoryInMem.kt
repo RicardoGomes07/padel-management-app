@@ -33,7 +33,15 @@ object UserRepositoryInMem : UserRepository {
 
     override fun save(element: User) {
         users.removeIf { it.uid == element.uid }
-        users.add(element)
+        currId += 1u
+        users.add(
+            User(
+                currId,
+                element.name,
+                element.email,
+                element.token,
+            ),
+        )
     }
 
     override fun findByIdentifier(id: UInt): User? = users.firstOrNull { it.uid == id }

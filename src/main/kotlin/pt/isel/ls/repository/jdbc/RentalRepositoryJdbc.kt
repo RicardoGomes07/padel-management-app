@@ -2,63 +2,118 @@
 
 package pt.isel.ls.repository.jdbc
 
-import kotlinx.datetime.LocalDate
+import kotlinx.datetime.*
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.RentalRepository
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
 
+/**
+ * Repository in jdbc responsible for direct interactions with the database for rentals related actions
+ * @param connection The database connection for the SQL queries
+ */
 class RentalRepositoryJdbc(
     private val connection: Connection,
 ) : RentalRepository {
+    /**
+     * Function responsible for the creation of a club.
+     * @param date Day of the rental
+     * @param rentTime TimeSlot of hours that the rental will take
+     * @param renterId User that is renting
+     * @param courtId Court being rented
+     * @return The Rental created
+     * @throws IllegalArgumentException If the date is not in the future or if the renter and/ or the court don't exist
+     */
     override fun createRental(
         date: LocalDate,
         rentTime: TimeSlot,
         renterId: UInt,
         courtId: UInt,
     ): Rental {
-        val sqlInsert =
-            """
-            WITH inserted ir AS (
-                INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id) values (?, ?, ?, ?, ?)
-                RETURNING *
-            )
-            SELECT *
-            FROM inserted ir
-            LEFT JOIN users u WHERE ir.renter_id = u.uid
-            LEFT JOIN courts cr WHERE ir.court_id = cr.crid
-            LEFT JOIN clubs c WHERE cr.club_id = c.cid
-            """.trimIndent()
+        try {
+            require(isInTheFuture(date, rentTime.start.toInt()))
 
-        return connection.prepareStatement(sqlInsert).use { stmt ->
-            stmt.setInt(1, date.toEpochDays())
-            stmt.setInt(2, rentTime.start.toInt())
-            stmt.setInt(3, rentTime.end.toInt())
-            stmt.setInt(4, renterId.toInt())
-            stmt.setInt(5, courtId.toInt())
+            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
+            connection.autoCommit = false
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    rs.mapRental()
-                } else {
-                    throw SQLException("User creation failed, no ID obtained.")
+            val sqlSelectRenter =
+                """
+                SELECT * FROM users WHERE uid = ?
+                """.trimIndent()
+
+            val renter =
+                connection.prepareStatement(sqlSelectRenter).use { stmt ->
+                    stmt.setInt(1, renterId.toInt())
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next()) { "No User with such id." }
+                        rs.mapUser()
+                    }
                 }
-            }
+
+            val sqlSelectCourt =
+                """
+                ${courtSqlReturnFormat()}
+                WHERE cr.crid = ?
+                """.trimIndent()
+
+            val court =
+                connection.prepareStatement(sqlSelectCourt).use { stmt ->
+                    stmt.setInt(1, courtId.toInt())
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next()) { "No court with such id." }
+                        rs.mapCourt()
+                    }
+                }
+
+            val sqlInsert =
+                """
+                INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id) values (?, ?, ?, ?, ?)
+                RETURNING rid as rental_id, date_ as rental_date, rd_start as rental_start, rd_end as rental_end,
+                    renter_id, court_id
+                """.trimIndent()
+
+            val newRental =
+                connection.prepareStatement(sqlInsert).use { stmt ->
+                    stmt.setInt(1, date.toEpochDays())
+                    stmt.setInt(2, rentTime.start.toInt())
+                    stmt.setInt(3, rentTime.end.toInt())
+                    stmt.setInt(4, renterId.toInt())
+                    stmt.setInt(5, courtId.toInt())
+
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next())
+                        rs.mapRental(renter, court)
+                    }
+                }
+
+            connection.commit()
+
+            return newRental
+        } catch (e: SQLException) {
+            connection.rollback()
+            throw e
+        } finally {
+            connection.autoCommit = true
+            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
     }
 
+    /**
+     * Function that finds all available hours of a court for the given day
+     * @param crid The court to look for available hours
+     * @param date Day to search for available hours
+     * @return The list of available hours
+     */
     override fun findAvailableHoursForACourt(
         crid: UInt,
         date: LocalDate,
     ): List<UInt> {
         val sqlSelect =
             """
-            SELECT * FROM rentals ir WHERE ir.date = ?
-            LEFT JOIN users u WHERE ir.renter_id = u.uid
-            LEFT JOIN courts cr WHERE ir.court_id = cr.crid
-            LEFT JOIN clubs c WHERE cr.club_id = c.cid
-            ORDER BY ir.rd_start ASC
+            ${rentalSqlReturnFormat()}
+            WHERE r.date_ = ?
+            ORDER BY r.rd_start ASC
             """.trimIndent()
 
         val rentalsOnDate =
@@ -79,11 +134,19 @@ class RentalRepositoryJdbc(
         return hoursRange
             .filter { hour ->
                 rentalsOnDate.none { rental ->
-                    hour in rental.rentTime.start..rental.rentTime.end
+                    hour in rental.rentTime.start..<rental.rentTime.end
                 }
             }
     }
 
+    /**
+     * Function that finds all rentals for a given day for a given court.
+     * @param crid The court to search for rentals in
+     * @param date The day to search for rentals in
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return The list of rentals found
+     */
     override fun findByCridAndDate(
         crid: UInt,
         date: LocalDate?,
@@ -91,26 +154,21 @@ class RentalRepositoryJdbc(
         offset: Int,
     ): List<Rental> {
         val sqlSelect =
-
             """
-            SELECT * FROM rentals ir WHERE ir.crid = ?
-            """ +
-                (
-                    if (date != null) {
-                        """
-                        AND ir.date_ = ?
-                        """.trimIndent()
-                    } else {
-                        ""
-                    }
-                ) +
-                """
-                LEFT JOIN users u WHERE ir.renter_id = u.uid
-                LEFT JOIN courts cr WHERE ir.court_id = cr.crid
-                LEFT JOIN clubs c WHERE cr.club_id = c.cid
-                ORDER BY ir.date ASC, ir.rd_start ASC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+            ${rentalSqlReturnFormat()}
+            WHERE r.court_id = ?
+            ${(
+                if (date != null) {
+                    """
+                    AND r.date_ = ?
+                    """.trimIndent()
+                } else {
+                    ""
+                }
+            )}
+            ORDER BY r.date_ ASC, r.rd_start ASC
+            LIMIT ? OFFSET ?
+            """.trimIndent()
 
         return connection.prepareStatement(sqlSelect).use { stmt ->
             stmt.setInt(1, crid.toInt())
@@ -135,6 +193,13 @@ class RentalRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that finds 'limit' rentals, skipping first 'offset', of a user.
+     * @param renter The User to search rentals of
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return The list of rentals found
+     */
     override fun findAllRentalsByRenterId(
         renter: UInt,
         limit: Int,
@@ -142,11 +207,9 @@ class RentalRepositoryJdbc(
     ): List<Rental> {
         val sqlSelect =
             """
-            SELECT * FROM rentals ir WHERE ir.renter_id = ?
-            LEFT JOIN users u WHERE ir.renter_id = u.uid
-            LEFT JOIN courts cr WHERE ir.court_id = cr.crid
-            LEFT JOIN clubs c WHERE cr.club_id = c.cid
-            ORDER BY ir.date DESC, ir.rd_start ASC
+            ${rentalSqlReturnFormat()}
+            WHERE r.renter_id = ?
+            ORDER BY r.date_ DESC, r.rd_start ASC
             LIMIT ? OFFSET ?
             """.trimIndent()
 
@@ -165,36 +228,46 @@ class RentalRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that creates a new rental or updates, with the information given, if one with the rid already exists.
+     * @param element rental to be created or updated
+     */
     override fun save(element: Rental) {
-        val sqlUpdate =
+        val sqlSave =
             """
-            UPDATE rentals
-            SET date_ = ?, rd_start = ?, rd_end = ?, renter_id = ?, court_id = ?
-            WHERE uid = ?
+            INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id)
+            VALUES (?, ?, ?, ? ,?)
+            ON CONFLICT (rid)
+            DO UPDATE SET
+                date_ = EXCLUDED.date_,
+                rd_start = EXCLUDED.rd_start,
+                rd_end = EXCLUDED.rd_end,
+                renter_id = EXCLUDED.renter_id,
+                court_id = EXCLUDED.court_id;
             """.trimIndent()
 
-        connection.prepareStatement(sqlUpdate).use { stmt ->
+        connection.prepareStatement(sqlSave).use { stmt ->
             stmt.setInt(1, element.date.toEpochDays())
             stmt.setInt(2, element.rentTime.start.toInt())
             stmt.setInt(3, element.rentTime.end.toInt())
             stmt.setInt(4, element.renter.uid.toInt())
             stmt.setInt(5, element.court.crid.toInt())
 
-            // if no row was updated, there is no such user, so create one
-            if (stmt.executeUpdate() == 0) {
-                createRental(element.date, element.rentTime, element.renter.uid, element.court.crid)
-            }
+            stmt.executeUpdate()
         }
     }
 
+    /**
+     * Function that finds a rental by its rid.
+     * @param id Identifier of the class, corresponding to the PK of the respective table, in this case rid
+     * @return Rental if found, otherwise null
+     */
     override fun findByIdentifier(id: UInt): Rental? {
         val sqlSelect =
             """
-            SELECT * FROM rentals ir WHERE ir.rid = ?
-            LEFT JOIN users u WHERE ir.renter_id = u.uid
-            LEFT JOIN courts cr WHERE ir.court_id = cr.crid
-            LEFT JOIN clubs c WHERE cr.club_id = c.cid
-            ORDER BY ir.date DESC, ir.rd_start ASC
+            ${rentalSqlReturnFormat()}
+            WHERE r.rid = ?
+            ORDER BY r.date_ DESC, r.rd_start ASC
             """.trimIndent()
 
         return connection.prepareStatement(sqlSelect).use { stmt ->
@@ -206,17 +279,20 @@ class RentalRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that returns limit elements after offset, from latest tuple to be created to oldest
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return List of Rentals retrieved
+     */
     override fun findAll(
         limit: Int,
         offset: Int,
     ): List<Rental> {
         val sqlSelect =
             """
-            SELECT * FROM rentals ir
-            LEFT JOIN users u WHERE ir.renter_id = u.uid
-            LEFT JOIN courts cr WHERE ir.court_id = cr.crid
-            LEFT JOIN clubs c WHERE cr.club_id = c.cid
-            ORDER BY ir.date DESC, ir.rd_start ASC
+            ${rentalSqlReturnFormat()}
+            ORDER BY r.date_ DESC, r.rd_start ASC
             LIMIT ? OFFSET ?
             """.trimIndent()
 
@@ -234,6 +310,10 @@ class RentalRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes a rental if exists a tuple with the rid, if it doesn't exist, does nothing
+     * @param id Identifier of the Rental to delete
+     */
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM rentals WHERE rid = ?"
 
@@ -243,45 +323,118 @@ class RentalRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes every entry of the table,
+     *  resets autoincremented values and any rows that have references to it
+     */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE rentals RESTART IDENTITY CASCADE"
         connection.prepareStatement(sqlDelete).use { stmt ->
             stmt.executeUpdate()
         }
     }
-
-    private fun ResultSet.mapRental(): Rental =
-        Rental(
-            rid = getInt("ir.rid").toUInt(),
-            date = LocalDate.fromEpochDays(getInt("ir.date_")),
-            rentTime =
-                TimeSlot(
-                    getInt("ir.rd_start").toUInt(),
-                    getInt("ir.rd_end").toUInt(),
-                ),
-            renter =
-                User(
-                    uid = getInt("u.uid").toUInt(),
-                    name = Name(getString("u.name")),
-                    email = Email(getString("u.email")),
-                    token = getString("u.token").toToken(),
-                ),
-            court =
-                Court(
-                    crid = getInt("cr.crid").toUInt(),
-                    name = Name(getString("cr.name")),
-                    club =
-                        Club(
-                            cid = getInt("c.cid").toUInt(),
-                            name = Name(getString("c.name")),
-                            owner =
-                                User(
-                                    uid = getInt("co.uid").toUInt(),
-                                    name = Name(getString("co.name")),
-                                    email = Email(getString("co.email")),
-                                    token = getString("co.token").toToken(),
-                                ),
-                        ),
-                ),
-        )
 }
+
+/**
+ * Function that validates if a rental is in the future.
+ * @param date Day of the rental to check
+ * @param startHour Start hour of the rental to check
+ * @return True if it's in the future, otherwise false
+ */
+private fun isInTheFuture(
+    date: LocalDate,
+    startHour: Int,
+): Boolean {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val currentHour =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .hour
+
+    return when {
+        date > today -> true
+        date < today -> false
+        else -> startHour > currentHour
+    }
+}
+
+/**
+ * Function with the default select query to retrieve a rental with the information of the renter and court
+ * @return the default select query string
+ */
+private fun rentalSqlReturnFormat() =
+    """
+    SELECT r.rid as rental_id, r.date_ as rental_date, r.rd_start as rental_start, r.rd_end as rental_end,
+        u.uid as renter_id, u.name as renter_name, u.email as renter_email, u.token as renter_token,
+        cr.crid as court_id, cr.name as court_name,
+        c.cid as court_club_id, c.name as court_club_name,
+        u2.uid as court_club_owner_id, u2.name as court_club_owner_name, u2.email as court_club_owner_email, u2.token as court_club_owner_token
+    FROM rentals r
+    LEFT JOIN users u ON r.renter_id = u.uid
+    LEFT JOIN courts cr ON r.court_id = cr.crid
+    LEFT JOIN clubs c ON cr.club_id = c.cid
+    LEFT JOIN users u2 ON u2.uid = c.owner
+    """.trimIndent()
+
+/**
+ * Function that maps a ResultSet to a Rental, according to the name dictionary defined,
+ *  in this case the one defined in the default select query
+ * @return The mapped Rental
+ */
+private fun ResultSet.mapRental(): Rental =
+    Rental(
+        rid = getInt("rental_id").toUInt(),
+        date = LocalDate.fromEpochDays(getInt("rental_date")),
+        rentTime =
+            TimeSlot(
+                getInt("rental_start").toUInt(),
+                getInt("rental_end").toUInt(),
+            ),
+        renter =
+            User(
+                uid = getInt("renter_id").toUInt(),
+                name = getString("renter_name").toName(),
+                email = getString("renter_email").toEmail(),
+                token = getString("renter_token").toToken(),
+            ),
+        court =
+            Court(
+                crid = getInt("court_id").toUInt(),
+                name = getString("court_name").toName(),
+                club =
+                    Club(
+                        cid = getInt("court_club_id").toUInt(),
+                        name = getString("court_club_name").toName(),
+                        owner =
+                            User(
+                                uid = getInt("court_club_owner_id").toUInt(),
+                                name = getString("court_club_owner_name").toName(),
+                                email = getString("court_club_owner_email").toEmail(),
+                                token = getString("court_club_owner_token").toToken(),
+                            ),
+                    ),
+            ),
+    )
+
+/**
+ * Function that maps a ResultSet to a Rental, according to the name dictionary defined,
+ *  in this case the one defined in the default select query, doesn't read neither renter nor court through ResultSet
+ * @param renter User that is renting
+ * @param court Court being rented
+ * @return The mapped Rental
+ */
+private fun ResultSet.mapRental(
+    renter: User,
+    court: Court,
+) = Rental(
+    rid = getInt("rental_id").toUInt(),
+    date = LocalDate.fromEpochDays(getInt("rental_date")),
+    rentTime =
+        TimeSlot(
+            getInt("rental_start").toUInt(),
+            getInt("rental_end").toUInt(),
+        ),
+    renter = renter,
+    court = court,
+)

@@ -39,7 +39,14 @@ object CourtRepositoryInMem : CourtRepository {
 
     override fun save(element: Court) {
         courts.removeIf { it.crid == element.crid }
-        courts.add(element)
+        currId += 1u
+        courts.add(
+            Court(
+                crid = currId,
+                name = element.name,
+                club = element.club,
+            ),
+        )
     }
 
     override fun findByIdentifier(id: UInt): Court? = courts.firstOrNull { it.crid == id }

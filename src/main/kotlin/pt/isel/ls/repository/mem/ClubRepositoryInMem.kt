@@ -37,7 +37,14 @@ object ClubRepositoryInMem : ClubRepository {
 
     override fun save(element: Club) {
         clubs.removeIf { it.cid == element.cid }
-        clubs.add(element)
+        currId += 1u
+        clubs.add(
+            Club(
+                cid = currId,
+                name = element.name,
+                owner = element.owner,
+            ),
+        )
     }
 
     override fun findByIdentifier(id: UInt): Club? = clubs.firstOrNull { it.cid == id }

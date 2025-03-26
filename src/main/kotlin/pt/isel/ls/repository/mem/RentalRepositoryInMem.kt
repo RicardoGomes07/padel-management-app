@@ -93,7 +93,7 @@ object RentalRepositoryInMem : RentalRepository {
         return hoursRange
             .filter { hour ->
                 rentalsOnDate.none { rental ->
-                    hour in rental.rentTime.start..rental.rentTime.end
+                    hour in rental.rentTime.start..<rental.rentTime.end
                 }
             }
     }
@@ -138,7 +138,16 @@ object RentalRepositoryInMem : RentalRepository {
      */
     override fun save(element: Rental) {
         rentals.removeIf { it.rid == element.rid }
-        rentals.add(element)
+        currId += 1u
+        rentals.add(
+            Rental(
+                rid = currId,
+                date = element.date,
+                rentTime = element.rentTime,
+                renter = element.renter,
+                court = element.court,
+            ),
+        )
     }
 
     /**

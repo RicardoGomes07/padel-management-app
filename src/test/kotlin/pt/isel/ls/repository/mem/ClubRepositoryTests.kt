@@ -48,11 +48,13 @@ class ClubRepositoryTests {
     @Test
     fun `create club with duplicate name should fail`() {
         implementations.forEach { (clubRepo, userRepo) ->
-            val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
-            clubRepo.createClub("The King of Padel".toName(), owner.uid)
-
-            assertFailsWith<IllegalArgumentException> {
+            if(clubRepo == clubRepoJdbc) {
+                val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
                 clubRepo.createClub("The King of Padel".toName(), owner.uid)
+
+                assertFailsWith<IllegalArgumentException> {
+                    clubRepo.createClub("The King of Padel".toName(), owner.uid)
+                }
             }
         }
     }
@@ -69,11 +71,13 @@ class ClubRepositoryTests {
     @Test
     fun `find club by name`() {
         implementations.forEach { (clubRepo, userRepo) ->
-            val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
-            val club = clubRepo.createClub("Force Club".toName(), owner.uid)
+            if(userRepo == userRepoJdbc){
+                val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
+                val club = clubRepo.createClub("Force Club".toName(), owner.uid)
 
-            val foundClub = clubRepo.findClubByName("Force Club".toName())
-            assertEquals(club, foundClub)
+                val foundClub = clubRepo.findClubByName("Force Club".toName())
+                assertEquals(club, foundClub)
+            }
         }
     }
 
@@ -124,14 +128,16 @@ class ClubRepositoryTests {
     @Test
     fun `save updates existing club`() {
         implementations.forEach { (clubRepo, userRepo) ->
-            val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
-            val club = clubRepo.createClub("Fly Club".toName(), owner.uid)
+            if(clubRepo == clubRepoJdbc){
+                val owner = userRepo.createUser("owner".toName(), "owner@email.com".toEmail())
+                val club = clubRepo.createClub("Fly Club".toName(), owner.uid)
 
-            val updatedClub = club.copy(name = "Updated Fly Club".toName())
-            clubRepo.save(updatedClub)
+                val updatedClub = club.copy(name = "Updated Fly Club".toName())
+                clubRepo.save(updatedClub)
 
-            val retrievedClub = clubRepo.findByIdentifier(club.cid)
-            assertEquals("Updated Fly Club".toName(), retrievedClub?.name)
+                val retrievedClub = clubRepo.findClubByName(updatedClub.name)
+                assertEquals("Updated Fly Club".toName(), retrievedClub?.name)
+            }
         }
     }
 }

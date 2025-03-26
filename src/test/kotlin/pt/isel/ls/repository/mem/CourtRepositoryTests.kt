@@ -130,7 +130,12 @@ class CourtRepositoryTests {
             val updatedCourt = court.copy(name = "Updated Court A".toName())
             courtRepo.save(updatedCourt)
 
-            val retrievedCourt = courtRepo.findByIdentifier(court.crid)
+            val retrievedCourt =
+                courtRepo
+                    .findByClubIdentifier(court.club.cid)
+                    .firstOrNull {
+                        it.name == updatedCourt.name
+                    }
             assertEquals("Updated Court A".toName(), retrievedCourt?.name)
         }
     }

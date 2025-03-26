@@ -8,39 +8,80 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
 
+/**
+ * Repository in jdbc responsible for direct interactions with the database for courts related actions
+ * @param connection The database connection for the SQL queries
+ */
 class CourtRepositoryJdbc(
-    private val connection: Connection
+    private val connection: Connection,
 ) : CourtRepository {
+    /**
+     * Function responsible for the creation of a court.
+     * @param name Name of the new court
+     * @param clubId Identifier of the club that owns the court
+     * @return The Court created
+     * @throws IllegalArgumentException if clubId doesn't exist
+     */
     override fun createCourt(
         name: Name,
         clubId: UInt,
     ): Court {
-        val sqlInsert =
-            """
-            WITH inserted icr AS (
-                INSERT INTO courts (name, club_id) values (?, ?)
-                RETURNING *
-            )
-            SELECT *
-            FROM inserted icr
-            LEFT JOIN clubs c ON icr.club_id = c.cid
-            LEFT JOIN users u ON c.owner = u.uid
-            """.trimIndent()
+        try {
+            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
+            connection.autoCommit = false
 
-        return connection.prepareStatement(sqlInsert).use { stmt ->
-            stmt.setString(1, name.value)
-            stmt.setInt(2, clubId.toInt())
+            val sqlCheckFk =
+                """
+                ${clubSqlReturnFormat()}
+                WHERE c.cid = ?
+                """.trimIndent()
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    rs.mapCourt()
-                } else {
-                    throw SQLException("User creation failed, no ID obtained.")
+            val club =
+                connection.prepareStatement(sqlCheckFk).use { stmt ->
+                    stmt.setInt(1, clubId.toInt())
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next()) { "No Club with such id." }
+                        rs.mapClub()
+                    }
                 }
-            }
+
+            val sqlInsert =
+                """
+                INSERT INTO courts (name, club_id)
+                VALUES (?, ?)
+                RETURNING crid as court_id, name as court_name, club_id
+                """.trimIndent()
+
+            val newCourt =
+                connection.prepareStatement(sqlInsert).use { stmt ->
+                    stmt.setString(1, name.value)
+                    stmt.setInt(2, clubId.toInt())
+
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next()) { "Court creation failed." }
+                        rs.mapCourt(club)
+                    }
+                }
+
+            connection.commit()
+
+            return newCourt
+        } catch (e: SQLException) {
+            connection.rollback()
+            throw e
+        } finally {
+            connection.autoCommit = true
+            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
     }
 
+    /**
+     * Function that finds all courts of a club.
+     * @param cid The identifier of the club to search for the courts
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return The list of courts owned by the club
+     */
     override fun findByClubIdentifier(
         cid: UInt,
         limit: Int,
@@ -48,10 +89,9 @@ class CourtRepositoryJdbc(
     ): List<Court> {
         val sqlSelect =
             """
-            SELECT * FROM courts icr WHERE icr.club_id = ?
-            LEFT JOIN clubs c ON icr.club_id = c.cid
-            LEFT JOIN users u ON c.owner = u.uid
-            ORDER BY icr.crid DESC
+            ${courtSqlReturnFormat()}
+            WHERE cr.club_id = ?
+            ORDER BY cr.crid DESC
             LIMIT ? OFFSET ?
             """.trimIndent()
 
@@ -70,32 +110,39 @@ class CourtRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that creates a new court or updates, with the information given, if one with the crid already exists.
+     * @param element court to be created or updated
+     */
     override fun save(element: Court) {
-        val sqlUpdate =
+        val sqlSave =
             """
-            UPDATE users
-            SET name = ?, club_id = ?
-            WHERE uid = ?
+            INSERT INTO courts (name, club_id)
+            VALUES (?, ?)
+            ON CONFLICT (crid)
+            DO UPDATE SET
+                name = EXCLUDED.name,
+                club_id = EXCLUDED.club_id;
             """.trimIndent()
 
-        connection.prepareStatement(sqlUpdate).use { stmt ->
+        connection.prepareStatement(sqlSave).use { stmt ->
             stmt.setString(1, element.name.value)
             stmt.setInt(2, element.club.cid.toInt())
-            stmt.setInt(3, element.crid.toInt())
 
-            // if no row was updated, there is no such user, so create one
-            if (stmt.executeUpdate() == 0) {
-                createCourt(element.name, element.club.cid)
-            }
+            stmt.executeUpdate()
         }
     }
 
+    /**
+     * Function that finds a court by its crid.
+     * @param id Identifier of the class, corresponding to the PK of the respective table, in this case crid
+     * @return Court if found, otherwise null
+     */
     override fun findByIdentifier(id: UInt): Court? {
         val sqlSelect =
             """
-            SELECT * FROM courts icr WHERE icr.crid = ?
-            LEFT JOIN clubs c ON icr.club_id = c.cid
-            LEFT JOIN users u ON c.owner = u.uid
+            ${courtSqlReturnFormat()}
+            WHERE cr.crid = ?
             """.trimIndent()
 
         return connection.prepareStatement(sqlSelect).use { stmt ->
@@ -107,16 +154,20 @@ class CourtRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that returns limit elements after offset, from latest tuple to be created to oldest
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return List of Courts retrieved
+     */
     override fun findAll(
         limit: Int,
         offset: Int,
     ): List<Court> {
         val sqlSelect =
             """
-            SELECT * FROM courts icr
-            LEFT JOIN clubs c ON icr.club_id = c.cid
-            LEFT JOIN users u ON c.owner = u.uid
-            ORDER BY icr.crid DESC
+            ${courtSqlReturnFormat()}
+            ORDER BY cr.crid DESC
             LIMIT ? OFFSET ?
             """.trimIndent()
 
@@ -134,6 +185,10 @@ class CourtRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes a court if exists a tuple with the crid, if it doesn't exist, does nothing
+     * @param id Identifier of the Court to delete
+     */
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM courts WHERE crid = ?"
 
@@ -143,28 +198,64 @@ class CourtRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes every entry of the table,
+     *  resets autoincremented values and any rows that have references to it
+     */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE courts RESTART IDENTITY CASCADE"
         connection.prepareStatement(sqlDelete).use { stmt ->
             stmt.executeUpdate()
         }
     }
-
-    private fun ResultSet.mapCourt(): Court =
-        Court(
-            crid = getInt("icr.crid").toUInt(),
-            name = Name(getString("icr.name")),
-            club =
-                Club(
-                    cid = getInt("c.cid").toUInt(),
-                    name = Name(getString("c.name")),
-                    owner =
-                        User(
-                            uid = getInt("u.uid").toUInt(),
-                            name = Name(getString("u.name")),
-                            email = Email(getString("u.email")),
-                            token = getString("u.token").toToken(),
-                        ),
-                ),
-        )
 }
+
+/**
+ * Function with the default select query to retrieve a court with the information of the club
+ * @return the default select query string
+ */
+fun courtSqlReturnFormat() =
+    """
+    SELECT cr.crid as court_id, cr.name as court_name, cr.club_id as club_id,
+        c.name as club_name, c.owner as club_owner_id,
+        u.name as club_owner_name, u.email as club_owner_email, u.token as club_owner_token
+    FROM courts cr
+    LEFT JOIN clubs c ON cr.club_id = c.cid
+    LEFT JOIN users u ON c.owner = u.uid
+    """.trimIndent()
+
+/**
+ * Function that maps a ResultSet to a Court, according to the name dictionary defined,
+ *  in this case the one defined in the default select query
+ * @return The mapped Court
+ */
+fun ResultSet.mapCourt(): Court =
+    Court(
+        crid = getInt("court_id").toUInt(),
+        name = getString("court_name").toName(),
+        club =
+            Club(
+                cid = getInt("club_id").toUInt(),
+                name = getString("club_name").toName(),
+                owner =
+                    User(
+                        uid = getInt("club_owner_id").toUInt(),
+                        name = getString("club_owner_name").toName(),
+                        email = getString("club_owner_email").toEmail(),
+                        token = getString("club_owner_token").toToken(),
+                    ),
+            ),
+    )
+
+/**
+ * Function that maps a ResultSet to a Court, according to the name dictionary defined,
+ *  in this case the one defined in the default select query, doesn't read club through ResultSet
+ * @param club Club
+ * @return The mapped Court
+ */
+fun ResultSet.mapCourt(club: Club) =
+    Court(
+        crid = getInt("court_id").toUInt(),
+        name = getString("court_name").toName(),
+        club = club,
+    )

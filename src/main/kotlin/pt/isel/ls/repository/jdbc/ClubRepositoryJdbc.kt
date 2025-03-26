@@ -4,103 +4,223 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.ClubRepository
+import pt.isel.ls.repository.jdbc.dao.mapClubDb
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.SQLException
 
+/**
+ * Repository in jdbc responsible for direct interactions with the database for clubs related actions
+ * @param connection The database connection for the SQL queries
+ */
 class ClubRepositoryJdbc(
     private val connection: Connection,
 ) : ClubRepository {
+    /**
+     * Function responsible for the creation of a club.
+     * @param name Name of the new club
+     * @param ownerId Identifier of the user that owns the club
+     * @return The Club created
+     * @throws IllegalArgumentException if either the ownerId doesn't exist or the name is not unique
+     */
     override fun createClub(
         name: Name,
         ownerId: UInt,
     ): Club {
-        val sqlInsert =
-            """
-            WITH inserted ic AS (
-                INSERT INTO clubs (name, owner) values (?, ?)
-                RETURNING *
-            )
-            SELECT *
-            FROM inserted ic
-            LEFT JOIN users u ON ic.owner = u.uid
-            """.trimIndent()
+        try {
+            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
+            connection.autoCommit = false
 
-        return connection.prepareStatement(sqlInsert).use { stmt ->
-            stmt.setString(1, name.value)
-            stmt.setInt(2, ownerId.toInt())
+            val sqlCheckFK =
+                """
+                SELECT * FROM users u WHERE u.uid = ?
+                """.trimIndent()
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) {
-                    rs.mapClub()
-                } else {
-                    throw SQLException("User creation failed, no ID obtained.")
+            val owner =
+                connection.prepareStatement(sqlCheckFK).use { stmt ->
+                    stmt.setInt(1, ownerId.toInt())
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next()) { "No user with such id." }
+                        rs.mapUser()
+                    }
                 }
-            }
+
+            val sqlInsert =
+                """
+                INSERT INTO clubs (name, owner)
+                VALUES (?, ?)
+                ON CONFLICT (name) DO NOTHING
+                RETURNING cid AS club_id, name AS club_name, owner AS owner_id
+                """.trimIndent()
+
+            val newUser =
+                connection.prepareStatement(sqlInsert).use { stmt ->
+                    stmt.setString(1, name.value)
+                    stmt.setInt(2, ownerId.toInt())
+
+                    stmt.executeQuery().use { rs ->
+                        require(rs.next()) { "Club creation failed, name already exists." }
+                        rs.mapClub(owner)
+                    }
+                }
+
+            connection.commit()
+
+            return newUser
+        } catch (e: SQLException) {
+            connection.rollback()
+            throw e
+        } finally {
+            connection.autoCommit = true
+            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
     }
 
+    /**
+     * Function that finds a club by a given name.
+     * @param name The name to search respective club
+     * @return The respective Club if found, otherwise null
+     */
     override fun findClubByName(name: Name): Club? {
-        val sqlSelect =
-            """
-            SELECT * FROM clubs ic
-            LEFT JOIN users u ON ic.owner = u.uid
-            """.trimIndent()
+        try {
+            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
+            connection.autoCommit = false
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setString(1, name.value)
+            val sqlSelect =
+                """
+                ${clubSqlReturnFormat()}
+                WHERE c.name = ?
+                """.trimIndent()
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.mapClub() else null
-            }
+            val clubDb =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setString(1, name.value)
+
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.mapClubDb() else return null
+                    }
+                }
+
+            val sqlCheckFK =
+                """
+                SELECT * FROM users u WHERE u.uid = ?
+                """.trimIndent()
+
+            val owner =
+                connection.prepareStatement(sqlCheckFK).use { stmt ->
+                    stmt.setInt(1, clubDb.owner.toInt())
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.mapUser() else return null
+                    }
+                }
+
+            connection.commit()
+
+            return Club(
+                cid = clubDb.cid,
+                name = clubDb.name,
+                owner = owner,
+            )
+        } catch (e: SQLException) {
+            connection.rollback()
+            throw e
+        } finally {
+            connection.autoCommit = true
+            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
     }
 
+    /**
+     * Function that creates a new club or updates, with the information given, if one with the cid already exists.
+     * @param element club to be created or updated
+     */
     override fun save(element: Club) {
-        val sqlUpdate =
+        val sqlSave =
             """
-            UPDATE users
-            SET name = ?, owner = ?
-            WHERE cid = ?
+            INSERT INTO clubs (name, owner)
+            VALUES (?, ?)
+            ON CONFLICT (cid)
+            DO UPDATE SET
+                name = EXCLUDED.name,
+                owner = EXCLUDED.owner;
             """.trimIndent()
 
-        connection.prepareStatement(sqlUpdate).use { stmt ->
+        connection.prepareStatement(sqlSave).use { stmt ->
             stmt.setString(1, element.name.value)
             stmt.setInt(2, element.owner.uid.toInt())
-            stmt.setInt(3, element.cid.toInt())
 
-            // if no row was updated, there is no such user, so create one
-            if (stmt.executeUpdate() == 0) {
-                createClub(element.name, element.owner.uid)
-            }
+            stmt.executeUpdate()
         }
     }
 
+    /**
+     * Function that finds a club by its cid.
+     * @param id Identifier of the class, corresponding to the PK of the respective table, in this case cid
+     * @return Club if found, otherwise null
+     */
     override fun findByIdentifier(id: UInt): Club? {
-        val sqlSelect =
-            """
-            SELECT * FROM clubs ic WHERE ic.cid = ?
-            LEFT JOIN users u ON ic.owner = u.uid
-            """.trimIndent()
+        try {
+            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
+            connection.autoCommit = false
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, id.toInt())
+            val sqlSelect =
+                """
+                ${clubSqlReturnFormat()}
+                WHERE c.cid = ?
+                """.trimIndent()
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.mapClub() else null
-            }
+            val clubDb =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, id.toInt())
+
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.mapClubDb() else return null
+                    }
+                }
+
+            val sqlCheckFK =
+                """
+                SELECT * FROM users u WHERE u.uid = ?
+                """.trimIndent()
+
+            val owner =
+                connection.prepareStatement(sqlCheckFK).use { stmt ->
+                    stmt.setInt(1, clubDb.owner.toInt())
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.mapUser() else return null
+                    }
+                }
+
+            connection.commit()
+
+            return Club(
+                cid = clubDb.cid,
+                name = clubDb.name,
+                owner = owner,
+            )
+        } catch (e: SQLException) {
+            connection.rollback()
+            throw e
+        } finally {
+            connection.autoCommit = true
+            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
     }
 
+    /**
+     * Function that returns limit elements after offset, from latest tuple to be created to oldest
+     * @param limit Number of tuples to retrieve, default of 30
+     * @param offset Number of tuples to skip at the beginning, default of 0
+     * @return List of Clubs retrieved
+     */
     override fun findAll(
         limit: Int,
         offset: Int,
     ): List<Club> {
         val sqlSelect =
             """
-            SELECT * FROM clubs ic
-            LEFT JOIN users u ON ic.owner = u.uid
-            ORDER BY ic.cid DESC
+            ${clubSqlReturnFormat()}
+            ORDER BY c.cid DESC
             LIMIT ? OFFSET ?
             """.trimIndent()
 
@@ -118,8 +238,12 @@ class ClubRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes a club if exists a tuple with the cid, if it doesn't exist, does nothing
+     * @param id Identifier of the Club to delete
+     */
     override fun deleteByIdentifier(id: UInt) {
-        val sqlDelete = "DELETE FROM clubs ic WHERE cid = ?"
+        val sqlDelete = "DELETE FROM clubs c WHERE c.cid = ?"
 
         connection.prepareStatement(sqlDelete).use { stmt ->
             stmt.setInt(1, id.toInt())
@@ -127,23 +251,57 @@ class ClubRepositoryJdbc(
         }
     }
 
+    /**
+     * Function that deletes every entry of the table,
+     *  resets autoincremented values and any rows that have references to it
+     */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE clubs RESTART IDENTITY CASCADE"
         connection.prepareStatement(sqlDelete).use { stmt ->
             stmt.executeUpdate()
         }
     }
-
-    private fun ResultSet.mapClub() =
-        Club(
-            cid = getInt("ic.cid").toUInt(),
-            name = Name(getString("ic.name")),
-            owner =
-                User(
-                    uid = getInt("u.uid").toUInt(),
-                    name = Name(getString("u.name")),
-                    email = Email(getString("u.email")),
-                    token = getString("u.token").toToken(),
-                ),
-        )
 }
+
+/**
+ * Function with the default select query to retrieve a club with the information of the owner
+ * @return the default select query string
+ */
+fun clubSqlReturnFormat() =
+    """
+    SELECT c.cid as club_id, c.name as club_name, c.owner as owner_id,
+        u.name as owner_name, u.email as owner_email, u.token as owner_token
+    FROM clubs c
+    LEFT JOIN users u ON u.uid = c.owner
+    """.trimIndent()
+
+/**
+ * Function that maps a ResultSet to a Club, according to the name dictionary defined,
+ *  in this case the one defined in the default select query
+ * @return The mapped Club
+ */
+fun ResultSet.mapClub() =
+    Club(
+        cid = getInt("club_id").toUInt(),
+        name = Name(getString("club_name")),
+        owner =
+            User(
+                uid = getInt("owner_id").toUInt(),
+                name = Name(getString("owner_name")),
+                email = Email(getString("owner_email")),
+                token = getString("owner_token").toToken(),
+            ),
+    )
+
+/**
+ * Function that maps a ResultSet to a Club, according to the name dictionary defined,
+ *  in this case the one defined in the default select query, doesn't read owner through ResultSet
+ * @param owner User correspondent to the owner
+ * @return The mapped Club
+ */
+fun ResultSet.mapClub(owner: User) =
+    Club(
+        cid = getInt("club_id").toUInt(),
+        name = Name(getString("club_name")),
+        owner = owner,
+    )
