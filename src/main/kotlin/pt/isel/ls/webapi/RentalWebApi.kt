@@ -33,10 +33,15 @@ class RentalWebApi(
                 Json.decodeFromString<RentalCreationInput>(request.bodyString())
             }.getOrElse { ex -> return handleUserInputError(ex) }
 
+        val timeSlot =
+            validateUserInput {
+                TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt())
+            }.getOrElse { ex -> return handleUserInputError(ex) }
+
         return rentalService
             .createRental(
                 input.date,
-                TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt()),
+                timeSlot,
                 input.cid.toUInt(),
                 input.crid.toUInt(),
             ).fold(

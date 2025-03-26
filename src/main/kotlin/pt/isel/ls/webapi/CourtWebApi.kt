@@ -33,8 +33,12 @@ class CourtWebApi(
                 Json.decodeFromString<CourtCreationInput>(request.bodyString())
             }.getOrElse { ex -> return handleUserInputError(ex) }
 
+        val courtName =
+            validateUserInput { Name(input.name) }
+                .getOrElse { ex -> return handleUserInputError(ex) }
+
         return courtService
-            .createCourt(Name(input.name), (input.cid))
+            .createCourt(courtName, input.cid)
             .fold(
                 onFailure = { ex -> ex.toResponse() },
                 onSuccess = { Response(CREATED).body(Json.encodeToString(CourtDetailsOutput(it))) },

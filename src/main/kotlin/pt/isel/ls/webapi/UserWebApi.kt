@@ -21,9 +21,18 @@ class UserWebApi(
 ) {
     fun createUser(request: Request): Response {
         request.log()
-        val input = Json.decodeFromString<UserInput>(request.bodyString())
+        val input =
+            validateUserInput {
+                Json.decodeFromString<UserInput>(request.bodyString())
+            }.getOrElse { ex -> return handleUserInputError(ex) }
+        val userName =
+            validateUserInput { Name(input.name) }
+                .getOrElse { ex -> return handleUserInputError(ex) }
+        val email =
+            validateUserInput { Email(input.email) }
+                .getOrElse { ex -> return handleUserInputError(ex) }
         return userService
-            .createUser(Name(input.name), Email(input.email))
+            .createUser(userName, email)
             .fold(
                 onFailure = { ex -> ex.toResponse() },
                 onSuccess = { Response(CREATED).body(Json.encodeToString(UserOutput(it))) },
