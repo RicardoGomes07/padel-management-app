@@ -1,72 +1,95 @@
 package pt.isel.ls.webapi
 
-import junit.framework.TestCase.assertEquals
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import org.http4k.client.OkHttp
-import org.http4k.core.Method
+import org.http4k.core.Method.GET
+import org.http4k.core.Method.POST
 import org.http4k.core.Request
 import org.http4k.core.Status
-import org.junit.Test
+import org.http4k.routing.bind
+import org.http4k.routing.routes
+import pt.isel.ls.repository.mem.TransactionManagerInMem
+import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.UserOutput
+import java.util.UUID
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+val userApi =
+    UserWebApi(
+        UserService(TransactionManagerInMem()),
+    )
+val userRoutes =
+    routes(
+        "users" bind POST to userApi::createUser,
+        "users/me" bind GET to userApi::getUserInfo,
+    )
+
+fun createUser(): String {
+    val name = UUID.randomUUID().toString().take(5)
+    println(name)
+    val userResponse =
+        userRoutes(
+            Request(POST, "users")
+                .header("Content-Type", "application/json")
+                .body("""{"name":"Ric", "email":"$name@gmail.com"}"""),
+        )
+    val user = Json.decodeFromString<UserOutput>(userResponse.bodyString())
+    return user.token
+}
 
 class UserWebApiTests {
-    private val client = OkHttp()
-
     @Test
     fun `user creation with valid Name and Email`() {
-        val request =
-            Request(Method.POST, "$URI_API/users")
-                .header("Content-Type", "application/json")
-                .body("""{"name":"Riczão", "email":"riczao@gmail.com"}""")
-        val response = client(request)
-
-        assertEquals(Status.CREATED, response.status)
-        assertEquals("Expected Response Body", response.bodyString())
+        val response =
+            userRoutes(
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body("""{"name":"Ric", "email":"ric@gmail.com"}"""),
+            )
+        assertEquals(response.status, Status.CREATED)
+        val user = Json.decodeFromString<UserOutput>(response.bodyString())
+        println(user)
+        assertEquals(user.name, "Ric")
     }
 
     @Test
     fun `user creation with duplicate Name and Email`() {
-        val request =
-            Request(Method.POST, "$URI_API/users")
-                .header("Content-Type", "application/json")
-                .body("""{"name":"Ric", "email":"ric@gmail.com"}""")
-        val response = client(request)
-        assertEquals(Status.CREATED, response.status)
+        val response =
+            userRoutes(
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body("""{"name":"Riczao", "email":"riczao@gmail.com"}"""),
+            )
+        assertEquals(response.status, Status.CREATED)
 
-        val request1 =
-            Request(Method.POST, "$URI_API/users")
-                .header("Content-Type", "application/json")
-                .body("""{"name":"Ric", "email":"ric@gmail.com"}""")
-        val response1 = client(request1)
-        assertEquals(Status.BAD_REQUEST, response1.status)
+        val response1 =
+            userRoutes(
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body("""{"name":"Riczao", "email":"riczao@gmail.com"}"""),
+            )
+        assertEquals(response1.status, Status.BAD_REQUEST)
     }
 
     @Test
     fun `get user info without auth`() {
-        val request = Request(Method.GET, "$URI_API/users/me")
-        val response = client(request)
-
-        assertEquals(Status.UNAUTHORIZED, response.status)
-        assertEquals("Expected Response Body", response.bodyString())
+        val getUsersResponse =
+            userRoutes(
+                Request(GET, "users/me"),
+            )
+        assertEquals(Status.UNAUTHORIZED, getUsersResponse.status)
+        println(getUsersResponse.bodyString())
     }
 
     @Test
     fun `get user info with auth`() {
-        val request =
-            Request(Method.POST, "$URI_API/users")
-                .header("Content-Type", "application/json")
-                .body("""{"name":"Ric", "email":"ric@gmail.com"}""")
-        val response = client(request)
-        assertEquals(Status.CREATED, response.status)
-
-        val responseJson = Json.parseToJsonElement(response.bodyString()).jsonObject
-        val token = responseJson["token"]?.jsonPrimitive?.content ?: ""
-        val getUserInfoRequest =
-            Request(Method.GET, "$URI_API/users/me")
-                .header("Authorization", token)
-        val getUserInfoResponse = client(getUserInfoRequest)
-        println(getUserInfoResponse.bodyString())
-        assertEquals(Status.OK, getUserInfoResponse.status)
+        val token = createUser()
+        val getUsersResponse =
+            userRoutes(
+                Request(GET, "users/me")
+                    .header("Authorization", token),
+            )
+        assertEquals(Status.OK, getUsersResponse.status)
+        println(getUsersResponse.bodyString())
     }
 }

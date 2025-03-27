@@ -4,12 +4,13 @@ package pt.isel.ls.service
 
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.UserService
 import kotlin.test.*
 
 class UserServiceTests {
-    private val userService = UserService(UserRepositoryInMem)
+    private val userService = UserService(TransactionManagerInMem())
 
     @BeforeTest
     fun setUp() {

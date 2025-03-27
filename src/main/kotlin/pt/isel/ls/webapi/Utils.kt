@@ -7,9 +7,10 @@ package pt.isel.ls.webapi
 import kotlinx.datetime.*
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status
 import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.NOT_FOUND
-import org.http4k.core.Status.Companion.UNPROCESSABLE_ENTITY
+import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.slf4j.LoggerFactory
 import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
@@ -40,7 +41,7 @@ fun Request.handler(block: () -> Response): Response =
         log()
         block()
     } catch (e: Throwable) {
-        e.toResponse()
+        throw e
     }
 
 fun Request.handlerWithAuth(
@@ -51,9 +52,9 @@ fun Request.handlerWithAuth(
         log()
         validateUser(validationFun)
             ?.let { user -> block(user) }
-            ?: Response(UNPROCESSABLE_ENTITY).body("Invalid User")
+            ?: Response(UNAUTHORIZED).body("Invalid User")
     } catch (e: Throwable) {
-        e.toResponse()
+        throw e
     }
 
 /**
@@ -68,7 +69,7 @@ fun Throwable.toResponse(): Response =
     when (this) {
         is IllegalStateException -> Response(NOT_FOUND).body(message!!)
         is IllegalArgumentException -> Response(BAD_REQUEST).body(message!!)
-        else -> Response(UNPROCESSABLE_ENTITY).body(message!!)
+        else -> Response(Status.INTERNAL_SERVER_ERROR).body(message!!)
     }
 
 fun currentDate() =

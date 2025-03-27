@@ -17,9 +17,6 @@ dependencies {
     // For logging purposes
     implementation("org.slf4j:slf4j-simple:2.0.9")
     implementation("org.postgresql:postgresql:42.+")
-
-    // Http client to test web api
-    testImplementation("org.http4k:http4k-client-okhttp:4.33.0.0")
     testImplementation(kotlin("test"))
 }
 

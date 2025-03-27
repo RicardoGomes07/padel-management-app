@@ -5,6 +5,7 @@ package pt.isel.ls.service
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.mem.ClubRepositoryInMem
 import pt.isel.ls.repository.mem.CourtRepositoryInMem
+import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.CourtService
@@ -15,9 +16,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CourtServiceTests {
-    private val courtService = CourtService(CourtRepositoryInMem)
-    private val clubService = ClubService(ClubRepositoryInMem)
-    private val userService = UserService(UserRepositoryInMem)
+    private val courtService = CourtService(TransactionManagerInMem())
+    private val clubService = ClubService(TransactionManagerInMem())
+    private val userService = UserService(TransactionManagerInMem())
 
     @BeforeTest
     fun setUp() {
