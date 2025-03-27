@@ -5,12 +5,20 @@ package pt.isel.ls.service
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.junit.Before
+import pt.isel.ls.domain.Email
+import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.TimeSlot
+import pt.isel.ls.domain.toName
 import pt.isel.ls.repository.mem.ClubRepositoryInMem
 import pt.isel.ls.repository.mem.CourtRepositoryInMem
 import pt.isel.ls.repository.mem.RentalRepositoryInMem
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.days
 
 class RentalServiceTests {
     private val rentalService = RentalService(RentalRepositoryInMem)
@@ -18,7 +26,7 @@ class RentalServiceTests {
     private val userService = UserService(UserRepositoryInMem)
     private val courtService = CourtService(CourtRepositoryInMem)
 
-    @Before
+    @BeforeTest
     fun setUp() {
         RentalRepositoryInMem.clear()
         UserRepositoryInMem.clear()
@@ -27,24 +35,27 @@ class RentalServiceTests {
     }
 
     private val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-    /*
+
     @Test
     fun `create rental with valid renter and court`() {
-        val renter = userService.createUser(Name("John Doe"), Email("john@example.com"))
-        assertTrue(renter is Success)
-        val club = clubService.createClub("Sports Club", renter.value)
-        assertTrue(club is Success)
-        val court = courtService.createCourt(Name("Court A"), club.value.cid)
+        val renterResult = userService.createUser(Name("John Doe"), Email("john@example.com"))
+        assertTrue(renterResult.isSuccess)
+        val renter = renterResult.getOrNull()!!
+        val club = clubService.createClub("Sports Club".toName(), renter)
+        assertTrue(club.isSuccess)
+        val courtResult = courtService.createCourt(Name("Court A"), club.getOrNull()!!.cid)
+        assertTrue(courtResult.isSuccess)
+        val court = courtResult.getOrNull()!!
+        val rentalDate = Clock.System.now().plus(1.days).toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val rentTime = TimeSlot(10u, 13u)
 
-        val rentalDate = Clock.System.now().plus(1.hours).toLocalDateTime(TimeZone.currentSystemDefault())
-        val duration = 2.hours
-
-        val rental = rentalService.createRental(rentalDate, duration, renter.value.uid, court.crid)
+        val rentalResult = rentalService.createRental(rentalDate, rentTime, renter.uid, court.crid)
+        assertTrue(rentalResult.isSuccess)
+        val rental = rentalResult.getOrNull()!!
 
         assertEquals(rentalDate, rental.date)
-        assertEquals(duration, rental.duration)
-        assertEquals(renter.value, rental.renter)
+        assertEquals(rentTime, rental.rentTime)
+        assertEquals(renter, rental.renter)
         assertEquals(court, rental.court)
     }
-     */
 }

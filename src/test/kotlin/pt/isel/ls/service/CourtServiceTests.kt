@@ -1,76 +1,99 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.service
 
-import org.junit.Before
+import pt.isel.ls.domain.*
 import pt.isel.ls.repository.mem.ClubRepositoryInMem
 import pt.isel.ls.repository.mem.CourtRepositoryInMem
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.CourtService
 import pt.isel.ls.services.UserService
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CourtServiceTests {
     private val courtService = CourtService(CourtRepositoryInMem)
     private val clubService = ClubService(ClubRepositoryInMem)
     private val userService = UserService(UserRepositoryInMem)
 
-    @Before
+    @BeforeTest
     fun setUp() {
         CourtRepositoryInMem.clear()
         ClubRepositoryInMem.clear()
         UserRepositoryInMem.clear()
     }
-    /*
+
     @Test
     fun `create court with valid name and existing club`() {
-        val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
-        assertTrue(owner is Success)
-        val club = clubService.createClub("Sports Club", owner.value)
-        assertTrue(club is Success)
-        val court = courtService.createCourt(Name("Court A"), club.value.cid)
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail())
+        assertTrue(ownerResult.isSuccess)
+        val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
+        assertTrue(clubResult.isSuccess)
+        val club = clubResult.getOrNull()!!
+        val courtResult = courtService.createCourt("Court A".toName(), club.cid)
 
-        assertEquals(Name("Court A"), court.name)
-        assertEquals(club.value, court.club)
+        assertTrue(courtResult.isSuccess)
+        val court = courtResult.getOrNull()!!
+
+        assertEquals("Court A".toName(), court.name)
+        assertEquals(club, court.club)
     }
 
     @Test
     fun `find courts by club identifier`() {
-        val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
-        assertTrue(owner is Success)
-        val club = clubService.createClub("Sports Club", owner.value)
-        assertTrue(club is Success)
-        val court1 = courtService.createCourt(Name("Court A"), club.value.cid)
-        val court2 = courtService.createCourt(Name("Court B"), club.value.cid)
-
-        val foundCourts = courtService.getCourts(club.value.cid)
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail())
+        assertTrue(ownerResult.isSuccess)
+        val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
+        assertTrue(clubResult.isSuccess)
+        val club = clubResult.getOrNull()!!
+        val court1Result = courtService.createCourt("Court A".toName(), club.cid)
+        assertTrue(court1Result.isSuccess)
+        val court2Result = courtService.createCourt("Court B".toName(), club.cid)
+        assertTrue(court2Result.isSuccess)
+        val court1 = court1Result.getOrNull()!!
+        val court2 = court2Result.getOrNull()!!
+        val foundCourtsResult = courtService.getCourts(club.cid, 30, 0)
+        assertTrue(foundCourtsResult.isSuccess)
+        val foundCourts = foundCourtsResult.getOrNull()!!
         assertEquals(2, foundCourts.size)
-        Assert.assertTrue(foundCourts.containsAll(listOf(court1, court2)))
+
+        assertTrue(foundCourts.containsAll(listOf(court1, court2)))
     }
 
     @Test
     fun `find court by identifier`() {
-        val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
-        assertTrue(owner is Success)
-        val club = clubService.createClub("Sports Club", owner.value)
-        assertTrue(club is Success)
-        val court = courtService.createCourt(Name("Court A"), club.value.cid)
+        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"))
+        assertTrue(ownerResult.isSuccess)
+        val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
+        assertTrue(clubResult.isSuccess)
+        val courtResult = courtService.createCourt(Name("Court A"), clubResult.getOrNull()!!.cid)
 
-        val foundCourt = courtService.getCourtById(court.crid)
-        assertEquals(court, foundCourt)
+        assertTrue(courtResult.isSuccess)
+
+        val foundCourt = courtService.getCourtById(courtResult.getOrNull()!!.crid)
+        assertEquals(courtResult, foundCourt)
     }
 
     @Test
     fun `find all courts`() {
-        val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
-        assertTrue(owner is Success)
-        val club = clubService.createClub("Sports Club", owner.value)
-        assertTrue(club is Success)
-        val court1 = courtService.createCourt(Name("Court A"), club.value.cid)
-        val court2 = courtService.createCourt(Name("Court B"), club.value.cid)
-
-        val allCourts = courtService.getCourts(club.value.cid)
+        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"))
+        assertTrue(ownerResult.isSuccess)
+        val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
+        assertTrue(clubResult.isSuccess)
+        val club = clubResult.getOrNull()!!
+        val court1Result = courtService.createCourt(Name("Court A"), club.cid)
+        assertTrue(court1Result.isSuccess)
+        val court2Result = courtService.createCourt(Name("Court B"), club.cid)
+        assertTrue(court2Result.isSuccess)
+        val court1 = court1Result.getOrNull()!!
+        val court2 = court2Result.getOrNull()!!
+        val allCourtsResult = courtService.getCourts(club.cid, 30, 0)
+        assertTrue(allCourtsResult.isSuccess)
+        val allCourts = allCourtsResult.getOrNull()!!
         assertEquals(2, allCourts.size)
         assertTrue(allCourts.containsAll(listOf(court1, court2)))
     }
-
-     */
 }

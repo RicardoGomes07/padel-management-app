@@ -1,61 +1,68 @@
 package pt.isel.ls.service
 
-import org.junit.Before
+import pt.isel.ls.domain.Email
+import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.toEmail
+import pt.isel.ls.domain.toName
 import pt.isel.ls.repository.mem.ClubRepositoryInMem
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.UserService
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ClubServiceTests {
     private val clubService = ClubService(ClubRepositoryInMem)
     private val userService = UserService(UserRepositoryInMem)
 
-    @Before
+    @BeforeTest
     fun setUp() {
         ClubRepositoryInMem.clear()
         UserRepositoryInMem.clear()
     }
-    /*
+
     @Test
     fun `create club with valid name and existing owner`() {
-        val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
-        assertTrue(owner is Success)
-        val club = clubService.createClub("Sporting", owner.value)
-        assertTrue(club is Success)
-        assertEquals(owner.value, club.value.owner)
+        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"))
+        assertTrue(ownerResult.isSuccess)
+        val clubResult = clubService.createClub("Sporting".toName(), ownerResult.getOrNull()!!)
+        assertTrue(clubResult.isSuccess)
+        assertEquals(ownerResult.getOrNull(), clubResult.getOrNull()!!.owner)
     }
 
     @Test
     fun `create club with duplicate name should fail`() {
-        val owner = userService.createUser(Name("Ric"), Email("ric@email.com"))
-        assertTrue(owner is Success)
-        val firstClub = clubService.createClub("Benfica", owner.value)
-        assertTrue(firstClub is Success)
-        val secondClub = clubService.createClub("Benfica", owner.value)
-        assertTrue(secondClub is Failure)
+        val ownerResult = userService.createUser(Name("Ric"), Email("ric@email.com"))
+        assertTrue(ownerResult.isSuccess)
+        val owner = ownerResult.getOrNull()!!
+        val firstClubResult = clubService.createClub("Benfica".toName(), owner)
+        assertTrue(firstClubResult.isSuccess)
+        val secondClubResult = clubService.createClub("Benfica".toName(), owner)
+        assertTrue(secondClubResult.isFailure)
     }
 
     @Test
     fun `find club by identifier`() {
         val owner = userService.createUser(Name("Ric1"), Email("ric@email.com"))
-        assertTrue(owner is Success)
-        val club = clubService.createClub("Porto", owner.value)
-        assertTrue(club is Success)
-        val foundClub = clubService.getClubById(club.value.cid)
-        Assert.assertEquals(club, foundClub)
+        assertTrue(owner.isSuccess)
+        val club = clubService.createClub("Porto".toName(), owner.getOrNull()!!)
+        assertTrue(club.isSuccess)
+        val foundClub = clubService.getClubById(club.getOrNull()!!.cid)
+        assertEquals(club, foundClub)
     }
 
     @Test
     fun `find all clubs`() {
-        val owner = userService.createUser(Name("owner"), Email("owner@email.com"))
-        assertTrue(owner is Success)
-        val club1 = clubService.createClub("Braga", owner.value)
-        assertTrue(club1 is Success)
-        val club2 = clubService.createClub("Boavista", owner.value)
-        assertTrue(club2 is Success)
-        val allClubs = clubService.getClubs()
-        assertEquals(2, allClubs.size)
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail())
+        assertTrue(ownerResult.isSuccess)
+        val owner = ownerResult.getOrNull()!!
+        val club1 = clubService.createClub("Braga".toName(), owner)
+        assertTrue(club1.isSuccess)
+        val club2 = clubService.createClub("Boavista".toName(), owner)
+        assertTrue(club2.isSuccess)
+        val allClubs = clubService.getClubs(30, 0)
+        assertEquals(2, allClubs.getOrNull()?.size)
     }
-
-     */
 }

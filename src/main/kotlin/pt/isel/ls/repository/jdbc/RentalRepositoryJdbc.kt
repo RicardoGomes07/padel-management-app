@@ -109,6 +109,7 @@ class RentalRepositoryJdbc(
         crid: UInt,
         date: LocalDate,
     ): List<UInt> {
+        // TODO(Add court existence verification)
         val sqlSelect =
             """
             ${rentalSqlReturnFormat()}

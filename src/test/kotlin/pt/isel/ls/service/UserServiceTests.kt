@@ -2,7 +2,8 @@
 
 package pt.isel.ls.service
 
-import org.junit.Before
+import pt.isel.ls.domain.Email
+import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.UserService
 import kotlin.test.*
@@ -10,33 +11,30 @@ import kotlin.test.*
 class UserServiceTests {
     private val userService = UserService(UserRepositoryInMem)
 
-    @Before
+    @BeforeTest
     fun setUp() {
         UserRepositoryInMem.clear()
     }
-    /*
+
     @Test
     fun `user creation with valid Name and Email`() {
-        val user = userService.createUser(Name("user"), Email("user@email.com"))
-        assert(user is Success) { "Expected user creation to succeed but got $user" }
+        val userResult = userService.createUser(Name("user"), Email("user@email.com"))
+        assert(userResult.isSuccess) { "Expected user creation to succeed but got ${userResult.exceptionOrNull()}" }
     }
 
     @Test
     fun `user creation with invalid Name and Email`() {
         assertFailsWith<IllegalArgumentException> {
-            userService.createUser(Name("2131user"), Email("useril.com"))
+            userService.createUser(Name("2131user"), Email("useril.com")).exceptionOrNull()
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     @Test
     fun `retrieve user with user token`() {
-        val user = userService.createUser(Name("user"), Email("user@email.com"))
-        assertTrue(user is Success)
-        val createdUser = user.value
+        val userResult = userService.createUser(Name("user"), Email("user@email.com"))
+        assertTrue(userResult.isSuccess)
+        val createdUser = userResult.getOrNull()!!
         val retrievedUser = userService.validateUser(createdUser.token)
         assertEquals(createdUser, retrievedUser)
     }
-
-     */
 }
