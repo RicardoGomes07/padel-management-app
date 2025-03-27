@@ -7,7 +7,6 @@ import pt.isel.ls.repository.ClubRepository
 import pt.isel.ls.repository.jdbc.dao.mapClubDb
 import java.sql.Connection
 import java.sql.ResultSet
-import java.sql.SQLException
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for clubs related actions
@@ -26,11 +25,8 @@ class ClubRepositoryJdbc(
     override fun createClub(
         name: Name,
         ownerId: UInt,
-    ): Club {
-        try {
-            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
-            connection.autoCommit = false
-
+    ): Club =
+        connection.executeMultipleQueries {
             val sqlCheckFK =
                 """
                 SELECT * FROM users u WHERE u.uid = ?
@@ -53,39 +49,24 @@ class ClubRepositoryJdbc(
                 RETURNING cid AS club_id, name AS club_name, owner AS owner_id
                 """.trimIndent()
 
-            val newUser =
-                connection.prepareStatement(sqlInsert).use { stmt ->
-                    stmt.setString(1, name.value)
-                    stmt.setInt(2, ownerId.toInt())
+            connection.prepareStatement(sqlInsert).use { stmt ->
+                stmt.setString(1, name.value)
+                stmt.setInt(2, ownerId.toInt())
 
-                    stmt.executeQuery().use { rs ->
-                        require(rs.next()) { "Club creation failed, name already exists." }
-                        rs.mapClub(owner)
-                    }
+                stmt.executeQuery().use { rs ->
+                    require(rs.next()) { "Club creation failed, name already exists." }
+                    rs.mapClub(owner)
                 }
-
-            connection.commit()
-
-            return newUser
-        } catch (e: SQLException) {
-            connection.rollback()
-            throw e
-        } finally {
-            connection.autoCommit = true
-            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
+            }
         }
-    }
 
     /**
      * Function that finds a club by a given name.
      * @param name The name to search respective club
      * @return The respective Club if found, otherwise null
      */
-    override fun findClubByName(name: Name): Club? {
-        try {
-            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
-            connection.autoCommit = false
-
+    override fun findClubByName(name: Name): Club? =
+        connection.executeMultipleQueries {
             val sqlSelect =
                 """
                 ${clubSqlReturnFormat()}
@@ -97,7 +78,7 @@ class ClubRepositoryJdbc(
                     stmt.setString(1, name.value)
 
                     stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapClubDb() else return null
+                        if (rs.next()) rs.mapClubDb() else return@executeMultipleQueries null
                     }
                 }
 
@@ -110,25 +91,16 @@ class ClubRepositoryJdbc(
                 connection.prepareStatement(sqlCheckFK).use { stmt ->
                     stmt.setInt(1, clubDb.owner.toInt())
                     stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapUser() else return null
+                        if (rs.next()) rs.mapUser() else return@executeMultipleQueries null
                     }
                 }
 
-            connection.commit()
-
-            return Club(
+            Club(
                 cid = clubDb.cid,
                 name = clubDb.name,
                 owner = owner,
             )
-        } catch (e: SQLException) {
-            connection.rollback()
-            throw e
-        } finally {
-            connection.autoCommit = true
-            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
-    }
 
     /**
      * Function that creates a new club or updates, with the information given, if one with the cid already exists.
@@ -158,11 +130,8 @@ class ClubRepositoryJdbc(
      * @param id Identifier of the class, corresponding to the PK of the respective table, in this case cid
      * @return Club if found, otherwise null
      */
-    override fun findByIdentifier(id: UInt): Club? {
-        try {
-            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
-            connection.autoCommit = false
-
+    override fun findByIdentifier(id: UInt): Club? =
+        connection.executeMultipleQueries {
             val sqlSelect =
                 """
                 ${clubSqlReturnFormat()}
@@ -174,7 +143,7 @@ class ClubRepositoryJdbc(
                     stmt.setInt(1, id.toInt())
 
                     stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapClubDb() else return null
+                        if (rs.next()) rs.mapClubDb() else return@executeMultipleQueries null
                     }
                 }
 
@@ -187,25 +156,16 @@ class ClubRepositoryJdbc(
                 connection.prepareStatement(sqlCheckFK).use { stmt ->
                     stmt.setInt(1, clubDb.owner.toInt())
                     stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapUser() else return null
+                        if (rs.next()) rs.mapUser() else return@executeMultipleQueries null
                     }
                 }
 
-            connection.commit()
-
-            return Club(
+            Club(
                 cid = clubDb.cid,
                 name = clubDb.name,
                 owner = owner,
             )
-        } catch (e: SQLException) {
-            connection.rollback()
-            throw e
-        } finally {
-            connection.autoCommit = true
-            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
         }
-    }
 
     /**
      * Function that returns limit elements after offset, from latest tuple to be created to oldest

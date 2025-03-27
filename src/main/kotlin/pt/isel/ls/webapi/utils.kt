@@ -1,7 +1,10 @@
-@file:OptIn(ExperimentalUuidApi::class, ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class)
+
+@file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.webapi
 
+import kotlinx.datetime.*
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
@@ -32,15 +35,25 @@ fun Request.log() {
     )
 }
 
-fun <T> validateUserInput(operation: () -> T): Result<T> =
-    runCatching {
-        operation()
+fun Request.handler(block: () -> Response): Response =
+    try {
+        log()
+        block()
+    } catch (e: Throwable) {
+        e.toResponse()
     }
 
-fun handleUserInputError(e: Throwable): Response =
-    when (e) {
-        is IllegalArgumentException -> Response(BAD_REQUEST).body(e.message!!)
-        else -> throw e
+fun Request.handlerWithAuth(
+    validationFun: (Token) -> User?,
+    block: (User) -> Response,
+): Response =
+    try {
+        log()
+        validateUser(validationFun)
+            ?.let { user -> block(user) }
+            ?: Response(UNPROCESSABLE_ENTITY).body("Invalid User")
+    } catch (e: Throwable) {
+        e.toResponse()
     }
 
 /**
@@ -57,3 +70,11 @@ fun Throwable.toResponse(): Response =
         is IllegalArgumentException -> Response(BAD_REQUEST).body(message!!)
         else -> Response(UNPROCESSABLE_ENTITY).body(message!!)
     }
+
+fun currentDate() =
+    Clock
+        .System
+        .now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .toJavaLocalDateTime()
+        .let { LocalDate(it.year, it.month, it.dayOfMonth) }

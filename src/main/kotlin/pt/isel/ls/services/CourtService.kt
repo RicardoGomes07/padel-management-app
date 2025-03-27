@@ -2,10 +2,10 @@ package pt.isel.ls.services
 
 import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Name
-import pt.isel.ls.repository.CourtRepository
+import pt.isel.ls.repository.TransactionManager
 
 class CourtService(
-    private val courtRepo: CourtRepository,
+    private val trxManager: TransactionManager,
 ) {
     /**
      * Function that returns all courts in the system
@@ -20,7 +20,9 @@ class CourtService(
         skip: Int,
     ): Result<List<Court>> =
         runCatching {
-            courtRepo.findByClubIdentifier(cid, limit, skip)
+            trxManager.run {
+                courtRepo.findByClubIdentifier(cid, limit, skip)
+            }
         }
 
     /**
@@ -30,7 +32,9 @@ class CourtService(
      */
     fun getCourtById(crid: UInt): Result<Court> =
         runCatching {
-            checkNotNull(courtRepo.findByIdentifier(crid)) { "Court with $crid not found " }
+            trxManager.run {
+                checkNotNull(courtRepo.findByIdentifier(crid)) { "Court with $crid not found" }
+            }
         }
 
     /**
@@ -44,6 +48,8 @@ class CourtService(
         clubId: UInt,
     ): Result<Court> =
         runCatching {
-            courtRepo.createCourt(name, clubId)
+            trxManager.run {
+                courtRepo.createCourt(name, clubId)
+            }
         }
 }

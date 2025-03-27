@@ -3,10 +3,10 @@ package pt.isel.ls.services
 import kotlinx.datetime.LocalDate
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.domain.TimeSlot
-import pt.isel.ls.repository.RentalRepository
+import pt.isel.ls.repository.TransactionManager
 
 class RentalService(
-    private val rentalRepo: RentalRepository,
+    private val trxManager: TransactionManager,
 ) {
     /**
      * Function that returns all rentals in of a court in a specific date
@@ -23,7 +23,9 @@ class RentalService(
         skip: Int,
     ): Result<List<Rental>> =
         runCatching {
-            rentalRepo.findByCridAndDate(crid, date, limit, skip)
+            trxManager.run {
+                rentalRepo.findByCridAndDate(crid, date, limit, skip)
+            }
         }
 
     /**
@@ -33,7 +35,9 @@ class RentalService(
      */
     fun getRentalById(rid: UInt): Result<Rental> =
         runCatching {
-            checkNotNull(rentalRepo.findByIdentifier(rid)) { "Rental with $rid not found" }
+            trxManager.run {
+                checkNotNull(rentalRepo.findByIdentifier(rid)) { "Rental with $rid not found" }
+            }
         }
 
     /**
@@ -51,7 +55,9 @@ class RentalService(
         courtId: UInt,
     ): Result<Rental> =
         runCatching {
-            rentalRepo.createRental(date, rentTime, renterId, courtId)
+            trxManager.run {
+                rentalRepo.createRental(date, rentTime, renterId, courtId)
+            }
         }
 
     /**
@@ -65,7 +71,9 @@ class RentalService(
         date: LocalDate,
     ): Result<List<UInt>> =
         runCatching {
-            rentalRepo.findAvailableHoursForACourt(crid, date)
+            trxManager.run {
+                rentalRepo.findAvailableHoursForACourt(crid, date)
+            }
         }
 
     /**
@@ -81,6 +89,8 @@ class RentalService(
         skip: Int,
     ): Result<List<Rental>> =
         runCatching {
-            rentalRepo.findAllRentalsByRenterId(uid, limit, skip)
+            trxManager.run {
+                rentalRepo.findAllRentalsByRenterId(uid, limit, skip)
+            }
         }
 }

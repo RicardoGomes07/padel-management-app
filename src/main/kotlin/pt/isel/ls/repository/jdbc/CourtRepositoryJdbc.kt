@@ -6,7 +6,6 @@ import pt.isel.ls.domain.*
 import pt.isel.ls.repository.CourtRepository
 import java.sql.Connection
 import java.sql.ResultSet
-import java.sql.SQLException
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for courts related actions
@@ -25,11 +24,8 @@ class CourtRepositoryJdbc(
     override fun createCourt(
         name: Name,
         clubId: UInt,
-    ): Court {
-        try {
-            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
-            connection.autoCommit = false
-
+    ): Court =
+        connection.executeMultipleQueries {
             val sqlCheckFk =
                 """
                 ${clubSqlReturnFormat()}
@@ -62,18 +58,8 @@ class CourtRepositoryJdbc(
                         rs.mapCourt(club)
                     }
                 }
-
-            connection.commit()
-
-            return newCourt
-        } catch (e: SQLException) {
-            connection.rollback()
-            throw e
-        } finally {
-            connection.autoCommit = true
-            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
+            newCourt
         }
-    }
 
     /**
      * Function that finds all courts of a club.

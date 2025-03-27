@@ -7,7 +7,6 @@ import pt.isel.ls.domain.*
 import pt.isel.ls.repository.RentalRepository
 import java.sql.Connection
 import java.sql.ResultSet
-import java.sql.SQLException
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for rentals related actions
@@ -30,12 +29,9 @@ class RentalRepositoryJdbc(
         rentTime: TimeSlot,
         renterId: UInt,
         courtId: UInt,
-    ): Rental {
-        try {
+    ): Rental =
+        connection.executeMultipleQueries {
             require(isInTheFuture(date, rentTime.start.toInt()))
-
-            connection.transactionIsolation = Connection.TRANSACTION_SERIALIZABLE
-            connection.autoCommit = false
 
             val sqlSelectRenter =
                 """
@@ -73,31 +69,19 @@ class RentalRepositoryJdbc(
                     renter_id, court_id
                 """.trimIndent()
 
-            val newRental =
-                connection.prepareStatement(sqlInsert).use { stmt ->
-                    stmt.setInt(1, date.toEpochDays())
-                    stmt.setInt(2, rentTime.start.toInt())
-                    stmt.setInt(3, rentTime.end.toInt())
-                    stmt.setInt(4, renterId.toInt())
-                    stmt.setInt(5, courtId.toInt())
+            connection.prepareStatement(sqlInsert).use { stmt ->
+                stmt.setInt(1, date.toEpochDays())
+                stmt.setInt(2, rentTime.start.toInt())
+                stmt.setInt(3, rentTime.end.toInt())
+                stmt.setInt(4, renterId.toInt())
+                stmt.setInt(5, courtId.toInt())
 
-                    stmt.executeQuery().use { rs ->
-                        require(rs.next())
-                        rs.mapRental(renter, court)
-                    }
+                stmt.executeQuery().use { rs ->
+                    require(rs.next())
+                    rs.mapRental(renter, court)
                 }
-
-            connection.commit()
-
-            return newRental
-        } catch (e: SQLException) {
-            connection.rollback()
-            throw e
-        } finally {
-            connection.autoCommit = true
-            connection.transactionIsolation = Connection.TRANSACTION_READ_COMMITTED
+            }
         }
-    }
 
     /**
      * Function that finds all available hours of a court for the given day

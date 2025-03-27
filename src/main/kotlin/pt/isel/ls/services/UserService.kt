@@ -4,10 +4,10 @@ import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
-import pt.isel.ls.repository.UserRepository
+import pt.isel.ls.repository.TransactionManager
 
 class UserService(
-    private val userRepo: UserRepository,
+    private val trxManager: TransactionManager,
 ) {
     /**
      * Function that creates a new user in the system
@@ -19,7 +19,9 @@ class UserService(
         email: Email,
     ): Result<User> =
         runCatching {
-            userRepo.createUser(name, email)
+            trxManager.run {
+                userRepo.createUser(name, email)
+            }
         }
 
     /**
@@ -27,5 +29,8 @@ class UserService(
      * @param token the user token
      * @return the user if the token is valid, null otherwise
      */
-    fun validateUser(token: Token): User? = userRepo.findUserByToken(token)
+    fun validateUser(token: Token): User? =
+        trxManager.run {
+            userRepo.findUserByToken(token)
+        }
 }

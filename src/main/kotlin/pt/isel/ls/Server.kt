@@ -7,10 +7,7 @@ import org.http4k.routing.routes
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.slf4j.LoggerFactory
-import pt.isel.ls.repository.mem.ClubRepositoryInMem
-import pt.isel.ls.repository.mem.CourtRepositoryInMem
-import pt.isel.ls.repository.mem.RentalRepositoryInMem
-import pt.isel.ls.repository.mem.UserRepositoryInMem
+import pt.isel.ls.repository.jdbc.TransactionManagerJdbc
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.CourtService
 import pt.isel.ls.services.RentalService
@@ -19,26 +16,31 @@ import pt.isel.ls.webapi.ClubWebApi
 import pt.isel.ls.webapi.CourtWebApi
 import pt.isel.ls.webapi.RentalWebApi
 import pt.isel.ls.webapi.UserWebApi
+import java.sql.DriverManager
 
 private val logger = LoggerFactory.getLogger("HTTPServer")
 
+val DB_URL = System.getenv("DB_URL") ?: throw Exception("Missing DB_URL environment variable")
+
 fun main() {
-    val userApi = UserWebApi(UserService(UserRepositoryInMem))
+    val trxManagerJdbc = TransactionManagerJdbc(DriverManager.getConnection(DB_URL))
+
+    val userApi = UserWebApi(UserService(trxManagerJdbc))
     val clubApi =
         ClubWebApi(
-            ClubService(ClubRepositoryInMem),
-            UserService(UserRepositoryInMem),
-            RentalService(RentalRepositoryInMem),
+            ClubService(trxManagerJdbc),
+            UserService(trxManagerJdbc),
+            RentalService(trxManagerJdbc),
         )
     val courtApi =
         CourtWebApi(
-            CourtService(CourtRepositoryInMem),
-            UserService(UserRepositoryInMem),
+            CourtService(trxManagerJdbc),
+            UserService(trxManagerJdbc),
         )
     val rentalApi =
         RentalWebApi(
-            RentalService(RentalRepositoryInMem),
-            UserService(UserRepositoryInMem),
+            RentalService(trxManagerJdbc),
+            UserService(trxManagerJdbc),
         )
 
     val userRoutes =

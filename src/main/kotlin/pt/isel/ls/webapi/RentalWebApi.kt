@@ -4,10 +4,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.services.RentalService
@@ -23,80 +21,66 @@ class RentalWebApi(
     private val rentalService: RentalService,
     private val userService: UserService,
 ) {
-    fun createRental(request: Request): Response {
-        request.log()
-        request.validateUser(userService::validateUser)
-            ?: return Response(UNAUTHORIZED).body("No Authorization")
+    fun createRental(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
 
-        val input =
-            validateUserInput {
-                Json.decodeFromString<RentalCreationInput>(request.bodyString())
-            }.getOrElse { ex -> return handleUserInputError(ex) }
+            val timeSlot = TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt())
 
-        val timeSlot =
-            validateUserInput {
-                TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt())
-            }.getOrElse { ex -> return handleUserInputError(ex) }
+            rentalService
+                .createRental(
+                    input.date,
+                    timeSlot,
+                    input.cid.toUInt(),
+                    input.crid.toUInt(),
+                ).fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) },
+                )
+        }
 
-        return rentalService
-            .createRental(
-                input.date,
-                timeSlot,
-                input.cid.toUInt(),
-                input.crid.toUInt(),
-            ).fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) },
-            )
-    }
+    fun getAllRentals(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val courtId = request.path("crid")?.toUIntOrNull()
 
-    fun getAllRentals(request: Request): Response {
-        request.log()
-        request.validateUser(userService::validateUser)
-            ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val courtId =
-            request.path("crid")?.toUIntOrNull()
-                ?: return Response(BAD_REQUEST).body("Invalid court id")
-        val date = request.query("date")?.let { LocalDate.parse(it) }
-        val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
-        val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
+            requireNotNull(courtId) { "Invalid court id" }
 
-        return rentalService
-            .getRentals(courtId, date, limit, skip)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
-            )
-    }
+            val date = request.query("date")?.let { LocalDate.parse(it) }
+            val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
+            val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
 
-    fun getUserRentals(request: Request): Response {
-        request.log()
-        val userInfo =
-            request.validateUser(userService::validateUser)
-                ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
-        val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
+            rentalService
+                .getRentals(courtId, date, limit, skip)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
+                )
+        }
 
-        return rentalService
-            .getUserRentals(userInfo.uid, limit, skip)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
-            )
-    }
+    fun getUserRentals(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) { user ->
+            val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
+            val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
 
-    fun getRentalInfo(request: Request): Response {
-        request.log()
-        request.validateUser(userService::validateUser)
-            ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val rentalId =
-            request.path("rid")?.toUIntOrNull()
-                ?: return Response(BAD_REQUEST).body("Invalid rental id")
-        return rentalService
-            .getRentalById(rentalId)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
-            )
-    }
+            rentalService
+                .getUserRentals(user.uid, limit, skip)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
+                )
+        }
+
+    fun getRentalInfo(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val rentalId = request.path("rid")?.toUIntOrNull()
+
+            requireNotNull(rentalId) { "Invalid rental id" }
+
+            rentalService
+                .getRentalById(rentalId)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
+                )
+        }
 }

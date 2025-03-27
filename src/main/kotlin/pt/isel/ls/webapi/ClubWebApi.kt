@@ -6,10 +6,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
-import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.http4k.routing.path
 import pt.isel.ls.domain.Name
 import pt.isel.ls.services.*
@@ -25,74 +23,66 @@ class ClubWebApi(
     private val userService: UserService,
     private val rentalService: RentalService,
 ) {
-    fun createClub(request: Request): Response {
-        request.log()
-        val user =
-            request.validateUser(userService::validateUser)
-                ?: return Response(UNAUTHORIZED).body("No Authorization")
+    fun createClub(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) { user ->
 
-        val input =
-            validateUserInput {
-                Json.decodeFromString<ClubCreationInput>(request.bodyString())
-            }.getOrElse { ex -> return handleUserInputError(ex) }
+            val input = Json.decodeFromString<ClubCreationInput>(request.bodyString())
 
-        val clubName =
-            validateUserInput { Name(input.name) }
-                .getOrElse { ex -> return handleUserInputError(ex) }
+            val clubName = Name(input.name)
 
-        return clubService
-            .createClub(clubName, user)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(CREATED).body(Json.encodeToString(ClubDetailsOutput(it))) },
-            )
-    }
+            clubService
+                .createClub(clubName, user)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(CREATED).body(Json.encodeToString(ClubDetailsOutput(it))) },
+                )
+        }
 
-    fun getAllClubs(request: Request): Response {
-        request.log()
-        request.validateUser(userService::validateUser)
-            ?: return Response(UNAUTHORIZED).body("No Authorization")
+    fun getAllClubs(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
+            val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
 
-        val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
-        val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
-        return clubService
-            .getClubs(limit, skip)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput())) },
-            )
-    }
+            clubService
+                .getClubs(limit, skip)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput())) },
+                )
+        }
 
-    fun getClubInfo(request: Request): Response {
-        request.log()
-        request.validateUser(userService::validateUser)
-            ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val clubId = request.path("cid")?.toUIntOrNull() ?: return Response(BAD_REQUEST).body("Invalid club id")
-        return clubService
-            .getClubById(clubId)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(OK).body(Json.encodeToString(ClubDetailsOutput(it))) },
-            )
-    }
+    fun getClubInfo(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val clubId =
+                request.path("cid")?.toUIntOrNull()
 
-    fun getAvailableHours(request: Request): Response {
-        request.log()
-        request.validateUser(userService::validateUser)
-            ?: return Response(UNAUTHORIZED).body("No Authorization")
-        val courtId =
-            request.path("crid")?.toUIntOrNull()
-                ?: return Response(BAD_REQUEST).body("Invalid court id")
-        val date =
-            request
-                .query("date")
-                ?.let { LocalDate.parse(it) }
-                ?: return Response(BAD_REQUEST).body("Invalid date")
-        return rentalService
-            .getAvailableHours(courtId, date)
-            .fold(
-                onFailure = { ex -> ex.toResponse() },
-                onSuccess = { Response(OK).body(Json.encodeToString(it)) },
-            )
-    }
+            requireNotNull(clubId) { "Invalid club id" }
+
+            clubService
+                .getClubById(clubId)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(ClubDetailsOutput(it))) },
+                )
+        }
+
+    fun getAvailableHours(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val courtId = request.path("crid")?.toUIntOrNull()
+
+            requireNotNull(courtId) { "Invalid court id" }
+
+            val date = request.query("date")?.let { LocalDate.parse(it) }
+
+            requireNotNull(date) { "Invalid date" }
+
+            require(date >= currentDate()) { "Date must not be in the past" }
+
+            rentalService
+                .getAvailableHours(courtId, date)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it)) },
+                )
+        }
 }

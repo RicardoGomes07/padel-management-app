@@ -3,10 +3,10 @@ package pt.isel.ls.services
 import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
-import pt.isel.ls.repository.ClubRepository
+import pt.isel.ls.repository.TransactionManager
 
 class ClubService(
-    private val clubRepo: ClubRepository,
+    private val trxManager: TransactionManager,
 ) {
     /**
      * Function that returns all clubs in the system
@@ -17,7 +17,9 @@ class ClubService(
         skip: Int,
     ): Result<List<Club>> =
         runCatching {
-            clubRepo.findAll(limit, skip)
+            trxManager.run {
+                clubRepo.findAll(limit, skip)
+            }
         }
 
     /**
@@ -27,7 +29,9 @@ class ClubService(
      */
     fun getClubById(cid: UInt): Result<Club> =
         runCatching {
-            checkNotNull(clubRepo.findByIdentifier(cid)) { "Club with $cid not found" }
+            trxManager.run {
+                checkNotNull(clubRepo.findByIdentifier(cid)) { "Club with $cid not found" }
+            }
         }
 
     fun createClub(
@@ -35,7 +39,9 @@ class ClubService(
         owner: User,
     ): Result<Club> =
         runCatching {
-            require(clubRepo.findClubByName(name) == null) { "Club with name $name already exists" }
-            clubRepo.createClub(name, owner.uid)
+            trxManager.run {
+                require(clubRepo.findClubByName(name) == null) { "Club with name $name already exists" }
+                clubRepo.createClub(name, owner.uid)
+            }
         }
 }
