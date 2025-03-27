@@ -92,37 +92,52 @@ class RentalRepositoryJdbc(
     override fun findAvailableHoursForACourt(
         crid: UInt,
         date: LocalDate,
-    ): List<UInt> {
-        // TODO(Add court existence verification)
-        val sqlSelect =
-            """
-            ${rentalSqlReturnFormat()}
-            WHERE r.date_ = ?
-            ORDER BY r.rd_start ASC
-            """.trimIndent()
+    ): List<UInt> =
+        connection.executeMultipleQueries {
+            val sqlCheckFk =
+                """
+                SELECT * FROM courts WHERE crid = ?
+                """.trimIndent()
 
-        val rentalsOnDate =
-            connection.prepareStatement(sqlSelect).use { stmt ->
-                stmt.setInt(1, date.toEpochDays())
+            connection.prepareStatement(sqlCheckFk).use { stmt ->
+                stmt.setInt(1, crid.toInt())
 
                 stmt.executeQuery().use { rs ->
-                    val rentals = mutableListOf<Rental>()
-                    while (rs.next()) {
-                        rentals.add(rs.mapRental())
+                    require(rs.next())
+                    rs.mapCourt()
+                }
+            }
+
+            val sqlSelect =
+                """
+                ${rentalSqlReturnFormat()}
+                WHERE r.date_ = ?, r.crid = ?
+                ORDER BY r.rd_start ASC
+                """.trimIndent()
+
+            val rentalsOnDate =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, date.toEpochDays())
+                    stmt.setInt(2, crid.toInt())
+
+                    stmt.executeQuery().use { rs ->
+                        val rentals = mutableListOf<Rental>()
+                        while (rs.next()) {
+                            rentals.add(rs.mapRental())
+                        }
+                        rentals
                     }
-                    rentals
                 }
-            }
 
-        val hoursRange = UIntRange(0u, 23u)
+            val hoursRange = UIntRange(0u, 23u)
 
-        return hoursRange
-            .filter { hour ->
-                rentalsOnDate.none { rental ->
-                    hour in rental.rentTime.start..<rental.rentTime.end
+            hoursRange
+                .filter { hour ->
+                    rentalsOnDate.none { rental ->
+                        hour in rental.rentTime.start..<rental.rentTime.end
+                    }
                 }
-            }
-    }
+        }
 
     /**
      * Function that finds all rentals for a given day for a given court.
