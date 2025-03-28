@@ -84,7 +84,9 @@ object RentalRepositoryInMem : RentalRepository {
         crid: UInt,
         date: LocalDate,
     ): List<UInt> {
-        val court = courts.firstOrNull { it.crid == crid } ?: return emptyList()
+        val court = courts.firstOrNull { it.crid == crid }
+
+        checkNotNull(court)
 
         val rentalsOnDate = rentals.filter { it.court == court && it.date == date }
 
@@ -109,12 +111,14 @@ object RentalRepositoryInMem : RentalRepository {
         date: LocalDate?,
         limit: Int,
         offset: Int,
-    ): List<Rental> =
-        rentals
+    ): List<Rental> {
+        checkNotNull(courts.firstOrNull { it.crid == crid })
+        return rentals
             .filter {
                 it.court.crid == crid && (date == null || it.date == date)
             }.drop(offset)
             .take(limit)
+    }
 
     /**
      * Finds all rentals by a renter id.
@@ -125,12 +129,14 @@ object RentalRepositoryInMem : RentalRepository {
         renter: UInt,
         limit: Int,
         offset: Int,
-    ): List<Rental> =
-        rentals
+    ): List<Rental> {
+        checkNotNull(users.firstOrNull { it.uid == renter })
+        return rentals
             .filter {
                 it.renter.uid == renter
             }.drop(offset)
             .take(limit)
+    }
 
     /**
      * Updates an existing rental or creates a new one if it's new.
