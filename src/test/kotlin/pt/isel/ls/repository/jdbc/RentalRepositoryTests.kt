@@ -6,7 +6,6 @@ import kotlinx.datetime.*
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
-import pt.isel.ls.domain.toTimeSlot
 import pt.isel.ls.services.RentalError
 import java.sql.Connection
 import java.sql.DriverManager
@@ -42,7 +41,7 @@ class RentalRepositoryTests {
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
         val rentalDate = tomorrowDate
-        val rentalTime = (10..12).toTimeSlot() // 2-hour rental from 10:00 to 12:00
+        val rentalTime = TimeSlot(10u, 12u) // 2-hour rental from 10:00 to 12:00
 
         val rental = rentalRepoJdbc.createRental(rentalDate, rentalTime, renter.uid, court.crid)
 
@@ -60,8 +59,24 @@ class RentalRepositoryTests {
 
         val pastDate = tomorrowDate.minus(2, DateTimeUnit.DAY)
 
+        val currTime =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+
         assertFailsWith<RentalError.RentalDateInThePast> {
-            rentalRepoJdbc.createRental(pastDate, (10..12).toTimeSlot(), renter.uid, court.crid)
+            rentalRepoJdbc.createRental(pastDate, TimeSlot(10u, 12u), renter.uid, court.crid)
+        }
+        assertFailsWith<RentalError.RentalDateInThePast> {
+            rentalRepoJdbc.createRental(
+                currTime.date,
+                TimeSlot(
+                    (currTime.hour - 1).toUInt(),
+                    currTime.hour.toUInt(),
+                ),
+                renter.uid,
+                court.crid,
+            )
         }
     }
 
@@ -73,15 +88,15 @@ class RentalRepositoryTests {
 
         rentalRepoJdbc.createRental(
             tomorrowDate,
-            (10..12).toTimeSlot(),
+            TimeSlot(10u, 12u),
             renter.uid,
             court.crid,
         )
 
-        assertFailsWith<RentalError.RentalAlreadyExists> {
+        assertFailsWith<RentalError.OverlapInTimeSlot> {
             rentalRepoJdbc.createRental(
                 tomorrowDate,
-                (11..13).toTimeSlot(),
+                TimeSlot(11u, 13u),
                 renter.uid,
                 court.crid,
             )
@@ -94,8 +109,8 @@ class RentalRepositoryTests {
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
-        rentalRepoJdbc.createRental(tomorrowDate, (9..10).toTimeSlot(), renter.uid, court.crid)
-        rentalRepoJdbc.createRental(tomorrowDate, (11..13).toTimeSlot(), renter.uid, court.crid)
+        rentalRepoJdbc.createRental(tomorrowDate, TimeSlot(9u, 10u), renter.uid, court.crid)
+        rentalRepoJdbc.createRental(tomorrowDate, TimeSlot(11u, 13u), renter.uid, court.crid)
 
         val rentals = rentalRepoJdbc.findAllRentalsByRenterId(renter.uid)
         assertEquals(2, rentals.size)
@@ -106,17 +121,32 @@ class RentalRepositoryTests {
         val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
+        val court2 = courtRepoJdbc.createCourt("Court B".toName(), club.cid)
 
         rentalRepoJdbc
             .createRental(
                 tomorrowDate,
-                (14..16).toTimeSlot(),
+                TimeSlot(14u, 16u),
+                renter.uid,
+                court.crid,
+            )
+
+        rentalRepoJdbc
+            .createRental(
+                tomorrowDate.plus(1, DateTimeUnit.DAY),
+                TimeSlot(17u, 20u),
                 renter.uid,
                 court.crid,
             )
 
         val foundRentals = rentalRepoJdbc.findByCridAndDate(court.crid, null)
-        assertEquals(1, foundRentals.size)
+        assertEquals(2, foundRentals.size)
+
+        val tomorrowRentals = rentalRepoJdbc.findByCridAndDate(court.crid, tomorrowDate)
+        assertEquals(1, tomorrowRentals.size)
+
+        val otherCourtRentals = rentalRepoJdbc.findByCridAndDate(court2.crid, tomorrowDate)
+        assertEquals(0, otherCourtRentals.size)
     }
 
     @Test
@@ -128,7 +158,7 @@ class RentalRepositoryTests {
         rentalRepoJdbc
             .createRental(
                 tomorrowDate,
-                (10..12).toTimeSlot(),
+                TimeSlot(10u, 12u),
                 renter.uid,
                 court.crid,
             )
@@ -154,10 +184,12 @@ class RentalRepositoryTests {
             rentalRepoJdbc
                 .createRental(
                     tomorrowDate,
-                    (10..12).toTimeSlot(),
+                    TimeSlot(10u, 12u),
                     renter.uid,
                     court.crid,
                 )
+
+        assertEquals(rental, rentalRepoJdbc.findByIdentifier(rental.rid))
 
         rentalRepoJdbc.deleteByIdentifier(rental.rid)
         val foundRental = rentalRepoJdbc.findByIdentifier(rental.rid)
@@ -174,7 +206,7 @@ class RentalRepositoryTests {
             rentalRepoJdbc
                 .createRental(
                     tomorrowDate,
-                    (10..12).toTimeSlot(),
+                    TimeSlot(10u, 12u),
                     renter.uid,
                     court.crid,
                 )
@@ -191,6 +223,6 @@ class RentalRepositoryTests {
                         it.renter == updatedRental.renter &&
                         it.court == updatedRental.court
                 }
-        assertEquals((12..15).toTimeSlot(), retrievedRental?.rentTime)
+        assertEquals(TimeSlot(12u, 15u), retrievedRental?.rentTime)
     }
 }

@@ -12,15 +12,18 @@ import pt.isel.ls.services.CourtService
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.CourtDetailsOutput
 import pt.isel.ls.webapi.dto.CourtsOutput
-import java.util.UUID
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+private val transactionManager = TransactionManagerInMem()
+
 val courtApi =
     CourtWebApi(
-        CourtService(TransactionManagerInMem()),
-        UserService(TransactionManagerInMem()),
+        CourtService(transactionManager),
+        UserService(transactionManager),
     )
+
 val courtsRoutes =
     routes(
         "courts" bind POST to courtApi::createCourt,
@@ -32,7 +35,7 @@ fun createCourt(
     token: String,
     clubId: Int,
 ): CourtDetailsOutput {
-    val name = "Court-${UUID.randomUUID().toString().take(4)}"
+    val name = "Court-${randomString(10)}"
     val courtResponse =
         courtsRoutes(
             Request(POST, "courts")
@@ -45,6 +48,14 @@ fun createCourt(
 }
 
 class CourtWebApiTests {
+    @BeforeTest
+    fun setup() {
+        transactionManager.run {
+            it.courtRepo.clear()
+            it.userRepo.clear()
+        }
+    }
+
     @Test
     fun `create court with valid data`() {
         val token = createUser()
@@ -56,7 +67,8 @@ class CourtWebApiTests {
     @Test
     fun `get court info with valid court id`() {
         val token = createUser()
-        val courtCreated = createCourt(token, 1)
+        val clubID = createClub(token).cid.toInt()
+        val courtCreated = createCourt(token, clubID)
         val getCourtInfoRequest =
             courtsRoutes(
                 Request(GET, "courts/${courtCreated.crid.toInt()}")
@@ -82,10 +94,10 @@ class CourtWebApiTests {
     @Test
     fun `get all courts for a club`() {
         val token = createUser()
-        val clubId = 1
+        val clubID = createClub(token).cid.toInt()
         val getAllCourtsRequest =
             courtsRoutes(
-                Request(GET, "courts/clubs/$clubId")
+                Request(GET, "courts/clubs/$clubID")
                     .header("Authorization", token),
             )
         val getAllCourtsResponse = Json.decodeFromString<CourtsOutput>(getAllCourtsRequest.bodyString())

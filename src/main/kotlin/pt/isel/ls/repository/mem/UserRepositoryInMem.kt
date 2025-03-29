@@ -62,5 +62,6 @@ object UserRepositoryInMem : UserRepository {
 
     override fun clear() {
         users.clear()
+        currId = 0u
     }
 }

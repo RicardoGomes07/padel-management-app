@@ -11,14 +11,15 @@ import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.UserInput
 import pt.isel.ls.webapi.dto.UserOutput
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+
+private val transactionManager = TransactionManagerInMem()
 
 val userApi =
     UserWebApi(
-        UserService(TransactionManagerInMem()),
+        UserService(transactionManager),
     )
 val userRoutes =
     routes(
@@ -26,9 +27,16 @@ val userRoutes =
         "users/me" bind GET to userApi::getUserInfo,
     )
 
-@OptIn(ExperimentalUuidApi::class)
+fun randomString(
+    length: Int,
+    charset: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+): String =
+    (1..length)
+        .map { charset.random() }
+        .joinToString("")
+
 fun createUser(): String {
-    val name = Uuid.random().toString().take(10)
+    val name = randomString(10)
     val userResponse =
         userRoutes(
             Request(POST, "users")
@@ -40,6 +48,13 @@ fun createUser(): String {
 }
 
 class UserWebApiTests {
+    @BeforeTest
+    fun setup() {
+        transactionManager.run {
+            it.userRepo.clear()
+        }
+    }
+
     @Test
     fun `user creation with valid Name and Email`() {
         val response =

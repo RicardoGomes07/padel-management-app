@@ -28,7 +28,7 @@ private fun CustomError.toResponse(): Response {
             // Rental Errors
             is RentalError.RentalNotFound, is RentalError.RenterNotFound, is RentalError.MissingCourt -> NOT_FOUND
             is RentalError.RentalDateInThePast -> BAD_REQUEST
-            is RentalError.RentalAlreadyExists -> CONFLICT
+            is RentalError.OverlapInTimeSlot -> CONFLICT
         }
     return Response(status).body(Json.encodeToString(ProblemOutput(this.description, this.message)))
 }

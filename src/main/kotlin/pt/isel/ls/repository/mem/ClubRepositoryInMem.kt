@@ -67,5 +67,6 @@ object ClubRepositoryInMem : ClubRepository {
 
     override fun clear() {
         clubs.clear()
+        currId = 0u
     }
 }

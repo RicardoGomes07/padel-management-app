@@ -73,6 +73,13 @@ class RentalRepositoryJdbc(
                     }
                 }
 
+            val availableHours = retrieveAvailableHoursInCourtForDate(courtId, date)
+
+            ensureOrThrow(
+                condition = (rentTime.start until rentTime.end).all { it in availableHours },
+                exception = RentalError.OverlapInTimeSlot(date, rentTime),
+            )
+
             val sqlInsert =
                 """
                 INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id) values (?, ?, ?, ?, ?)
@@ -88,10 +95,7 @@ class RentalRepositoryJdbc(
                 stmt.setInt(5, courtId.toInt())
 
                 stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = RentalError.RentalAlreadyExists(date, rentTime),
-                    )
+                    rs.next()
                     rs.mapRental(renter, court)
                 }
             }
@@ -110,7 +114,8 @@ class RentalRepositoryJdbc(
         connection.executeMultipleQueries {
             val sqlCheckFk =
                 """
-                SELECT * FROM courts WHERE crid = ?
+                ${courtSqlReturnFormat()}
+                WHERE cr.crid = ?
                 """.trimIndent()
 
             connection.prepareStatement(sqlCheckFk).use { stmt ->
@@ -125,35 +130,7 @@ class RentalRepositoryJdbc(
                 }
             }
 
-            val sqlSelect =
-                """
-                ${rentalSqlReturnFormat()}
-                WHERE r.date_ = ?, r.crid = ?
-                ORDER BY r.rd_start ASC
-                """.trimIndent()
-
-            val rentalsOnDate =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, date.toEpochDays())
-                    stmt.setInt(2, crid.toInt())
-
-                    stmt.executeQuery().use { rs ->
-                        val rentals = mutableListOf<Rental>()
-                        while (rs.next()) {
-                            rentals.add(rs.mapRental())
-                        }
-                        rentals
-                    }
-                }
-
-            val hoursRange = UIntRange(0u, 23u)
-
-            hoursRange
-                .filter { hour ->
-                    rentalsOnDate.none { rental ->
-                        hour in rental.rentTime.start..<rental.rentTime.end
-                    }
-                }
+            retrieveAvailableHoursInCourtForDate(crid, date)
         }
 
     /**
@@ -349,6 +326,41 @@ class RentalRepositoryJdbc(
         connection.prepareStatement(sqlDelete).use { stmt ->
             stmt.executeUpdate()
         }
+    }
+
+    private fun retrieveAvailableHoursInCourtForDate(
+        crid: UInt,
+        date: LocalDate,
+    ): List<UInt> {
+        val sqlSelect =
+            """
+            ${rentalSqlReturnFormat()}
+            WHERE r.date_ = ? AND cr.crid = ?
+            ORDER BY r.rd_start ASC
+            """.trimIndent()
+
+        val rentalsOnDate =
+            connection.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setInt(1, date.toEpochDays())
+                stmt.setInt(2, crid.toInt())
+
+                stmt.executeQuery().use { rs ->
+                    val rentals = mutableListOf<Rental>()
+                    while (rs.next()) {
+                        rentals.add(rs.mapRental())
+                    }
+                    rentals
+                }
+            }
+
+        val hoursRange = UIntRange(0u, 23u)
+
+        return hoursRange
+            .filter { hour ->
+                rentalsOnDate.none { rental ->
+                    hour in rental.rentTime.start..<rental.rentTime.end
+                }
+            }
     }
 }
 

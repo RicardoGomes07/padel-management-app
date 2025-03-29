@@ -5,24 +5,14 @@ package pt.isel.ls.services
 import kotlinx.datetime.LocalDate
 import pt.isel.ls.domain.TimeSlot
 
-private enum class ErrorTypes(
-    val description: String,
-) {
-    USER("Error during user operation"),
-    CLUB("Error during club operation"),
-    COURT("Error during court operation"),
-    RENTAL("Error during rental operation"),
-}
-
 sealed class CustomError(
-    private val type: ErrorTypes,
     override val message: String,
-    val description: String = type.description,
+    val description: String,
 ) : RuntimeException(message)
 
 sealed class UserError(
     message: String,
-) : CustomError(ErrorTypes.USER, message) {
+) : CustomError(message, "Error during user operation") {
     class UserAlreadyExists(
         email: String,
     ) : UserError("User with email $email already exists")
@@ -30,7 +20,7 @@ sealed class UserError(
 
 sealed class ClubError(
     message: String,
-) : CustomError(ErrorTypes.CLUB, message) {
+) : CustomError(message, "Error during club operation") {
     class ClubAlreadyExists(
         name: String,
     ) : ClubError("Club with name $name already exists")
@@ -46,7 +36,7 @@ sealed class ClubError(
 
 sealed class CourtError(
     message: String,
-) : CustomError(ErrorTypes.COURT, message) {
+) : CustomError(message, "Error during court operation") {
     class CourtNotFound(
         courtId: UInt,
     ) : CourtError("Court with id $courtId not found")
@@ -58,7 +48,7 @@ sealed class CourtError(
 
 sealed class RentalError(
     message: String,
-) : CustomError(ErrorTypes.RENTAL, message) {
+) : CustomError(message, "Error during rental operation") {
     class RentalNotFound(
         rentalId: UInt,
     ) : RentalError("Rental with id $rentalId not found")
@@ -67,7 +57,7 @@ sealed class RentalError(
         date: LocalDate,
     ) : RentalError("Rental date $date is in the past")
 
-    class RentalAlreadyExists(
+    class OverlapInTimeSlot(
         date: LocalDate,
         timeSlot: TimeSlot,
     ) : RentalError(

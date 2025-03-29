@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 @file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.webapi
@@ -11,8 +9,7 @@ import org.http4k.core.Status.Companion.UNAUTHORIZED
 import org.slf4j.LoggerFactory
 import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import pt.isel.ls.domain.toToken
 
 const val LIMIT_VALUE_DEFAULT = 10
 const val SKIP_VALUE_DEFAULT = 0
@@ -59,7 +56,7 @@ fun Request.handlerWithAuth(
  */
 fun Request.validateUser(validateUser: (Token) -> User?): User? =
     header("Authorization")
-        ?.let { token -> Token(Uuid.parse(token)) }
+        ?.toToken()
         ?.let { userToken -> validateUser(userToken) }
 
 fun currentDate() =

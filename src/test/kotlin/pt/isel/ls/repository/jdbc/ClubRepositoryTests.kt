@@ -80,7 +80,7 @@ class ClubRepositoryTests {
         assertEquals(1, clubRepoJdbc.findAll().size)
 
         clubRepoJdbc.deleteByIdentifier(club.cid)
-        assertEquals(0, clubRepoJdbc.findAll().size)
+        assertNull(clubRepoJdbc.findByIdentifier(club.cid))
     }
 
     @Test

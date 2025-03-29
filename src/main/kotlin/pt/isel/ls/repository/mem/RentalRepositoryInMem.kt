@@ -52,7 +52,7 @@ object RentalRepositoryInMem : RentalRepository {
                     rental.date == date &&
                         !(rentTime.end <= rental.rentTime.start || rentTime.start >= rental.rentTime.end)
                 },
-            exception = RentalError.RentalAlreadyExists(date, rentTime),
+            exception = RentalError.OverlapInTimeSlot(date, rentTime),
         )
 
         currId += 1u
@@ -201,5 +201,6 @@ object RentalRepositoryInMem : RentalRepository {
      */
     override fun clear() {
         rentals.clear()
+        currId = 0u
     }
 }

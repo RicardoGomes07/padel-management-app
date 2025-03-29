@@ -88,7 +88,7 @@ class CourtRepositoryTests {
         assertEquals(1, courtRepoJdbc.findAll().size)
 
         courtRepoJdbc.deleteByIdentifier(court.crid)
-        assertEquals(0, courtRepoJdbc.findAll().size)
+        assertNull(courtRepoJdbc.findByIdentifier(court.crid))
     }
 
     @Test

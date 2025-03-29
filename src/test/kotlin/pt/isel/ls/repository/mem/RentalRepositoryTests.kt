@@ -35,7 +35,7 @@ class RentalRepositoryTests {
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
         val rentalDate = tomorrowDate
-        val rentalTime = (10..12).toTimeSlot() // 2-hour rental from 10:00 to 12:00
+        val rentalTime = TimeSlot(10u, 12u) // 2-hour rental from 10:00 to 12:00
 
         val rental = rentalRepoInMem.createRental(rentalDate, rentalTime, renter.uid, court.crid)
 
@@ -54,7 +54,7 @@ class RentalRepositoryTests {
         val pastDate = tomorrowDate.minus(2, DateTimeUnit.DAY)
 
         assertFailsWith<RentalError.RentalDateInThePast> {
-            rentalRepoInMem.createRental(pastDate, (10..12).toTimeSlot(), renter.uid, court.crid)
+            rentalRepoInMem.createRental(pastDate, TimeSlot(10u, 12u), renter.uid, court.crid)
         }
     }
 
@@ -66,15 +66,15 @@ class RentalRepositoryTests {
 
         rentalRepoInMem.createRental(
             tomorrowDate,
-            (10..12).toTimeSlot(),
+            TimeSlot(10u, 12u),
             renter.uid,
             court.crid,
         )
 
-        assertFailsWith<RentalError.RentalAlreadyExists> {
+        assertFailsWith<RentalError.OverlapInTimeSlot> {
             rentalRepoInMem.createRental(
                 tomorrowDate,
-                (11..13).toTimeSlot(),
+                TimeSlot(11u, 13u),
                 renter.uid,
                 court.crid,
             )
@@ -87,8 +87,8 @@ class RentalRepositoryTests {
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
-        rentalRepoInMem.createRental(tomorrowDate, (9..10).toTimeSlot(), renter.uid, court.crid)
-        rentalRepoInMem.createRental(tomorrowDate, (11..13).toTimeSlot(), renter.uid, court.crid)
+        rentalRepoInMem.createRental(tomorrowDate, TimeSlot(9u, 10u), renter.uid, court.crid)
+        rentalRepoInMem.createRental(tomorrowDate, TimeSlot(11u, 13u), renter.uid, court.crid)
 
         val rentals = rentalRepoInMem.findAllRentalsByRenterId(renter.uid)
         assertEquals(2, rentals.size)
@@ -103,7 +103,7 @@ class RentalRepositoryTests {
         rentalRepoInMem
             .createRental(
                 tomorrowDate,
-                (14..16).toTimeSlot(),
+                TimeSlot(14u, 16u),
                 renter.uid,
                 court.crid,
             )
@@ -121,7 +121,7 @@ class RentalRepositoryTests {
         rentalRepoInMem
             .createRental(
                 tomorrowDate,
-                (10..12).toTimeSlot(),
+                TimeSlot(10u, 12u),
                 renter.uid,
                 court.crid,
             )
@@ -147,7 +147,7 @@ class RentalRepositoryTests {
             rentalRepoInMem
                 .createRental(
                     tomorrowDate,
-                    (10..12).toTimeSlot(),
+                    TimeSlot(10u, 12u),
                     renter.uid,
                     court.crid,
                 )
@@ -167,7 +167,7 @@ class RentalRepositoryTests {
             rentalRepoInMem
                 .createRental(
                     tomorrowDate,
-                    (10..12).toTimeSlot(),
+                    TimeSlot(10u, 12u),
                     renter.uid,
                     court.crid,
                 )
@@ -184,6 +184,6 @@ class RentalRepositoryTests {
                         it.renter == updatedRental.renter &&
                         it.court == updatedRental.court
                 }
-        assertEquals((12..15).toTimeSlot(), retrievedRental?.rentTime)
+        assertEquals(TimeSlot(12u, 15u), retrievedRental?.rentTime)
     }
 }

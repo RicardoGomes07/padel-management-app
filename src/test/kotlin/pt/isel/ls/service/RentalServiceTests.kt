@@ -9,7 +9,7 @@ import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.domain.toName
-import pt.isel.ls.repository.mem.*
+import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -18,20 +18,22 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.days
 
 class RentalServiceTests {
-    private val rentalService = RentalService(TransactionManagerInMem())
-    private val clubService = ClubService(TransactionManagerInMem())
-    private val userService = UserService(TransactionManagerInMem())
-    private val courtService = CourtService(TransactionManagerInMem())
+    private val transactionManager = TransactionManagerInMem()
+
+    private val rentalService = RentalService(transactionManager)
+    private val clubService = ClubService(transactionManager)
+    private val userService = UserService(transactionManager)
+    private val courtService = CourtService(transactionManager)
 
     @BeforeTest
     fun setUp() {
-        RentalRepositoryInMem.clear()
-        UserRepositoryInMem.clear()
-        ClubRepositoryInMem.clear()
-        CourtRepositoryInMem.clear()
+        transactionManager.run {
+            it.rentalRepo.clear()
+            it.courtRepo.clear()
+            it.clubRepo.clear()
+            it.userRepo.clear()
+        }
     }
-
-    private val currentDateTime = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
     @Test
     fun `create rental with valid renter and court`() {

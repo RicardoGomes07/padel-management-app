@@ -5,16 +5,18 @@ package pt.isel.ls.service
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.mem.TransactionManagerInMem
-import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.UserService
 import kotlin.test.*
 
 class UserServiceTests {
-    private val userService = UserService(TransactionManagerInMem())
+    private val transactionManager = TransactionManagerInMem()
+    private val userService = UserService(transactionManager)
 
     @BeforeTest
     fun setUp() {
-        UserRepositoryInMem.clear()
+        transactionManager.run {
+            it.userRepo.clear()
+        }
     }
 
     @Test

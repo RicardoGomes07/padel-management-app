@@ -4,7 +4,6 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.ClubRepository
-import pt.isel.ls.repository.jdbc.dao.mapClubDb
 import pt.isel.ls.services.ClubError
 import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
@@ -81,33 +80,13 @@ class ClubRepositoryJdbc(
                 WHERE c.name = ?
                 """.trimIndent()
 
-            val clubDb =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setString(1, name.value)
+            connection.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setString(1, name.value)
 
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapClubDb() else return@executeMultipleQueries null
-                    }
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.mapClub() else return@executeMultipleQueries null
                 }
-
-            val sqlCheckFK =
-                """
-                SELECT * FROM users u WHERE u.uid = ?
-                """.trimIndent()
-
-            val owner =
-                connection.prepareStatement(sqlCheckFK).use { stmt ->
-                    stmt.setInt(1, clubDb.owner.toInt())
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapUser() else return@executeMultipleQueries null
-                    }
-                }
-
-            Club(
-                cid = clubDb.cid,
-                name = clubDb.name,
-                owner = owner,
-            )
+            }
         }
 
     /**
@@ -146,33 +125,13 @@ class ClubRepositoryJdbc(
                 WHERE c.cid = ?
                 """.trimIndent()
 
-            val clubDb =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, id.toInt())
+            connection.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setInt(1, id.toInt())
 
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapClubDb() else return@executeMultipleQueries null
-                    }
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.mapClub() else return@executeMultipleQueries null
                 }
-
-            val sqlCheckFK =
-                """
-                SELECT * FROM users u WHERE u.uid = ?
-                """.trimIndent()
-
-            val owner =
-                connection.prepareStatement(sqlCheckFK).use { stmt ->
-                    stmt.setInt(1, clubDb.owner.toInt())
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapUser() else return@executeMultipleQueries null
-                    }
-                }
-
-            Club(
-                cid = clubDb.cid,
-                name = clubDb.name,
-                owner = owner,
-            )
+            }
         }
 
     /**

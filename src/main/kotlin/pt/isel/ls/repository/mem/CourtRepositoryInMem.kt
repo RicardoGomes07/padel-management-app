@@ -65,5 +65,6 @@ object CourtRepositoryInMem : CourtRepository {
 
     override fun clear() {
         courts.clear()
+        currId = 0u
     }
 }

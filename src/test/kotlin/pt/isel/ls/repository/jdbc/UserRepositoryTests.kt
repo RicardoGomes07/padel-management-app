@@ -99,4 +99,13 @@ class UserRepositoryTests {
         assertEquals(newUser.email, retrievedUser?.email)
         assertEquals(newUser.token, retrievedUser?.token)
     }
+
+    @Test
+    fun deleteUserAndFailToFindItById() {
+        val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail())
+        assertEquals(1, userRepoJdbc.findAll().size)
+
+        userRepoJdbc.deleteByIdentifier(user.uid)
+        assertNull(userRepoJdbc.findByIdentifier(user.uid))
+    }
 }

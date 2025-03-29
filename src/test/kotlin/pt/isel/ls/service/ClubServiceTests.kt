@@ -4,9 +4,7 @@ import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
-import pt.isel.ls.repository.mem.ClubRepositoryInMem
 import pt.isel.ls.repository.mem.TransactionManagerInMem
-import pt.isel.ls.repository.mem.UserRepositoryInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.UserService
 import kotlin.test.BeforeTest
@@ -15,13 +13,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ClubServiceTests {
-    private val clubService = ClubService(TransactionManagerInMem())
-    private val userService = UserService(TransactionManagerInMem())
+    private val transactionManager = TransactionManagerInMem()
+    private val clubService = ClubService(transactionManager)
+    private val userService = UserService(transactionManager)
 
     @BeforeTest
     fun setUp() {
-        ClubRepositoryInMem.clear()
-        UserRepositoryInMem.clear()
+        transactionManager.run {
+            it.clubRepo.clear()
+            it.userRepo.clear()
+        }
     }
 
     @Test
