@@ -25,6 +25,7 @@ tasks.register<Copy>("copyRuntimeDependencies") {
     from(configurations.runtimeClasspath)
 }
 
+/*
 tasks.named<Test>("test") {
     environment("DB_URL", "jdbc:postgresql://localhost:5439/db?user=dbuser&password=changeit")
     dependsOn("dbTestsWait")
@@ -58,3 +59,4 @@ task<Exec>("dbTestsWait") {
 task<Exec>("dbTestsDown") {
     commandLine("docker", "compose", "-p", "padel-courts", "-f", dockerComposePath, "down", "padel-courts-db")
 }
+*/

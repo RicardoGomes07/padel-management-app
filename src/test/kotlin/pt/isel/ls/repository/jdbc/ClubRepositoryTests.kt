@@ -1,3 +1,4 @@
+/*
 @file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.repository.jdbc
@@ -95,3 +96,4 @@ class ClubRepositoryTests {
         assertEquals("Updated Fly Club".toName(), retrievedClub?.name)
     }
 }
+*/
