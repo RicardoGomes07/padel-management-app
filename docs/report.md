@@ -16,10 +16,10 @@ We highlight the following aspects:
 
 Our data model consists of four entities: `User`, `Club`, `Court`, and `Rental`, each with the following attributes:
 
-- **`User`**: `id`, `name`, `email`, `password`.
-- **`Club`**: `id`, `name`, `address`.
-- **`Court`**: `id`, `clubId`, `name`.
-- **`Rental`**: `id`, `courtId`, `userId`, `date`.
+- **`User`**: `uid`, `name`, `email`, `token`.
+- **`Club`**: `cid`, `name`, `owner`.
+- **`Court`**: `crid`, `name`, `club_id`.
+- **`Rental`**: `rid`, `date_`, `rd_start`, `rd_end`, `renter_id`, `court_id`.
 
 These attributes are directly mapped to database tables.
 
@@ -44,8 +44,8 @@ The conceptual model has the following restrictions:
 
 * The email of a user is unique. 
 * The name of a club is unique.
-* The id of a court is unique.
-* The id of a rental is unique.
+* The crid of a court is unique.
+* The rid of a rental is unique.
 * There's no attribute that can be null in the database.
 
 ### Physical Model ###
