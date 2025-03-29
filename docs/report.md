@@ -76,9 +76,21 @@ We also specify the actual dto classes that are used in the by our webApi.
 
 ### Request Details
 
-(_describe how a request goes through the different elements of your solution_)
+The request flow in our system follows a structured pattern through several layers:
 
-(_describe the relevant classes/functions used internally in a request_)
+* `Web API Layer`: Receives and processes HTTP requests
+* `Service Layer`: Handles business logic
+* `Repository Layer`: Manages data access
+* `Database`: Stores and retrieves data
+
+The request follows this path:
+
+* The HTTP request is received by the relevant WebApi class, where path and query parameters are extracted and validated
+* Request logging, error handling and Token validation are applied through functions from the Utils Class
+* The request is transformed into domain model parameters forcing rules and constraints
+* The service layer is called to execute logic and interacts with repositories through transaction management
+* Results are converted to DTOs and returned as HTTP responses
+
 
 (_describe how and where request parameters are validated_)
 
