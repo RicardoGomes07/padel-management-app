@@ -23,7 +23,8 @@ private val logger = LoggerFactory.getLogger("HTTPServer")
 val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_URL environment variable")
 
 fun main() {
-    val trxManagerJdbc = TransactionManagerJdbc(DriverManager.getConnection(DB_URL))
+    val connection = DriverManager.getConnection(DB_URL)
+    val trxManagerJdbc = TransactionManagerJdbc(connection)
 
     val userApi = UserWebApi(UserService(trxManagerJdbc))
     val clubApi =
@@ -82,6 +83,8 @@ fun main() {
 
     readln()
     jettyServer.stop()
+
+    connection.close()
 
     logger.info("leaving Main")
 }
