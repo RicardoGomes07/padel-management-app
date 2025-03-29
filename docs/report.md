@@ -9,6 +9,7 @@ This document contains the relevant design and implementation aspects of LS proj
 ### Conceptual model ###
 
 The following diagram holds the Entity-Relationship model for the information managed by the system.
+
 ![Entity-Relationship Model](./Entity-Relationship.png)
 
 We highlight the following aspects:
@@ -51,10 +52,6 @@ The conceptual model has the following restrictions:
 
 The physical model of the database is available in [DataBase Model](../src/test/sql/createSchema.sql).
 
-We highlight the following aspects of this model:
-
-* (_include a list of relevant design issues_)
-
 ## Software organization
 
 ### Open-API Specification ###
@@ -91,12 +88,21 @@ The request follows this path:
 * The service layer is called to execute logic and interacts with repositories through transaction management
 * Results are converted to DTOs and returned as HTTP responses
 
-
-(_describe how and where request parameters are validated_)
-
 ### Connection Management
 
-(_describe how connections are created, used and disposed_, namely its relation with transaction scopes).
+The database connection is created at server startup using a URL obtained from an environment variable. This connection is then passed to the `TransactionManager`, which manages it across the JDBC repositories.
+
+For simple operations requiring only one query, the `autocommit` property, with its default value set to `true`, ensures that each statement is automatically committed.
+
+For complex operations involving multiple queries, `autocommit` is disabled, and the transaction level is set to `SERIALIZABLE` to prevent conflicts with concurrent transactions. This logic is encapsulated in the `executeMultipleQueries` function, which follows a try-catch-finally approach:
+
+- **try** → Executes queries and manually commits if successful.
+- **catch** → Rolls back in case of failure.
+- **finally** → Restores properties to their default values.
+
+In both cases, `Statement` and `ResultSet` are managed using Kotlin’s `.use {}` function, ensuring they are automatically closed after being processed.
+
+The connection remains open until the server stops, at which point it is closed.
 
 ### Data Access
 
@@ -124,7 +130,9 @@ We have the following implementations, for the test of the data access layer:
 * `CourtRepositoryJdbc`
 * `RentalRepositoryJdbc`
 
-(_identify any non-trivial used SQL statements_).
+To simplify the SQL statements, a consistent design approach was adopted by using a generic `SELECT` format, where column aliases define a dictionary-like mapping for the returned values in a result set. This provides a uniform way of accessing query results, regardless of the specific query. This pattern is used throughout all JDBC repositories.
+
+For row insertions, SQL's `ON CONFLICT` clause is often used to handle foreign key constraints and unique value violations, ensuring data integrity.
 
 ### Error Handling/Processing
 
@@ -141,6 +149,7 @@ in the API and returned to the client.
 
 ## Critical Evaluation
 
-(_enumerate the functionality that is not concluded and the identified defects_)
+There are a couple of improvements to be made:
 
-(_identify improvements to be made on the next phase_)
+- The first is increasing test coverage, specifically within Web API branches, and ensuring all possible cases are covered across packages.
+- The second is implementing conditional execution of Gradle tasks, so that database-related tasks run only when JDBC tests are executed. This aims to enable testing of JDBC repositories while avoiding unnecessary overhead from Docker-related tasks when not needed.
