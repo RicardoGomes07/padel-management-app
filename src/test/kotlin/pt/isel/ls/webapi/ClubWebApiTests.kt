@@ -1,5 +1,6 @@
 package pt.isel.ls.webapi
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
@@ -11,10 +12,14 @@ import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.ClubCreationInput
 import pt.isel.ls.webapi.dto.ClubDetailsOutput
-import java.util.UUID
+import pt.isel.ls.webapi.dto.ClubsOutput
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 val clubApi =
     ClubWebApi(
@@ -28,17 +33,18 @@ val clubsRoutes =
         "clubs" bind POST to clubApi::createClub,
         "clubs" bind GET to clubApi::getAllClubs,
         "clubs/{cid}" bind GET to clubApi::getClubInfo,
-        "clubs/{cid}/courts/{crid}/available" bind GET to clubApi::getAvailableHours,
+        "clubs/{cid}/courts/{crid}/available" bind POST to clubApi::getAvailableHours,
     )
 
+@OptIn(ExperimentalUuidApi::class)
 fun createClub(token: String): ClubDetailsOutput {
-    val name = "Club-${UUID.randomUUID().toString().take(6)}"
+    val name = "Club-${Uuid.random().toString().take(10)}"
     val clubResponse =
         clubsRoutes(
             Request(POST, "clubs")
                 .header("Content-Type", "application/json")
                 .header("Authorization", token)
-                .body("""{"name":"$name"}"""),
+                .body(Json.encodeToString<ClubCreationInput>(ClubCreationInput(name))),
         )
     return Json.decodeFromString<ClubDetailsOutput>(clubResponse.bodyString())
 }
@@ -52,12 +58,11 @@ class ClubWebApiTests {
                 Request(POST, "clubs")
                     .header("Content-Type", "application/json")
                     .header("Authorization", token)
-                    .body("""{"name":"Benfica"}"""),
+                    .body(Json.encodeToString<ClubCreationInput>(ClubCreationInput("Benfica"))),
             )
         assertEquals(Status.CREATED, clubResponse.status)
         val club = Json.decodeFromString<ClubDetailsOutput>(clubResponse.bodyString())
-        println(club)
-        assertEquals(club.name, "Benfica")
+        assertEquals("Benfica", club.name)
     }
 
     @Test
@@ -71,8 +76,8 @@ class ClubWebApiTests {
                     .header("Authorization", token),
             )
         val clubRequest = Json.decodeFromString<ClubDetailsOutput>(clubResponse.bodyString())
-        println(clubRequest)
         assertEquals(club.name, clubRequest.name)
+        assertEquals(club.cid, clubRequest.cid)
         assertEquals(Status.OK, clubResponse.status)
     }
 
@@ -97,20 +102,21 @@ class ClubWebApiTests {
                     .header("Authorization", token),
             )
         assertEquals(Status.OK, getAllClubsRequest.status)
-        println(getAllClubsRequest.bodyString())
+        val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
+        assertTrue(body.clubs.isNotEmpty())
     }
 
     @Test
     fun `get available hours with invalid court`() {
         val clubId = 1
         val courtId = 999
-        val date = "2025-06-01"
+        val date = LocalDate.parse("2025-06-01")
         val token = createUser()
         val getAvailableHoursRequest =
             clubsRoutes(
-                Request(GET, "clubs/$clubId/courts/$courtId/available")
+                Request(POST, "clubs/$clubId/courts/$courtId/available")
                     .header("Authorization", token)
-                    .query("date", date),
+                    .body(Json.encodeToString(date)),
             )
         assertEquals(Status.NOT_FOUND, getAvailableHoursRequest.status)
     }
@@ -120,14 +126,34 @@ class ClubWebApiTests {
         val token = createUser()
         val clubId = createClub(token).cid
         val courtId = createCourt(token, clubId.toInt())
-        val date = "2025-06-01"
+        val date = LocalDate.parse("2025-06-01")
 
         val getAvailableHoursRequest =
             clubsRoutes(
-                Request(GET, "clubs/$clubId/courts/${courtId.crid}/available")
+                Request(POST, "clubs/$clubId/courts/${courtId.crid}/available")
                     .header("Authorization", token)
-                    .query("date", date),
+                    .body(Json.encodeToString<LocalDate>(date)),
             )
-        assertEquals(Status.NOT_FOUND, getAvailableHoursRequest.status)
+        assertEquals(Status.OK, getAvailableHoursRequest.status)
+        val availableHours =
+            Json.decodeFromString<List<UInt>>(getAvailableHoursRequest.bodyString())
+        assert(availableHours.isNotEmpty())
+        assert(availableHours.size == 24)
+    }
+
+    @Test
+    fun `trying to see available hours for a court in the past should fail`() {
+        val token = createUser()
+        val clubId = createClub(token).cid
+        val courtId = createCourt(token, clubId.toInt())
+        val date = LocalDate.parse("2024-06-01")
+
+        val getAvailableHoursRequest =
+            clubsRoutes(
+                Request(POST, "clubs/$clubId/courts/${courtId.crid}/available")
+                    .header("Authorization", token)
+                    .body(Json.encodeToString(date)),
+            )
+        assertEquals(Status.BAD_REQUEST, getAvailableHoursRequest.status)
     }
 }

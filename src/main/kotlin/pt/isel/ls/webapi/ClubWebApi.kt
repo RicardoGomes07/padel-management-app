@@ -72,9 +72,7 @@ class ClubWebApi(
 
             requireNotNull(courtId) { "Invalid court id" }
 
-            val date = request.query("date")?.let { LocalDate.parse(it) }
-
-            requireNotNull(date) { "Invalid date" }
+            val date = Json.decodeFromString<LocalDate>(request.bodyString())
 
             require(date >= currentDate()) { "Date must not be in the past" }
 

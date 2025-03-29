@@ -30,7 +30,8 @@ class ClubService(
     fun getClubById(cid: UInt): Result<Club> =
         runCatching {
             trxManager.run {
-                checkNotNull(clubRepo.findByIdentifier(cid)) { "Club with $cid not found" }
+                clubRepo.findByIdentifier(cid)
+                    ?: throw ClubError.ClubNotFound(cid)
             }
         }
 
@@ -40,7 +41,6 @@ class ClubService(
     ): Result<Club> =
         runCatching {
             trxManager.run {
-                require(clubRepo.findClubByName(name) == null) { "Club with name $name already exists" }
                 clubRepo.createClub(name, owner.uid)
             }
         }

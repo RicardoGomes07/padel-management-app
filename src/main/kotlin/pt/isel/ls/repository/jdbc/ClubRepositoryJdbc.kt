@@ -5,6 +5,8 @@ package pt.isel.ls.repository.jdbc
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.ClubRepository
 import pt.isel.ls.repository.jdbc.dao.mapClubDb
+import pt.isel.ls.services.ClubError
+import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -36,7 +38,10 @@ class ClubRepositoryJdbc(
                 connection.prepareStatement(sqlCheckFK).use { stmt ->
                     stmt.setInt(1, ownerId.toInt())
                     stmt.executeQuery().use { rs ->
-                        require(rs.next()) { "No user with such id." }
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = ClubError.OwnerNotFound(ownerId),
+                        )
                         rs.mapUser()
                     }
                 }
@@ -54,7 +59,10 @@ class ClubRepositoryJdbc(
                 stmt.setInt(2, ownerId.toInt())
 
                 stmt.executeQuery().use { rs ->
-                    require(rs.next()) { "Club creation failed, name already exists." }
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = ClubError.ClubAlreadyExists(name.value),
+                    )
                     rs.mapClub(owner)
                 }
             }

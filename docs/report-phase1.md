@@ -9,7 +9,7 @@ This document contains the relevant design and implementation aspects of LS proj
 ### Conceptual model ###
 
 The following diagram holds the Entity-Relationship model for the information managed by the system.
-[Entity-Relationship Model](https://drive.google.com/file/d/1GLaFSvp2_tc7XhItJ_ohYZRLyUMypwP3/view?usp=sharing)
+![Entity-Relationship Model](./Entity-Relationship.png)
 
 We highlight the following aspects:
 
@@ -79,11 +79,11 @@ We have the following implementations, for the test of the data access layer:
 
 Our solutions deal with the errors in the following way:
 When we detect an error made by the client in the request we return an error directly to the user,
-without processing the request.
+without processing the request, informing the user that he made a bad request.
 When we detect an error in the processing of the request our service will return an Error, to our api
 detailing what happen wrong during the request processing.
-If our access to the database fails, or the database returns an error, we will catch the error in our api
-with and ExceptionHandler that will detail the error that happened during the request processing.
+We have CustomError classes for each type of error that in the api are transformed into a JSON object 
+that is returned to the client.
 
 ## Critical Evaluation
 

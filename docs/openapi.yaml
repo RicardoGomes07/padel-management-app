@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: DRAFT - OpenAPI 3.0
+  title: Padel Clubs Management System - OpenAPI 3.0
   description: |-
     This is Padel Clubs Management API based on the OpenAPI 3.0 specification.  
     Some useful links:
-    - [DRAFT repository](https://github.com/isel-leic-ls/2425-2-LEIC42D-G10)
+    - [Padel Clubs Management System repository](https://github.com/isel-leic-ls/2425-2-LEIC42D-G10)
   contact:
     email: a50494@alunos.isel.pt
   license:
@@ -43,6 +43,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Token'
+        409:
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /me:
     get:
       security:
@@ -122,6 +128,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClubCreationOutputModel'
+        409:
+          description: Club already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
     get:
       security:
         - bearerAuth: []
@@ -172,7 +184,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ClubDetailsModel'
+                $ref: '#/components/schemas/ClubDetailsOutputModel'
         404:
           description: Club not found
           content:
@@ -270,7 +282,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourtDetailsModel'
+                $ref: '#/components/schemas/CourtDetailsOutputModel'
         404:
           description: Court not found
           content:
@@ -299,8 +311,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RentalCreationOutputModel'
-        400:
-          description: Bad Request
+        409:
+          description: Rental with the given details already exists
           content:
             application/json:
               schema:
@@ -353,13 +365,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RentalsOutputModel'
-        404:
-          description: Rentals Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Problem'
-
 
   /rentals/{rid}:
     get:
@@ -392,7 +397,7 @@ paths:
                 $ref: '#/components/schemas/Problem'
 
   /clubs/{cid}/courts/{crid}/available:
-    get:
+    post:
       security:
         - bearerAuth: []
       tags:
@@ -413,13 +418,13 @@ paths:
             type: integer
           required: true
           description: Court id
-        - in: query
-          name: date
-          schema:
-            type: string
-            format: date
-          required: true
-          description: Date to check availability
+      requestBody:
+        description: Date to check availability
+        content:
+          application/json:
+            schema:
+              type: string
+              format: date
       responses:
         200:
           description: List of available time slots
@@ -526,13 +531,12 @@ components:
           type: string
           example: Fly Padel
         owner:
-          type: object
-          ref: '#/components/schemas/OwnerOutputModel'
+          $ref: '#/components/schemas/OwnerOutputModel'
 
     ClubsOutputModel:
       type: array
       items:
-        $ref: '#/components/schemas/ClubDetailsModel'
+        $ref: '#/components/schemas/ClubDetailsOutputModel'
 
     CourtCreationInputModel:
       type: object
@@ -564,13 +568,12 @@ components:
           type: string
           example: Court 1
         club:
-          type: object
-          ref: '#/components/schemas/ClubDetailsOutputModel'
+          $ref: '#/components/schemas/ClubDetailsOutputModel'
 
     CourtsOutputModel:
       type: array
       items:
-        $ref: '#/components/schemas/CourtDetailsModel'
+        $ref: '#/components/schemas/CourtDetailsOutputModel'
 
     RentalCreationInputModel:
       type: object
@@ -604,11 +607,9 @@ components:
       type: object
       properties:
         club:
-          type: object
-          ref: '#/components/schemas/ClubDetailsOutputModel'
+          $ref: '#/components/schemas/ClubDetailsOutputModel'
         court:
-          type: object
-          ref: '#/components/schemas/CourtDetailsOutputModel'
+          $ref: '#/components/schemas/CourtDetailsOutputModel'
         date:
           type: object
           example: LocalDate
@@ -617,19 +618,16 @@ components:
           type: object
           example: LocalTime
           description: Duration in hours
-
     RentalsOutputModel:
       type: array
       items:
         $ref: '#/components/schemas/RentalDetailsOutputModel'
-
-
-
     Problem:
       type: object
       properties:
         title:
           type: string
+
           example: Invalid Request
         description:
           type: string

@@ -3,19 +3,9 @@
 package pt.isel.ls.repository.mem
 
 import kotlinx.datetime.*
-import pt.isel.ls.domain.TimeSlot
-import pt.isel.ls.domain.toEmail
-import pt.isel.ls.domain.toName
-import pt.isel.ls.domain.toTimeSlot
-import pt.isel.ls.repository.jdbc.*
+import pt.isel.ls.domain.*
+import pt.isel.ls.services.RentalError
 import kotlin.test.*
-
-private data class Quadruple<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D,
-)
 
 class RentalRepositoryTests {
     private val rentalRepoInMem = RentalRepositoryInMem
@@ -56,15 +46,38 @@ class RentalRepositoryTests {
     }
 
     @Test
-    fun `create rental with past date should fail`() {
+    fun `create rental with past date should throw error RentalDateInPast`() {
         val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail())
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
         val pastDate = tomorrowDate.minus(2, DateTimeUnit.DAY)
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<RentalError.RentalDateInThePast> {
             rentalRepoInMem.createRental(pastDate, (10..12).toTimeSlot(), renter.uid, court.crid)
+        }
+    }
+
+    @Test
+    fun `overlapping should throw RentalAlreadyExists`() {
+        val renter = userRepoInMem.createUser("Alice".toName(), "alice@email.com".toEmail())
+        val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
+        val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
+
+        rentalRepoInMem.createRental(
+            tomorrowDate,
+            (10..12).toTimeSlot(),
+            renter.uid,
+            court.crid,
+        )
+
+        assertFailsWith<RentalError.RentalAlreadyExists> {
+            rentalRepoInMem.createRental(
+                tomorrowDate,
+                (11..13).toTimeSlot(),
+                renter.uid,
+                court.crid,
+            )
         }
     }
 

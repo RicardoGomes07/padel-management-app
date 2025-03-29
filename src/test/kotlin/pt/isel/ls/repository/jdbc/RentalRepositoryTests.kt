@@ -7,6 +7,7 @@ import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
 import pt.isel.ls.domain.toTimeSlot
+import pt.isel.ls.services.RentalError
 import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
@@ -52,15 +53,38 @@ class RentalRepositoryTests {
     }
 
     @Test
-    fun `create rental with past date should fail`() {
+    fun `create rental with past date should throw error RentalDateInPast`() {
         val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
         val pastDate = tomorrowDate.minus(2, DateTimeUnit.DAY)
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<RentalError.RentalDateInThePast> {
             rentalRepoJdbc.createRental(pastDate, (10..12).toTimeSlot(), renter.uid, court.crid)
+        }
+    }
+
+    @Test
+    fun `overlapping should throw RentalAlreadyExists`() {
+        val renter = userRepoJdbc.createUser("Alice".toName(), "alice@email.com".toEmail())
+        val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
+        val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
+
+        rentalRepoJdbc.createRental(
+            tomorrowDate,
+            (10..12).toTimeSlot(),
+            renter.uid,
+            court.crid,
+        )
+
+        assertFailsWith<RentalError.RentalAlreadyExists> {
+            rentalRepoJdbc.createRental(
+                tomorrowDate,
+                (11..13).toTimeSlot(),
+                renter.uid,
+                court.crid,
+            )
         }
     }
 

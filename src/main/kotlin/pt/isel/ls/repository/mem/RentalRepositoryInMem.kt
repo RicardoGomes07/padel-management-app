@@ -11,6 +11,9 @@ import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.repository.RentalRepository
 import pt.isel.ls.repository.mem.CourtRepositoryInMem.courts
 import pt.isel.ls.repository.mem.UserRepositoryInMem.users
+import pt.isel.ls.services.RentalError
+import pt.isel.ls.services.ensureOrThrow
+import pt.isel.ls.services.getOrThrow
 
 object RentalRepositoryInMem : RentalRepository {
     private val rentals = mutableListOf<Rental>()
@@ -33,33 +36,36 @@ object RentalRepositoryInMem : RentalRepository {
         renterId: UInt,
         courtId: UInt,
     ): Rental {
-        require(
-            value =
+        ensureOrThrow(
+            condition =
                 date >=
                     Clock.System
                         .now()
                         .toLocalDateTime(TimeZone.currentSystemDefault())
                         .date,
-        ) {
-            "Rental date must be in the future"
-        }
+            exception = RentalError.RentalDateInThePast(date),
+        )
 
-        require(
-            rentals.none { rental ->
-                rental.date == date &&
-                    !(rentTime.end <= rental.rentTime.start || rentTime.start >= rental.rentTime.end)
-            },
+        ensureOrThrow(
+            condition =
+                rentals.none { rental ->
+                    rental.date == date &&
+                        !(rentTime.end <= rental.rentTime.start || rentTime.start >= rental.rentTime.end)
+                },
+            exception = RentalError.RentalAlreadyExists(date, rentTime),
         )
 
         currId += 1u
 
-        val renter = users.firstOrNull { it.uid == renterId }
+        val renter =
+            getOrThrow(RentalError.RenterNotFound(renterId)) {
+                users.firstOrNull { it.uid == renterId }
+            }
 
-        requireNotNull(renter)
-
-        val court = courts.firstOrNull { it.crid == courtId }
-
-        requireNotNull(court)
+        val court =
+            getOrThrow(RentalError.MissingCourt(courtId)) {
+                courts.firstOrNull { it.crid == courtId }
+            }
 
         val rental =
             Rental(
@@ -84,9 +90,10 @@ object RentalRepositoryInMem : RentalRepository {
         crid: UInt,
         date: LocalDate,
     ): List<UInt> {
-        val court = courts.firstOrNull { it.crid == crid }
-
-        checkNotNull(court)
+        val court =
+            getOrThrow(RentalError.MissingCourt(crid)) {
+                courts.firstOrNull { it.crid == crid }
+            }
 
         val rentalsOnDate = rentals.filter { it.court == court && it.date == date }
 
@@ -112,7 +119,10 @@ object RentalRepositoryInMem : RentalRepository {
         limit: Int,
         offset: Int,
     ): List<Rental> {
-        checkNotNull(courts.firstOrNull { it.crid == crid })
+        getOrThrow(RentalError.MissingCourt(crid)) {
+            courts.firstOrNull { it.crid == crid }
+        }
+
         return rentals
             .filter {
                 it.court.crid == crid && (date == null || it.date == date)
@@ -130,7 +140,10 @@ object RentalRepositoryInMem : RentalRepository {
         limit: Int,
         offset: Int,
     ): List<Rental> {
-        checkNotNull(users.firstOrNull { it.uid == renter })
+        getOrThrow(RentalError.RenterNotFound(renter)) {
+            users.firstOrNull { it.uid == renter }
+        }
+
         return rentals
             .filter {
                 it.renter.uid == renter

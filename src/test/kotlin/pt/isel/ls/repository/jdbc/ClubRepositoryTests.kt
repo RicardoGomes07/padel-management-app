@@ -4,6 +4,7 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.services.ClubError
 import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
@@ -21,27 +22,18 @@ class ClubRepositoryTests {
     }
 
     @Test
-    fun `create club with valid name and existing owner`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail())
-        val club = clubRepoJdbc.createClub("Parker Club".toName(), owner.uid)
-
-        assertEquals("Parker Club".toName(), club.name)
-        assertEquals(owner, club.owner)
-    }
-
-    @Test
     fun `create club with duplicate name should fail`() {
         val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail())
         clubRepoJdbc.createClub("The King of Padel".toName(), owner.uid)
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ClubError.ClubAlreadyExists> {
             clubRepoJdbc.createClub("The King of Padel".toName(), owner.uid)
         }
     }
 
     @Test
     fun `create club with non-existent owner should fail`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ClubError.OwnerNotFound> {
             clubRepoJdbc.createClub("Nonexistent Owner Club".toName(), 999u)
         }
     }

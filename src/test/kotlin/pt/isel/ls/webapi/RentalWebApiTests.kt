@@ -1,5 +1,6 @@
 package pt.isel.ls.webapi
 
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
@@ -10,10 +11,12 @@ import org.http4k.routing.routes
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
 import pt.isel.ls.webapi.dto.RentalsOutput
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 val rentalApi =
     RentalWebApi(
@@ -40,8 +43,20 @@ fun createRental(
             Request(POST, "rentals")
                 .header("Content-Type", "application/json")
                 .header("Authorization", token)
-                .body("""{"date":"2025-06-$day","initialHour":10,"finalHour":12,"cid":$cid,"crid":$crid}"""),
+                .body(
+                    Json
+                        .encodeToString(
+                            RentalCreationInput(
+                                cid,
+                                crid,
+                                LocalDate.parse("2025-06-$day"),
+                                10,
+                                12,
+                            ),
+                        ),
+                ),
         )
+    assertEquals(Status.CREATED, rental.status)
     return Json.decodeFromString<RentalDetailsOutput>(rental.bodyString())
 }
 
@@ -57,10 +72,23 @@ class RentalWebApiTests {
                     .header("Content-Type", "application/json")
                     .header("Authorization", token)
                     .body(
-                        """{"date":"2025-06-15","initialHour":10,"finalHour":12,"cid":${club.cid.toInt()},"crid":${court.crid.toInt()}}""",
+                        Json.encodeToString<RentalCreationInput>(
+                            RentalCreationInput(
+                                date = LocalDate.parse("2025-06-15"),
+                                initialHour = 10,
+                                finalHour = 12,
+                                cid = club.cid.toInt(),
+                                crid = court.crid.toInt(),
+                            ),
+                        ),
                     ),
             )
         assertEquals(Status.CREATED, rental.status)
+        val rentalDetails = Json.decodeFromString<RentalDetailsOutput>(rental.bodyString())
+        assertEquals(rentalDetails.date, LocalDate.parse("2025-06-15"))
+        assertEquals(rentalDetails.initialHour, 10)
+        assertEquals(rentalDetails.finalHour, 12)
+        assertEquals(rentalDetails.court.club.cid, club.cid)
     }
 
     @Test
@@ -72,8 +100,6 @@ class RentalWebApiTests {
                 Request(GET, "rentals/1")
                     .header("Authorization", token),
             )
-        val rental = Json.decodeFromString<RentalDetailsOutput>(getRentalInfoRequest.bodyString())
-        println(rental)
         assertEquals(Status.OK, getRentalInfoRequest.status)
     }
 
@@ -92,14 +118,14 @@ class RentalWebApiTests {
     @Test
     fun `get all rentals for a court`() {
         val token = createUser()
-        createRental(token, 1, 1)
+        val rental = createRental(token, 1, 1)
         val getAllRentalsRequest =
             rentalsRoutes(
                 Request(GET, "rentals/clubs/courts/1")
                     .header("Authorization", token),
             )
         val rentals = Json.decodeFromString<RentalsOutput>(getAllRentalsRequest.bodyString())
-        println(rentals)
+        assertTrue(rentals.rentals.contains(rental))
         assertEquals(Status.OK, getAllRentalsRequest.status)
     }
 
@@ -112,7 +138,7 @@ class RentalWebApiTests {
                     .header("Authorization", token),
             )
         val userRentals = Json.decodeFromString<RentalsOutput>(getUserRentalsRequest.bodyString())
-        println(userRentals)
+        assertTrue(userRentals.rentals.isEmpty())
         assertEquals(Status.OK, getUserRentalsRequest.status)
     }
 }

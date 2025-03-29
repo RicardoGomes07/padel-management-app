@@ -4,6 +4,7 @@ package pt.isel.ls.repository.mem
 
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.services.ClubError
 import kotlin.test.*
 
 class ClubRepositoryTests {
@@ -30,14 +31,14 @@ class ClubRepositoryTests {
         val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
         clubRepoInMem.createClub("The King of Padel".toName(), owner.uid)
 
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ClubError.ClubAlreadyExists> {
             clubRepoInMem.createClub("The King of Padel".toName(), owner.uid)
         }
     }
 
     @Test
     fun `create club with non-existent owner should fail`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<ClubError.OwnerNotFound> {
             clubRepoInMem.createClub("Nonexistent Owner Club".toName(), 999u)
         }
     }

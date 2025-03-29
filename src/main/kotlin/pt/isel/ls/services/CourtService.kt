@@ -33,7 +33,8 @@ class CourtService(
     fun getCourtById(crid: UInt): Result<Court> =
         runCatching {
             trxManager.run {
-                checkNotNull(courtRepo.findByIdentifier(crid)) { "Court with $crid not found" }
+                courtRepo.findByIdentifier(crid)
+                    ?: throw CourtError.CourtNotFound(crid)
             }
         }
 

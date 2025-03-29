@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.webapi
 
 import kotlinx.datetime.LocalDate
@@ -8,8 +10,7 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
-import pt.isel.ls.services.RentalService
-import pt.isel.ls.services.UserService
+import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
 import pt.isel.ls.webapi.dto.toRentalsOutput

@@ -4,6 +4,8 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.UserRepository
+import pt.isel.ls.services.UserError
+import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -41,7 +43,10 @@ class UserRepositoryJdbc(
             stmt.setString(3, token.toString())
 
             stmt.executeQuery().use { rs ->
-                require(rs.next()) { "User creation failed, email already exists." }
+                ensureOrThrow(
+                    condition = rs.next(),
+                    exception = UserError.UserAlreadyExists(email.value),
+                )
                 rs.mapUser()
             }
         }

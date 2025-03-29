@@ -4,6 +4,8 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.CourtRepository
+import pt.isel.ls.services.CourtError
+import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -36,7 +38,10 @@ class CourtRepositoryJdbc(
                 connection.prepareStatement(sqlCheckFk).use { stmt ->
                     stmt.setInt(1, clubId.toInt())
                     stmt.executeQuery().use { rs ->
-                        require(rs.next()) { "No Club with such id." }
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = CourtError.MissingClub(clubId),
+                        )
                         rs.mapClub()
                     }
                 }
@@ -54,7 +59,10 @@ class CourtRepositoryJdbc(
                     stmt.setInt(2, clubId.toInt())
 
                     stmt.executeQuery().use { rs ->
-                        require(rs.next()) { "Court creation failed." }
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = RuntimeException("Error inserting court"),
+                        )
                         rs.mapCourt(club)
                     }
                 }

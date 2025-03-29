@@ -4,6 +4,9 @@ import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.ClubRepository
 import pt.isel.ls.repository.mem.UserRepositoryInMem.users
+import pt.isel.ls.services.ClubError
+import pt.isel.ls.services.ensureOrThrow
+import pt.isel.ls.services.getOrThrow
 
 object ClubRepositoryInMem : ClubRepository {
     val clubs = mutableListOf<Club>()
@@ -14,13 +17,17 @@ object ClubRepositoryInMem : ClubRepository {
         name: Name,
         ownerId: UInt,
     ): Club {
-        require(clubs.all { it.name != name })
+        ensureOrThrow(
+            condition = clubs.all { it.name != name },
+            exception = ClubError.ClubAlreadyExists(name.value),
+        )
 
         currId += 1u
 
-        val owner = users.find { it.uid == ownerId }
-
-        requireNotNull(owner)
+        val owner =
+            getOrThrow(ClubError.OwnerNotFound(ownerId)) {
+                users.find { it.uid == ownerId }
+            }
 
         val club =
             Club(

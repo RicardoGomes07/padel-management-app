@@ -5,6 +5,8 @@ package pt.isel.ls.repository.jdbc
 import kotlinx.datetime.*
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.RentalRepository
+import pt.isel.ls.services.RentalError
+import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
 import java.sql.ResultSet
 
@@ -22,7 +24,7 @@ class RentalRepositoryJdbc(
      * @param renterId User that is renting
      * @param courtId Court being rented
      * @return The Rental created
-     * @throws IllegalArgumentException If the date is not in the future or if the renter and/ or the court don't exist
+     * @throws RentalError.RentalDateInThePast If the date is not in the future or if the renter and/ or the court don't exist
      */
     override fun createRental(
         date: LocalDate,
@@ -31,7 +33,10 @@ class RentalRepositoryJdbc(
         courtId: UInt,
     ): Rental =
         connection.executeMultipleQueries {
-            require(isInTheFuture(date, rentTime.start.toInt()))
+            ensureOrThrow(
+                condition = isInTheFuture(date, rentTime.start.toInt()),
+                exception = RentalError.RentalDateInThePast(date),
+            )
 
             val sqlSelectRenter =
                 """
@@ -42,7 +47,10 @@ class RentalRepositoryJdbc(
                 connection.prepareStatement(sqlSelectRenter).use { stmt ->
                     stmt.setInt(1, renterId.toInt())
                     stmt.executeQuery().use { rs ->
-                        require(rs.next()) { "No User with such id." }
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = RentalError.RenterNotFound(renterId),
+                        )
                         rs.mapUser()
                     }
                 }
@@ -57,7 +65,10 @@ class RentalRepositoryJdbc(
                 connection.prepareStatement(sqlSelectCourt).use { stmt ->
                     stmt.setInt(1, courtId.toInt())
                     stmt.executeQuery().use { rs ->
-                        require(rs.next()) { "No court with such id." }
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = RentalError.MissingCourt(courtId),
+                        )
                         rs.mapCourt()
                     }
                 }
@@ -77,7 +88,10 @@ class RentalRepositoryJdbc(
                 stmt.setInt(5, courtId.toInt())
 
                 stmt.executeQuery().use { rs ->
-                    require(rs.next())
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = RentalError.RentalAlreadyExists(date, rentTime),
+                    )
                     rs.mapRental(renter, court)
                 }
             }
@@ -103,7 +117,10 @@ class RentalRepositoryJdbc(
                 stmt.setInt(1, crid.toInt())
 
                 stmt.executeQuery().use { rs ->
-                    require(rs.next())
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = RentalError.MissingCourt(crid),
+                    )
                     rs.mapCourt()
                 }
             }

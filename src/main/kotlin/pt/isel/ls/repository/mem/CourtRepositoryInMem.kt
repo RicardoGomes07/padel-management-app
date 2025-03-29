@@ -4,6 +4,8 @@ import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.CourtRepository
 import pt.isel.ls.repository.mem.ClubRepositoryInMem.clubs
+import pt.isel.ls.services.CourtError
+import pt.isel.ls.services.getOrThrow
 
 object CourtRepositoryInMem : CourtRepository {
     val courts = mutableListOf<Court>()
@@ -14,9 +16,10 @@ object CourtRepositoryInMem : CourtRepository {
         name: Name,
         clubId: UInt,
     ): Court {
-        val club = clubs.firstOrNull { it.cid == clubId }
-
-        requireNotNull(club)
+        val club =
+            getOrThrow(CourtError.MissingClub(clubId)) {
+                clubs.firstOrNull { it.cid == clubId }
+            }
 
         currId += 1u
 

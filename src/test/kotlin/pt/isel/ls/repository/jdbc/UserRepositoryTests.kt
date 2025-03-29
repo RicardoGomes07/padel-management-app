@@ -5,6 +5,7 @@ package pt.isel.ls.repository.jdbc
 import pt.isel.ls.domain.*
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.services.UserError
 import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
@@ -30,9 +31,10 @@ class UserRepositoryTests {
     @Test
     fun `user creation with invalid Email`() {
         userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail())
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<UserError.UserAlreadyExists> {
             userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail())
         }
+        assertEquals(1, userRepoJdbc.findAll().size)
     }
 
     @Test

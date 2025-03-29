@@ -5,6 +5,7 @@ package pt.isel.ls.repository.mem
 import pt.isel.ls.domain.*
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.services.UserError
 import kotlin.test.*
 
 class UserRepositoryTests {
@@ -25,7 +26,7 @@ class UserRepositoryTests {
     @Test
     fun `user creation with invalid Email`() {
         userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<UserError.UserAlreadyExists> {
             userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
         }
         assertEquals(1, userRepoInMem.findAll().size)

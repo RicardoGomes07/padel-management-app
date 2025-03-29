@@ -20,7 +20,7 @@ import java.sql.DriverManager
 
 private val logger = LoggerFactory.getLogger("HTTPServer")
 
-val DB_URL = System.getenv("DB_URL") ?: throw Exception("Missing DB_URL environment variable")
+val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_URL environment variable")
 
 fun main() {
     val trxManagerJdbc = TransactionManagerJdbc(DriverManager.getConnection(DB_URL))
@@ -54,7 +54,7 @@ fun main() {
             "/" bind POST to clubApi::createClub,
             "/" bind GET to clubApi::getAllClubs,
             "/{cid}" bind GET to clubApi::getClubInfo,
-            "/{cid}/courts/{crid}/available" bind GET to clubApi::getAvailableHours,
+            "/{cid}/courts/{crid}/available" bind POST to clubApi::getAvailableHours,
         )
     val courtsRoutes =
         routes(

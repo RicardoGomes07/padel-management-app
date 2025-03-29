@@ -4,6 +4,7 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.services.CourtError
 import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
@@ -34,7 +35,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `create court with non-existent club should fail`() {
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<CourtError.MissingClub> {
             courtRepoJdbc.createCourt("Court A".toName(), 999u)
         }
     }

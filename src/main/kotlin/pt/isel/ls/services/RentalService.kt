@@ -36,7 +36,8 @@ class RentalService(
     fun getRentalById(rid: UInt): Result<Rental> =
         runCatching {
             trxManager.run {
-                checkNotNull(rentalRepo.findByIdentifier(rid)) { "Rental with $rid not found" }
+                rentalRepo.findByIdentifier(rid)
+                    ?: throw RentalError.RentalNotFound(rid)
             }
         }
 

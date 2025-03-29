@@ -1,4 +1,4 @@
-@authToken = e6359511-087a-4cb1-a7a7-6fa78b805843
+@authToken = 71c78a21-8edd-4711-bfaa-ac50a65e7911
 
 ### Creates a new user
 POST http://localhost:8080/users
@@ -89,5 +89,10 @@ GET http://localhost:8080/rentals/1
 Authorization: {{authToken}}
 
 ### Get available hours for court rental
-GET http://localhost:8080/clubs/1/courts/1/available?date=2025-03-19
+POST http://localhost:8080/clubs/1/courts/1/available
 Authorization: {{authToken}}
+Content-Type: application/json
+
+{
+    "date": "2025-03-19"
+}

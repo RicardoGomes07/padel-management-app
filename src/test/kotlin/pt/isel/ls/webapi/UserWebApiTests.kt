@@ -9,10 +9,12 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.UserInput
 import pt.isel.ls.webapi.dto.UserOutput
-import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 val userApi =
     UserWebApi(
@@ -24,9 +26,9 @@ val userRoutes =
         "users/me" bind GET to userApi::getUserInfo,
     )
 
+@OptIn(ExperimentalUuidApi::class)
 fun createUser(): String {
-    val name = UUID.randomUUID().toString().take(5)
-    println(name)
+    val name = Uuid.random().toString().take(10)
     val userResponse =
         userRoutes(
             Request(POST, "users")
@@ -46,10 +48,9 @@ class UserWebApiTests {
                     .header("Content-Type", "application/json")
                     .body("""{"name":"Ric", "email":"ric@gmail.com"}"""),
             )
-        assertEquals(response.status, Status.CREATED)
+        assertEquals(Status.CREATED, response.status)
         val user = Json.decodeFromString<UserOutput>(response.bodyString())
-        println(user)
-        assertEquals(user.name, "Ric")
+        assertEquals("Ric", user.name)
     }
 
     @Test
@@ -58,17 +59,17 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body("""{"name":"Riczao", "email":"riczao@gmail.com"}"""),
+                    .body(Json.encodeToString<UserInput>(UserInput("Riczao", "riczao@gmail.com"))),
             )
-        assertEquals(response.status, Status.CREATED)
+        assertEquals(Status.CREATED, response.status)
 
         val response1 =
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body("""{"name":"Riczao", "email":"riczao@gmail.com"}"""),
+                    .body(Json.encodeToString<UserInput>(UserInput("Riczao", "riczao@gmail.com"))),
             )
-        assertEquals(response1.status, Status.BAD_REQUEST)
+        assertEquals(Status.CONFLICT, response1.status)
     }
 
     @Test
@@ -78,7 +79,6 @@ class UserWebApiTests {
                 Request(GET, "users/me"),
             )
         assertEquals(Status.UNAUTHORIZED, getUsersResponse.status)
-        println(getUsersResponse.bodyString())
     }
 
     @Test
@@ -90,6 +90,5 @@ class UserWebApiTests {
                     .header("Authorization", token),
             )
         assertEquals(Status.OK, getUsersResponse.status)
-        println(getUsersResponse.bodyString())
     }
 }

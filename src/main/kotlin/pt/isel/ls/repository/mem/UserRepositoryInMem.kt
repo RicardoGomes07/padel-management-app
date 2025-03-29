@@ -4,6 +4,8 @@ package pt.isel.ls.repository.mem
 
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.UserRepository
+import pt.isel.ls.services.UserError
+import pt.isel.ls.services.ensureOrThrow
 
 object UserRepositoryInMem : UserRepository {
     val users = mutableListOf<User>()
@@ -14,7 +16,10 @@ object UserRepositoryInMem : UserRepository {
         name: Name,
         email: Email,
     ): User {
-        require(users.all { it.email != email })
+        ensureOrThrow(
+            condition = users.all { it.email != email },
+            exception = UserError.UserAlreadyExists(email.value),
+        )
         currId += 1u
         val token = generateToken()
         val user =
