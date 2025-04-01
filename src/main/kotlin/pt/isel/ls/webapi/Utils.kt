@@ -54,7 +54,7 @@ fun Request.handlerWithAuth(
 /**
  * Verifies if the user is valid and returns the user.
  */
-fun Request.validateUser(validateUser: (Token) -> User?): User? =
+private fun Request.validateUser(validateUser: (Token) -> User?): User? =
     header("Authorization")
         ?.toToken()
         ?.let { userToken -> validateUser(userToken) }
