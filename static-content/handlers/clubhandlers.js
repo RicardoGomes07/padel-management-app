@@ -34,3 +34,10 @@ function getClub(mainContent) {
             mainContent.replaceChildren(ul)
         })
 }
+
+const clubHandlers= {
+    getClub,
+    getClubs,
+}
+
+export default clubHandlers
