@@ -13,6 +13,7 @@ import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
+import pt.isel.ls.webapi.dto.RentalUpdateInput
 import pt.isel.ls.webapi.dto.toRentalsOutput
 
 /**
@@ -41,7 +42,7 @@ class RentalWebApi(
         }
 
     fun getAllRentals(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val courtId = request.path("crid")?.toUIntOrNull()
 
             requireNotNull(courtId) { "Invalid court id" }
@@ -59,12 +60,15 @@ class RentalWebApi(
         }
 
     fun getUserRentals(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) { user ->
+        request.handler {
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
 
+            val userId = request.path("uid")?.toUIntOrNull()
+            requireNotNull(userId) { "Invalid user id" }
+
             rentalService
-                .getUserRentals(user.uid, limit, skip)
+                .getUserRentals(userId, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
@@ -72,7 +76,7 @@ class RentalWebApi(
         }
 
     fun getRentalInfo(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val rentalId = request.path("rid")?.toUIntOrNull()
 
             requireNotNull(rentalId) { "Invalid rental id" }
@@ -80,6 +84,41 @@ class RentalWebApi(
             rentalService
                 .getRentalById(rentalId)
                 .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
+                )
+        }
+
+    fun deleteRental(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val rentalId = request.path("rid")?.toUIntOrNull()
+
+            requireNotNull(rentalId)
+
+            rentalService
+                .deleteRental(rentalId)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK) },
+                )
+        }
+
+    fun updateRental(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) {
+            val rentalId = request.path("rid")?.toUIntOrNull()
+
+            requireNotNull(rentalId)
+
+            val input = Json.decodeFromString<RentalUpdateInput>(request.bodyString())
+
+            val rentTime = TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt())
+
+            rentalService
+                .updateDateAndRentTime(
+                    rentalId,
+                    input.date,
+                    rentTime,
+                ).fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
                 )

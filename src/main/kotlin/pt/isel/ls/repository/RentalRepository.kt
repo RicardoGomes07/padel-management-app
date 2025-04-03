@@ -50,4 +50,10 @@ interface RentalRepository : Repository<Rental> {
         limit: Int = 30,
         offset: Int = 0,
     ): List<Rental>
+
+    fun updateDateAndRentTime(
+        rid: UInt,
+        date: LocalDate,
+        rentTime: TimeSlot,
+    ): Rental
 }

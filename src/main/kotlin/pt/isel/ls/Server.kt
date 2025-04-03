@@ -1,13 +1,16 @@
 package pt.isel.ls
 
+import org.http4k.core.Method.DELETE
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
+import org.http4k.core.Method.PUT
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.slf4j.LoggerFactory
 import pt.isel.ls.repository.jdbc.TransactionManagerJdbc
+import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.CourtService
 import pt.isel.ls.services.RentalService
@@ -23,32 +26,33 @@ private val logger = LoggerFactory.getLogger("HTTPServer")
 val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_URL environment variable")
 
 fun main() {
-    val connection = DriverManager.getConnection(DB_URL)
-    val trxManagerJdbc = TransactionManagerJdbc(connection)
+    //val connection = DriverManager.getConnection(DB_URL)
+    //val trxManagerJdbc = TransactionManagerJdbc(connection)
+    val trxManagerInMem = TransactionManagerInMem()
 
-    val userApi = UserWebApi(UserService(trxManagerJdbc))
+    val userApi = UserWebApi(UserService(trxManagerInMem))
     val clubApi =
         ClubWebApi(
-            ClubService(trxManagerJdbc),
-            UserService(trxManagerJdbc),
-            RentalService(trxManagerJdbc),
+            ClubService(trxManagerInMem),
+            UserService(trxManagerInMem),
+            RentalService(trxManagerInMem),
         )
     val courtApi =
         CourtWebApi(
-            CourtService(trxManagerJdbc),
-            UserService(trxManagerJdbc),
+            CourtService(trxManagerInMem),
+            UserService(trxManagerInMem),
         )
     val rentalApi =
         RentalWebApi(
-            RentalService(trxManagerJdbc),
-            UserService(trxManagerJdbc),
+            RentalService(trxManagerInMem),
+            UserService(trxManagerInMem),
         )
 
     val userRoutes =
         routes(
             "/" bind POST to userApi::createUser,
-            "/me" bind GET to userApi::getUserInfo,
-            "/rentals" bind GET to rentalApi::getUserRentals,
+            "/{uid}" bind GET to userApi::getUserInfo,
+            "/{uid}/rentals" bind GET to rentalApi::getUserRentals,
         )
     val clubsRoutes =
         routes(
@@ -68,6 +72,8 @@ fun main() {
             "/" bind POST to rentalApi::createRental,
             "/clubs/{cid}/courts/{crid}" bind GET to rentalApi::getAllRentals,
             "/{rid}" bind GET to rentalApi::getRentalInfo,
+            "/{rid}" bind DELETE to rentalApi::deleteRental,
+            "/{rid}" bind PUT to rentalApi::updateRental,
         )
 
     val app =
@@ -84,7 +90,7 @@ fun main() {
     readln()
     jettyServer.stop()
 
-    connection.close()
+    //connection.close()
 
     logger.info("leaving Main")
 }

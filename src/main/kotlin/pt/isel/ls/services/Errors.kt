@@ -71,6 +71,10 @@ sealed class RentalError(
     class MissingCourt(
         courtId: UInt,
     ) : RentalError("Court with id $courtId not found")
+
+    class RentalUpdateFailed(
+        rentalId: UInt,
+    ) : RentalError("Update for rental: $rentalId failed unexpectedly.")
 }
 
 fun ensureOrThrow(

@@ -5,6 +5,7 @@ package pt.isel.ls.repository.jdbc
 import kotlinx.datetime.*
 import pt.isel.ls.domain.*
 import pt.isel.ls.repository.RentalRepository
+import pt.isel.ls.repository.jdbc.dao.mapRentalDb
 import pt.isel.ls.services.RentalError
 import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
@@ -220,6 +221,87 @@ class RentalRepositoryJdbc(
                 rentals
             }
         }
+    }
+
+    override fun updateDateAndRentTime(
+        rid: UInt,
+        date: LocalDate,
+        rentTime: TimeSlot,
+    ): Rental {
+        ensureOrThrow(
+            condition = isInTheFuture(date, rentTime.start.toInt()),
+            exception = RentalError.RentalDateInThePast(date),
+        )
+
+        val sqlUpdate =
+            """
+            UPDATE rentals SET
+                date_ = ?,
+                rd_start = ?,
+                rd_end = ?
+            WHERE rid = ?
+            RETURNING rid as rental_id, date_ as rental_date, rd_start as rental_start, rd_end as rental_end,
+                    renter_id, court_id
+            """.trimIndent()
+
+        val updatedRental =
+            connection.prepareStatement(sqlUpdate).use { stmt ->
+                stmt.setInt(1, date.toEpochDays())
+                stmt.setInt(2, rentTime.start.toInt())
+                stmt.setInt(3, rentTime.end.toInt())
+                stmt.setInt(4, rid.toInt())
+
+                stmt.executeQuery().use { rs ->
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = RentalError.RentalUpdateFailed(rid),
+                    )
+                    rs.mapRentalDb()
+                }
+            }
+
+        val sqlSelectRenter =
+            """
+            SELECT * FROM users WHERE uid = ?
+            """.trimIndent()
+
+        val renter =
+            connection.prepareStatement(sqlSelectRenter).use { stmt ->
+                stmt.setInt(1, updatedRental.renter.toInt())
+                stmt.executeQuery().use { rs ->
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = RentalError.RenterNotFound(updatedRental.renter),
+                    )
+                    rs.mapUser()
+                }
+            }
+
+        val sqlSelectCourt =
+            """
+            ${courtSqlReturnFormat()}
+            WHERE cr.crid = ?
+            """.trimIndent()
+
+        val court =
+            connection.prepareStatement(sqlSelectCourt).use { stmt ->
+                stmt.setInt(1, updatedRental.court.toInt())
+                stmt.executeQuery().use { rs ->
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = RentalError.MissingCourt(updatedRental.court),
+                    )
+                    rs.mapCourt()
+                }
+            }
+
+        return Rental(
+            rid = updatedRental.rid,
+            date = updatedRental.date,
+            rentTime = updatedRental.rentTime,
+            renter = renter,
+            court = court,
+        )
     }
 
     /**
