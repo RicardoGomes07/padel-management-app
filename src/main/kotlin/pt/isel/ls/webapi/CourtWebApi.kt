@@ -36,7 +36,7 @@ class CourtWebApi(
         }
 
     fun getCourtsByClub(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val clubId = request.path("cid")?.toUIntOrNull()
 
             requireNotNull(clubId) { "Invalid club id" }
@@ -53,7 +53,7 @@ class CourtWebApi(
         }
 
     fun getCourtInfo(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val courtId = request.path("crid")?.toUIntOrNull()
 
             requireNotNull(courtId) { "Invalid court id" }

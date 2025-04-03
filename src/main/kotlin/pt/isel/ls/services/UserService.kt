@@ -33,4 +33,9 @@ class UserService(
         trxManager.run {
             userRepo.findUserByToken(token)
         }
+
+    fun findUserById(uid: UInt): User? =
+        trxManager.run {
+            userRepo.findByIdentifier(uid)
+        }
 }

@@ -39,7 +39,7 @@ class ClubWebApi(
         }
 
     fun getAllClubs(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
 
@@ -52,7 +52,7 @@ class ClubWebApi(
         }
 
     fun getClubInfo(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val clubId =
                 request.path("cid")?.toUIntOrNull()
 
@@ -67,7 +67,7 @@ class ClubWebApi(
         }
 
     fun getAvailableHours(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handler {
             val courtId = request.path("crid")?.toUIntOrNull()
 
             requireNotNull(courtId) { "Invalid court id" }

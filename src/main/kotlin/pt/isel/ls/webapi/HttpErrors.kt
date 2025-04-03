@@ -29,6 +29,7 @@ private fun CustomError.toResponse(): Response {
             is RentalError.RentalNotFound, is RentalError.RenterNotFound, is RentalError.MissingCourt -> NOT_FOUND
             is RentalError.RentalDateInThePast -> BAD_REQUEST
             is RentalError.OverlapInTimeSlot -> CONFLICT
+            is RentalError.RentalUpdateFailed -> NOT_FOUND
         }
     return Response(status).body(Json.encodeToString(ProblemOutput(this.description, this.message)))
 }
@@ -38,4 +39,4 @@ fun Throwable.toResponse(): Response =
         is IllegalArgumentException -> Response(BAD_REQUEST).body(message ?: "Invalid request")
         is CustomError -> this.toResponse()
         else -> Response(INTERNAL_SERVER_ERROR).body("Unexpected error: ${this.message}")
-    }
+    }.also { println(this.message) }

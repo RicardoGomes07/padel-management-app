@@ -94,4 +94,26 @@ class RentalService(
                 rentalRepo.findAllRentalsByRenterId(uid, limit, skip)
             }
         }
+
+    fun deleteRental(rid: UInt): Result<Unit> =
+        runCatching {
+            trxManager.run {
+                rentalRepo.deleteByIdentifier(rid)
+            }
+        }
+
+    fun updateDateAndRentTime(
+        rid: UInt,
+        date: LocalDate,
+        rentTime: TimeSlot,
+    ): Result<Rental> =
+        runCatching {
+            trxManager.run {
+                rentalRepo.updateDateAndRentTime(
+                    rid,
+                    date,
+                    rentTime,
+                )
+            }
+        }
 }

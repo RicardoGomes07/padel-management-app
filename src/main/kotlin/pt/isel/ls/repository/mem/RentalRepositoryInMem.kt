@@ -1,4 +1,4 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
+@file:Suppress("kt lint:standard:no-wildcard-imports")
 
 package pt.isel.ls.repository.mem
 
@@ -149,6 +149,26 @@ object RentalRepositoryInMem : RentalRepository {
                 it.renter.uid == renter
             }.drop(offset)
             .take(limit)
+    }
+
+    override fun updateDateAndRentTime(
+        rid: UInt,
+        date: LocalDate,
+        rentTime: TimeSlot,
+    ): Rental {
+        val rental = rentals.firstOrNull { it.rid == rid }
+        requireNotNull(rental)
+        rentals.removeIf { it.rid == rid }
+        val newRental =
+            Rental(
+                rid = rid,
+                date = date,
+                rentTime = rentTime,
+                renter = rental.renter,
+                court = rental.court,
+            )
+        rentals.add(newRental)
+        return newRental
     }
 
     /**
