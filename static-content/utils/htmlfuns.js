@@ -1,4 +1,4 @@
-function div(children = []) {
+function div(...children) {
     const div = document.createElement("div");
     children.forEach(child => div.appendChild(child));
     return div;
@@ -11,7 +11,7 @@ function a(text, href) {
     return a;
 }
 
-function ul(children = []) {
+function ul(...children) {
     const ul = document.createElement("ul");
     children.forEach(child => ul.appendChild(child));
     return ul;
@@ -28,3 +28,20 @@ function h1(text) {
     h1.textContent = text;
     return h1;
 }
+
+function h2(text) {
+    const h2 = document.createElement("h2");
+    h2.textContent = text;
+    return h2;
+}
+
+const Html = {
+    div,
+    a,
+    ul,
+    li,
+    h1,
+    h2
+}
+
+export default Html;

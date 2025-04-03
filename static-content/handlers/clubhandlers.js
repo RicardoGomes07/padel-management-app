@@ -1,54 +1,36 @@
-function getClubs(mainContent){
-    fetch(API_BASE_URL + "clubs")
+import Html from "../utils/htmlfuns.js";
+const { div, a, ul, li, h1, h2 } = Html;
+
+function getClubs(mainContent, skip = 0, limit = 2) {
+    fetch(API_BASE_URL + "clubs?skip=" + skip + "&limit=" + limit)
         .then(res => res.json())
         .then(clubs => {
-            const div = document.createElement("div")
-            const h1 = document.createElement("h1")
-            const text = document.createTextNode("Clubs")
-            h1.appendChild(text)
-            div.appendChild(h1)
-            clubs.forEach(club => {
-                const p = document.createElement("p")
-                const a = document.createElement("a")
-                const aText = document.createTextNode("ClubDetails" + club.name);
-                a.appendChild(aText)
-                a.href="#clubs/" + club.cid
-                p.appendChild(a)
-                div.appendChild(p)
-            })
-            mainContent.replaceChildren(div)
+            div(
+                h1("Clubs"),
+                clubs.map(club => ul(
+                    li(club.name),
+                    li(a("Info", "#clubs/" + club.cid)),
+                )),
+            )
+            const nextLink = a("Next", "#clubs?skip=" + (skip + limit) + "&limit=" + limit);
+            const prevLink = a("Prev", "#clubs?skip=" + (skip - limit) + "&limit=" + limit);
+            
+            if (skip === 0) prevLink.style.display = "none";
+            if (skip + limit >= clubs.length) nextLink.style.display = "none";
+            mainContent.replaceChildren(div, nextLink, prevLink)
         })
 }
 
-function getClub(mainContent, cid) {
+function getClub(mainContent) {
     fetch(API_BASE_URL + "clubs/" + window.location.hash.split("/")[2]) //clubs[0] cid[1]
         .then(res => res.json())
         .then(club => {
-            const ulClub = document.createElement("ul")
-            const liName = document.createElement("li") 
-            const textName = document.createTextNode("Club Name: " + club.name)    
-            liName.appendChild(textName)
-
-            const liOwner = document.createElement("li")
-            const owner = document.createElement("a")
-            const textOwner = document.createTextNode("Owner: " + club.owner.name);
-            owner.appendChild(textOwner)
-            owner.href="#users/" + club.owner.uid
-            liOwner.appendChild(textOwner)
-
-            const liBack = document.createElement("li")
-            const a = document.createElement("a")
-            const aText = document.createTextNode("Clubs")
-            a.appendChild(aText)
-            a.href="#clubs"
-            liBack.appendChild(a)
-
-            
-
-            ulClub.appendChild(liName)
-            ulClub.appendChild(liOwner)
-            ulClub.appendChild(liBack)
-
-            mainContent.replaceChildren(ulClub)
+            h2("Club Info")
+            ul(
+                li("Name: " + club.name),
+                li("Owner: " + a(club.owner.name, "#users/" + club.owner.uid)),
+                li(a("Back", "#clubs"))
+            )
+            mainContent.replaceChildren(ul)
         })
 }
