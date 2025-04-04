@@ -1,6 +1,7 @@
 import Html from "../utils/htmlfuns.js";
+import {API_BASE_URL} from "./home.js";
 const { div, a, ul, li, h1, h2 } = Html;
-const API_BASE_URL = "http://localhost:8080/"
+
 
 function getClubs(mainContent, skip = 0, limit = 2) {
     fetch(API_BASE_URL + "clubs?skip=" + skip + "&limit=" + limit)

@@ -5,6 +5,7 @@ let notFoundRouteHandler = () => { throw "Route handler for unknown routes not d
 function addRouteHandler(pathTemplate, handler){
     routes.push({pathTemplate, handler})
 }
+
 function addDefaultNotFoundRouteHandler(notFoundRH) {
     notFoundRouteHandler = notFoundRH
 }
@@ -13,26 +14,59 @@ function getRouteHandler(path){
     const route = routes.find(r => matchPathTemplate(r.pathTemplate, path));
     return route ? route.handler : notFoundRouteHandler
 }
+
 function matchPathTemplate(template, path) {
-    const templateParts = template.split('/')
-    const pathParts = path.split('/')
+    const [pathWithoutQuery] = path.split('?');
+    const templateParts = template.split('/');
+    const pathParts = pathWithoutQuery.split('/');
 
     return templateParts.length === pathParts.length &&
-        templateParts.every((part, index) => part.startsWith(':') ||
-            part === pathParts[index]);
+        templateParts.every((part, index) => part.startsWith(':') || part === pathParts[index]);
 }
 
-const router = {
+
+export const router = {
     addRouteHandler,
     getRouteHandler,
-    addDefaultNotFoundRouteHandler
+    addDefaultNotFoundRouteHandler,
 }
 
-function getUriValues(path, handler){
-    const temp = routes.fir
-
-
-    return
+export const request = {
+    getRequestArgs,
+    path,
+    query,
 }
 
-export default router
+let args = {
+    path: {},
+    query: {}
+}
+
+function path(parameter){
+    return args.path[parameter] ? args.path[parameter] : null
+}
+
+function query(parameter){
+    return args.query[parameter] ? args.query[parameter] : null
+}
+
+function getRequestArgs(handler, path) {
+    const template = routes.find(r => r.handler === handler).pathTemplate
+    if (!template) return
+
+    const pathParts = path.split("/")
+    const templateParts = template.split("/")
+
+
+    args = { path: {}, query: {} }
+
+    templateParts.forEach((part, index) => {
+        if (part.startsWith(":")) args.path[part.substring(1)] = pathParts[index] || null
+    })
+
+    const queryString = path.split("?")[1] || ""
+    queryString.split("&").filter(Boolean).forEach(entry => {
+        const [key, value] = entry.split("=")
+        if (key) args.query[key] = value || null
+    })
+}

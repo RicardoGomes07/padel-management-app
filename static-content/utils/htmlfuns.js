@@ -1,38 +1,48 @@
+function createElement(tag, props, ...children) {
+    const element = document.createElement(tag)
+
+    Object.entries(props).forEach(([key, value]) => {
+        if (key.startsWith("on") && typeof value === "function") {
+            element.addEventListener(key.slice(2).toLowerCase(), value)
+        } else {
+            element[key] = value;
+        }
+    })
+
+    children.forEach(child => {
+        if (typeof child === "string" || typeof child === "number") {
+            element.appendChild(document.createTextNode(child))
+        } else if (child instanceof Node) {
+            element.appendChild(child)
+        }
+    })
+
+    return element
+}
+
+
 function div(...children) {
-    const div = document.createElement("div");
-    children.forEach(child => div.appendChild(child));
-    return div;
+    return createElement("div", {},...children)
 }
 
 function a(text, href) {
-    const a = document.createElement("a");
-    a.textContent = text;
-    a.href = href;
-    return a;
+    return createElement("a", {textContent:text, href: href})
 }
 
 function ul(...children) {
-    const ul = document.createElement("ul");
-    children.forEach(child => ul.appendChild(child));
-    return ul;
+    return createElement("ul",{},...children)
 }
 
 function li(text) {
-    const li = document.createElement("li");
-    li.textContent = text;
-    return li;
+    return createElement("li", {textContent: text})
 }
 
 function h1(text) {
-    const h1 = document.createElement("h1");
-    h1.textContent = text;
-    return h1;
+    return createElement("h1", {textContent:text})
 }
 
 function h2(text) {
-    const h2 = document.createElement("h2");
-    h2.textContent = text;
-    return h2;
+    return createElement("h2", {textContent:text})
 }
 
 const Html = {

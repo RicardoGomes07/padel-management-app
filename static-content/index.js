@@ -1,15 +1,14 @@
-import router from "./router.js";
-
-import clubhandlers from "./handlers/clubhandlers";
-import homeHandlers from "./handlers/home";
+import { router, request } from "./router.js";
+import clubHandlers from "./handlers/clubhandlers.js";
+import homeHandlers from "./handlers/home.js";
 
 window.addEventListener('load', loadHandler)
 window.addEventListener('hashchange', hashChangeHandler)
 
 function loadHandler(){
     router.addRouteHandler("home", homeHandlers.getHome)
-    router.addRouteHandler("clubs", clubhandlers.getClubs)
-    router.addRouteHandler("clubs/:id?skip=&limit=", clubhandlers.getClub)
+    router.addRouteHandler("clubs", clubHandlers.getClubs)
+    router.addRouteHandler("clubs/:cid", clubHandlers.getClub)
     router.addDefaultNotFoundRouteHandler(() => window.location.hash = "home")
 
     hashChangeHandler()
@@ -21,6 +20,7 @@ function hashChangeHandler(){
     const path =  window.location.hash.replace("#", "")
 
     const handler = router.getRouteHandler(path)
-    const values =
-    handler(mainContent, values)
+    request.getRequestArgs(handler,path)
+
+    handler(mainContent) //handler excusa de receber main content e apenas o estritamente necessario
 }
