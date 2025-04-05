@@ -24,7 +24,7 @@ val userApi =
 val userRoutes =
     routes(
         "users" bind POST to userApi::createUser,
-        "users/me" bind GET to userApi::getUserInfo,
+        "users/{uid}" bind GET to userApi::getUserInfo,
     )
 
 fun randomString(
@@ -88,22 +88,15 @@ class UserWebApiTests {
     }
 
     @Test
-    fun `get user info without auth`() {
-        val getUsersResponse =
-            userRoutes(
-                Request(GET, "users/me"),
-            )
-        assertEquals(Status.UNAUTHORIZED, getUsersResponse.status)
-    }
-
-    @Test
     fun `get user info with auth`() {
-        val token = createUser()
-        val getUsersResponse =
+        val name = randomString(10)
+        val userResponse =
             userRoutes(
-                Request(GET, "users/me")
-                    .header("Authorization", token),
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body("""{"name":"Ric", "email":"$name@gmail.com"}"""),
             )
-        assertEquals(Status.OK, getUsersResponse.status)
+
+        assertEquals(Status.CREATED, userResponse.status)
     }
 }

@@ -11,6 +11,7 @@ import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.CourtService
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.CourtDetailsOutput
+import pt.isel.ls.webapi.dto.CourtOutput
 import pt.isel.ls.webapi.dto.CourtsOutput
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -71,11 +72,10 @@ class CourtWebApiTests {
         val courtCreated = createCourt(token, clubID)
         val getCourtInfoRequest =
             courtsRoutes(
-                Request(GET, "courts/${courtCreated.crid.toInt()}")
-                    .header("Authorization", token),
+                Request(GET, "courts/${courtCreated.crid.toInt()}"),
             )
         assertEquals(Status.OK, getCourtInfoRequest.status)
-        val court = Json.decodeFromString<CourtDetailsOutput>(getCourtInfoRequest.bodyString())
+        val court = Json.decodeFromString<CourtOutput>(getCourtInfoRequest.bodyString())
         assertEquals(court.crid, courtCreated.crid)
     }
 
@@ -85,8 +85,7 @@ class CourtWebApiTests {
         val invalidCourtId = 999
         val getCourtInfoRequest =
             courtsRoutes(
-                Request(GET, "courts/$invalidCourtId")
-                    .header("Authorization", token),
+                Request(GET, "courts/$invalidCourtId"),
             )
         assertEquals(Status.NOT_FOUND, getCourtInfoRequest.status)
     }
@@ -97,11 +96,9 @@ class CourtWebApiTests {
         val clubID = createClub(token).cid.toInt()
         val getAllCourtsRequest =
             courtsRoutes(
-                Request(GET, "courts/clubs/$clubID")
-                    .header("Authorization", token),
+                Request(GET, "courts/clubs/$clubID"),
             )
         val getAllCourtsResponse = Json.decodeFromString<CourtsOutput>(getAllCourtsRequest.bodyString())
-        println(getAllCourtsResponse)
         assertEquals(Status.OK, getAllCourtsRequest.status)
     }
 }

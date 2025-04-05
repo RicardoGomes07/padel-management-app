@@ -62,6 +62,7 @@ fun main() {
             "/" bind GET to clubApi::getAllClubs,
             "/{cid}" bind GET to clubApi::getClubInfo,
             "/{cid}/courts/{crid}/available" bind POST to clubApi::getAvailableHours,
+            "/{cid}/courts/{crid}/rentals" bind GET to rentalApi::getRentalsOnCourt,
         )
     val courtsRoutes =
         routes(
@@ -72,7 +73,6 @@ fun main() {
     val rentalsRoutes =
         routes(
             "/" bind POST to rentalApi::createRental,
-            "/clubs/{cid}/courts/{crid}" bind GET to rentalApi::getAllRentals,
             "/{rid}" bind GET to rentalApi::getRentalInfo,
             "/{rid}" bind DELETE to rentalApi::deleteRental,
             "/{rid}" bind PUT to rentalApi::updateRental,
@@ -87,7 +87,7 @@ fun main() {
             singlePageApp(ResourceLoader.Directory("static-content")),
         )
 
-    val jettyServer = app.asServer(Jetty(8080)).start()
+    val jettyServer = app.asServer(Jetty(9000)).start()
     logger.info("server started listening")
 
     readln()

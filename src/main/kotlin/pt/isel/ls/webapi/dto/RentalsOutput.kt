@@ -5,7 +5,7 @@ import pt.isel.ls.domain.Rental
 
 @Serializable
 data class RentalsOutput(
-    val rentals: List<RentalDetailsOutput>,
+    val rentals: List<RentalOutput>,
 )
 
-fun List<Rental>.toRentalsOutput() = RentalsOutput(this.map { RentalDetailsOutput(it) })
+fun List<Rental>.toRentalsOutput() = RentalsOutput(this.map { RentalOutput(it) })

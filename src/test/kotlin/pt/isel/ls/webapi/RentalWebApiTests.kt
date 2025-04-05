@@ -1,9 +1,13 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.webapi
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
+import org.http4k.core.Method.DELETE
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
+import org.http4k.core.Method.PUT
 import org.http4k.core.Request
 import org.http4k.core.Status
 import org.http4k.routing.bind
@@ -12,10 +16,7 @@ import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.*
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 private val transactionManager = TransactionManagerInMem()
 
@@ -27,9 +28,11 @@ val rentalApi =
 val rentalsRoutes =
     routes(
         "rentals" bind POST to rentalApi::createRental,
-        "rentals/clubs/courts/{crid}" bind GET to rentalApi::getAllRentals,
+        "rentals/clubs/courts/{crid}" bind GET to rentalApi::getRentalsOnCourt,
         "rentals/{rid}" bind GET to rentalApi::getRentalInfo,
-        "users/rentals" bind GET to rentalApi::getUserRentals,
+        "users/{uid}/rentals" bind GET to rentalApi::getUserRentals,
+        "rentals/{rid}" bind DELETE to rentalApi::deleteRental,
+        "rentals/{rid}" bind PUT to rentalApi::updateRental,
     )
 
 fun createRental(token: String): RentalDetailsOutput {
@@ -116,7 +119,6 @@ class RentalWebApiTests {
         assertEquals(rentalDetails.date, LocalDate.parse("2025-06-15"))
         assertEquals(rentalDetails.initialHour, 10)
         assertEquals(rentalDetails.finalHour, 12)
-        assertEquals(rentalDetails.court.club.cid, club.cid)
     }
 
     @Test
@@ -125,20 +127,18 @@ class RentalWebApiTests {
         createRental(token)
         val getRentalInfoRequest =
             rentalsRoutes(
-                Request(GET, "rentals/1")
-                    .header("Authorization", token),
+                Request(GET, "rentals/1"),
             )
         assertEquals(Status.OK, getRentalInfoRequest.status)
     }
 
     @Test
     fun `get rental info with invalid rental id`() {
-        val token = createUser()
+        createUser()
         val invalidRentalId = 999
         val getRentalInfoRequest =
             rentalsRoutes(
-                Request(GET, "rentals/$invalidRentalId")
-                    .header("Authorization", token),
+                Request(GET, "rentals/$invalidRentalId"),
             )
         assertEquals(Status.NOT_FOUND, getRentalInfoRequest.status)
     }
@@ -149,24 +149,79 @@ class RentalWebApiTests {
         val rental = createRental(token)
         val getAllRentalsRequest =
             rentalsRoutes(
-                Request(GET, "rentals/clubs/courts/1")
-                    .header("Authorization", token),
+                Request(GET, "rentals/clubs/courts/1"),
             )
         val rentals = Json.decodeFromString<RentalsOutput>(getAllRentalsRequest.bodyString())
-        assertTrue(rentals.rentals.contains(rental))
+        assertTrue(rentals.rentals.any { it.date == rental.date })
         assertEquals(Status.OK, getAllRentalsRequest.status)
     }
 
     @Test
     fun `get user rentals with valid token`() {
-        val token = createUser()
+        val name = randomString(10)
+        val userResponse =
+            userRoutes(
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body("""{"name":"Ric", "email":"$name@gmail.com"}"""),
+            )
+        assertEquals(Status.CREATED, userResponse.status)
+
         val getUserRentalsRequest =
             rentalsRoutes(
-                Request(GET, "users/rentals")
-                    .header("Authorization", token),
+                Request(GET, "users/1/rentals"),
             )
         val userRentals = Json.decodeFromString<RentalsOutput>(getUserRentalsRequest.bodyString())
         assertTrue(userRentals.rentals.isEmpty())
         assertEquals(Status.OK, getUserRentalsRequest.status)
+    }
+
+    @Test
+    fun `update the date and rentTime of a rental`() {
+        val token = createUser()
+        val rental = createRental(token)
+
+        val updateRequest =
+            rentalsRoutes(
+                Request(PUT, "rentals/1")
+                    .header("Authorization", token)
+                    .body(
+                        Json.encodeToString<RentalUpdateInput>(
+                            RentalUpdateInput(
+                                date = LocalDate.parse("2026-06-15"),
+                                initialHour = 16,
+                                finalHour = 17,
+                            ),
+                        ),
+                    ),
+            )
+        assertEquals(Status.OK, updateRequest.status)
+
+        val updatedRental = Json.decodeFromString<RentalDetailsOutput>(updateRequest.bodyString())
+
+        assertNotEquals(rental.date, updatedRental.date)
+        assertNotEquals(rental.initialHour, updatedRental.initialHour)
+        assertNotEquals(rental.finalHour, updatedRental.finalHour)
+    }
+
+    @Test
+    fun `delete a rental`() {
+        val token = createUser()
+        val rental = createRental(token)
+        assertNotNull(rental)
+
+        val deleteRequest =
+            rentalsRoutes(
+                Request(DELETE, "rentals/1")
+                    .header("Authorization", token),
+            )
+        assertEquals(Status.OK, deleteRequest.status)
+
+        val getRentalInfoRequest =
+            rentalsRoutes(
+                Request(GET, "rentals/1")
+                    .header("Authorization", token),
+            )
+        assertEquals(Status.NOT_FOUND, getRentalInfoRequest.status)
     }
 }

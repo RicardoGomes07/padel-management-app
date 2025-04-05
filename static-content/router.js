@@ -42,16 +42,16 @@ let args = {
     query: {}
 }
 
-function path(parameter){
+export function path(parameter){
     return args.path[parameter] ? args.path[parameter] : null
 }
 
-function query(parameter){
+export function query(parameter){
     return args.query[parameter] ? args.query[parameter] : null
 }
 
 function getRequestArgs(handler, path) {
-    const template = routes.find(r => r.handler === handler).pathTemplate
+    const template = routes.find(r => r.handler === handler)?.pathTemplate || null;
     if (!template) return
 
     const pathParts = path.split("/")

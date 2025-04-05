@@ -80,8 +80,7 @@ class ClubWebApiTests {
 
         val clubResponse =
             clubsRoutes(
-                Request(GET, "clubs/${club.cid}")
-                    .header("Authorization", token),
+                Request(GET, "clubs/${club.cid}"),
             )
         val clubRequest = Json.decodeFromString<ClubDetailsOutput>(clubResponse.bodyString())
         assertEquals(club.name, clubRequest.name)
@@ -92,12 +91,9 @@ class ClubWebApiTests {
     @Test
     fun `get club info with invalid club id`() {
         val invalidClubId = 999
-        val token = createUser()
+        createUser()
         val getClubInfoRequest =
-            clubsRoutes(
-                Request(GET, "clubs/$invalidClubId")
-                    .header("Authorization", token),
-            )
+            clubsRoutes(Request(GET, "clubs/$invalidClubId"))
         assertEquals(Status.NOT_FOUND, getClubInfoRequest.status)
     }
 
@@ -108,8 +104,7 @@ class ClubWebApiTests {
 
         val getAllClubsRequest =
             clubsRoutes(
-                Request(GET, "clubs")
-                    .header("Authorization", token),
+                Request(GET, "clubs"),
             )
         val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
         assertTrue(body.clubs.isNotEmpty())

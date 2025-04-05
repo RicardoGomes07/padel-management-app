@@ -12,6 +12,7 @@ import pt.isel.ls.domain.Name
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.CourtCreationInput
 import pt.isel.ls.webapi.dto.CourtDetailsOutput
+import pt.isel.ls.webapi.dto.CourtOutput
 import pt.isel.ls.webapi.dto.toCourtsOutput
 
 /**
@@ -62,7 +63,7 @@ class CourtWebApi(
                 .getCourtById(courtId)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(CourtDetailsOutput(it))) },
+                    onSuccess = { Response(OK).body(Json.encodeToString(CourtOutput(it))) },
                 )
         }
 }

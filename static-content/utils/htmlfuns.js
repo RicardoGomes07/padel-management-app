@@ -33,8 +33,8 @@ function ul(...children) {
     return createElement("ul",{},...children)
 }
 
-function li(text) {
-    return createElement("li", {textContent: text})
+function li(...children) {
+    return createElement("li", {}, ...children)
 }
 
 function h1(text) {

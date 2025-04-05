@@ -41,7 +41,7 @@ class RentalWebApi(
                 )
         }
 
-    fun getAllRentals(request: Request): Response =
+    fun getRentalsOnCourt(request: Request): Response =
         request.handler {
             val courtId = request.path("crid")?.toUIntOrNull()
 
