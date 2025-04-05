@@ -14,7 +14,7 @@ function loadHandler(){
     router.addRouteHandler("clubs/:cid", clubHandlers.getClub)
     router.addRouteHandler("users/:uid", userHandlers.getUserDetails)
     router.addRouteHandler("users/:uid/rentals", userHandlers.getUserRentals)
-    router.addRouteHandler("courts/:crid", courtHandlers.getCourt)
+    router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourt)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals", courtHandlers.getCourtRentals)
     router.addRouteHandler("courts/clubs/:cid", courtHandlers.getCourtsByClub)
     router.addRouteHandler("rentals/:rid", rentalHandlers.getRentalDetails)

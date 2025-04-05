@@ -16,7 +16,7 @@ function getCourtsByClub(mainContent){
                 h1("Courts"),
                 ul(
                     ...courts.map(court =>
-                        li(a(court.name, "#courts/" + court.clubId)),
+                        li(a(court.name, "#clubs/" + cid + "/courts/" + court.clubId)),
                     ),
                 ),
             )
@@ -32,6 +32,7 @@ function getCourtsByClub(mainContent){
 
 function getCourt(mainContent) {
     const crid = path("crid")
+    const cid = path("cid")
 
     fetch(API_BASE_URL + "courts/" + crid)
         .then(res => res.json())
@@ -41,6 +42,7 @@ function getCourt(mainContent) {
                 ul(
                     li(court.name),
                     li(a("Club", "#clubs/" + court.clubId)),
+                    li(a("Court Rentals", "#clubs/" + cid + "/courts/"  + crid + "/rentals")),
                 )
             )
             mainContent.replaceChildren(all)
@@ -51,27 +53,31 @@ function getCourt(mainContent) {
 function getCourtRentals(mainContent) {
     const cid = path("cid")
     const crid = path("crid")
+    const skip = query("skip") || "0"
+    const limit = query("limit") || "10"
+    const baseLink = "clubs/" + cid + "/courts/" + crid + "/rentals";
 
-    fetch(API_BASE_URL + "clubs/" + cid + "/courts/" + crid + "/rentals")
+    fetch(API_BASE_URL + baseLink)
         .then(res => res.json())
-        .then(rentals => {
+        .then(response => {
+            const rentals = response.rentals;
             const all = div(
                 h1("Rentals"),
                 ul(
-                    rentals.map(rental =>
+                    ...rentals.map(rental =>
                         li(a(rental.date.toString() + ": ", "#rentals/" + rental.rid))
                     ),
                 ),
-                a("Back", "#courts/" + crid),
+                a("Back", "#clubs/" + cid + "/courts/" + crid),
             )
 
-            const nextLink = a("Next", "#" + baseLink + "?skip=" + (skip + limit) + "&limit=" + limit);
-            const prevLink = a("Prev", "#" + baseLink + "?skip=" + (skip - limit) + "&limit=" + limit);
+            //const nextLink = a("Next", "#" + baseLink + "?skip=" + (skip + limit) + "&limit=" + limit);
+            //const prevLink = a("Prev", "#" + baseLink + "?skip=" + (skip - limit) + "&limit=" + limit);
 
-            if (skip === 0) prevLink.style.display = "none";
-            if (skip + limit >= rentals.length) nextLink.style.display = "none";
+            //if (skip === 0) prevLink.style.display = "none";
+            //if (skip + limit >= rentals.length) nextLink.style.display = "none";
 
-            mainContent.replaceChildren(all, nextLink, prevLink)
+            mainContent.replaceChildren(all)
         })
 }
 
