@@ -12,7 +12,6 @@ import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import org.slf4j.LoggerFactory
 import pt.isel.ls.repository.jdbc.TransactionManagerJdbc
-import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.CourtService
 import pt.isel.ls.services.RentalService
@@ -30,7 +29,6 @@ val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_U
 fun main() {
     val connection = DriverManager.getConnection(DB_URL)
     val trxManagerJdbc = TransactionManagerJdbc(connection)
-    val trxManagerInMem = TransactionManagerInMem()
 
     val userApi = UserWebApi(UserService(trxManagerJdbc))
     val clubApi =

@@ -202,6 +202,16 @@ class CourtRepositoryJdbc(
             stmt.executeUpdate()
         }
     }
+
+    override fun count(cid: UInt): Int {
+        val sqlCount = "SELECT COUNT(*) FROM courts where club_id = ?"
+        return connection.prepareStatement(sqlCount).use { stmt ->
+            stmt.setInt(1, cid.toInt())
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) rs.getInt(1) else 0
+            }
+        }
+    }
 }
 
 /**

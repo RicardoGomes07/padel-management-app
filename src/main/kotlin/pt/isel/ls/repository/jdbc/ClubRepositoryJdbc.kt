@@ -188,6 +188,15 @@ class ClubRepositoryJdbc(
             stmt.executeUpdate()
         }
     }
+
+    override fun count(): Int {
+        val sqlCount = "SELECT COUNT(*) FROM clubs"
+        return connection.prepareStatement(sqlCount).use { stmt ->
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) rs.getInt(1) else 0
+            }
+        }
+    }
 }
 
 /**

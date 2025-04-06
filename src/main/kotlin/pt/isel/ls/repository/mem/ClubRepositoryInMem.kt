@@ -69,4 +69,6 @@ object ClubRepositoryInMem : ClubRepository {
         clubs.clear()
         currId = 0u
     }
+
+    override fun count(): Int = clubs.size
 }

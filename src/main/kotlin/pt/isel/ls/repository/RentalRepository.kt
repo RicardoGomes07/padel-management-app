@@ -42,6 +42,16 @@ interface RentalRepository : Repository<Rental> {
     ): List<Rental>
 
     /**
+     * Function that returns the number of rentals in the system.
+     * @param crid the court identifier
+     * @return the number of rentals in the system
+     */
+    fun numRentalsOfCourt(
+        crid: UInt,
+        date: LocalDate?,
+    ): Int
+
+    /**
      * Finds all the rentals of a renter.
      * @param renter The renter id.
      */
@@ -50,6 +60,13 @@ interface RentalRepository : Repository<Rental> {
         limit: Int = 30,
         offset: Int = 0,
     ): List<Rental>
+
+    /**
+     * Function that returns the number of rentals in the system.
+     * @param renter the renter identifier
+     * @return the number of rentals in the system
+     */
+    fun numRentalsOfUser(renter: UInt): Int
 
     fun updateDateAndRentTime(
         rid: UInt,

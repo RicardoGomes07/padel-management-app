@@ -67,4 +67,6 @@ object CourtRepositoryInMem : CourtRepository {
         courts.clear()
         currId = 0u
     }
+
+    override fun count(cid: UInt): Int = courts.count { it.club.cid == cid }
 }

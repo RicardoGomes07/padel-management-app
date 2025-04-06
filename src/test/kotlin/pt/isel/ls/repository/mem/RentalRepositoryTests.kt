@@ -90,8 +90,8 @@ class RentalRepositoryTests {
         rentalRepoInMem.createRental(tomorrowDate, TimeSlot(9u, 10u), renter.uid, court.crid)
         rentalRepoInMem.createRental(tomorrowDate, TimeSlot(11u, 13u), renter.uid, court.crid)
 
-        val rentals = rentalRepoInMem.findAllRentalsByRenterId(renter.uid)
-        assertEquals(2, rentals.size)
+        val numOfRentals = rentalRepoInMem.numRentalsOfUser(renter.uid)
+        assertEquals(2, numOfRentals)
     }
 
     @Test
@@ -108,8 +108,8 @@ class RentalRepositoryTests {
                 court.crid,
             )
 
-        val foundRentals = rentalRepoInMem.findByCridAndDate(court.crid, null)
-        assertEquals(1, foundRentals.size)
+        val numOfRentals = rentalRepoInMem.numRentalsOfCourt(court.crid, null)
+        assertEquals(1, numOfRentals)
     }
 
     @Test

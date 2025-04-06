@@ -13,7 +13,12 @@ import java.sql.DriverManager
 import kotlin.test.*
 
 class RentalRepositoryTests {
-    private val connection: Connection = DriverManager.getConnection(DB_URL)
+    private val connection: Connection =
+        DriverManager
+            .getConnection(
+                System.getenv("DB_URL")
+                    ?: throw Exception("Missing DB_URL environment variable"),
+            )
 
     private val rentalRepoJdbc = RentalRepositoryJdbc(connection)
     private val userRepoJdbc = UserRepositoryJdbc(connection)
@@ -113,8 +118,8 @@ class RentalRepositoryTests {
         rentalRepoJdbc.createRental(tomorrowDate, TimeSlot(9u, 10u), renter.uid, court.crid)
         rentalRepoJdbc.createRental(tomorrowDate, TimeSlot(11u, 13u), renter.uid, court.crid)
 
-        val rentals = rentalRepoJdbc.findAllRentalsByRenterId(renter.uid)
-        assertEquals(2, rentals.size)
+        val numOfRentals = rentalRepoJdbc.numRentalsOfUser(renter.uid)
+        assertEquals(2, numOfRentals)
     }
 
     @Test
@@ -143,11 +148,11 @@ class RentalRepositoryTests {
         val foundRentals = rentalRepoJdbc.findByCridAndDate(court.crid, null)
         assertEquals(2, foundRentals.size)
 
-        val tomorrowRentals = rentalRepoJdbc.findByCridAndDate(court.crid, tomorrowDate)
-        assertEquals(1, tomorrowRentals.size)
+        val numOfTomorrowRentals = rentalRepoJdbc.numRentalsOfCourt(court.crid, tomorrowDate)
+        assertEquals(1, numOfTomorrowRentals)
 
-        val otherCourtRentals = rentalRepoJdbc.findByCridAndDate(court2.crid, tomorrowDate)
-        assertEquals(0, otherCourtRentals.size)
+        val numOfOtherCourtRentals = rentalRepoJdbc.numRentalsOfCourt(court2.crid, tomorrowDate)
+        assertEquals(0, numOfOtherCourtRentals)
     }
 
     @Test

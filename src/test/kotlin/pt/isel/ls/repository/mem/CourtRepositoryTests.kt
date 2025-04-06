@@ -44,7 +44,8 @@ class CourtRepositoryTests {
         val court2 = courtRepoInMem.createCourt("Court B".toName(), club.cid)
 
         val foundCourts = courtRepoInMem.findByClubIdentifier(club.cid)
-        assertEquals(2, foundCourts.size)
+        val numOfCourts = courtRepoInMem.count(club.cid)
+        assertEquals(2, numOfCourts)
         assertTrue(foundCourts.containsAll(listOf(court1, court2)))
     }
 

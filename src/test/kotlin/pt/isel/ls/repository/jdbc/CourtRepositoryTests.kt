@@ -11,7 +11,12 @@ import java.sql.DriverManager
 import kotlin.test.*
 
 class CourtRepositoryTests {
-    private val connection: Connection = DriverManager.getConnection(DB_URL)
+    private val connection: Connection =
+        DriverManager
+            .getConnection(
+                System.getenv("DB_URL")
+                    ?: throw Exception("Missing DB_URL environment variable"),
+            )
 
     private val courtRepoJdbc = CourtRepositoryJdbc(connection)
     private val clubRepoJdbc = ClubRepositoryJdbc(connection)
@@ -49,7 +54,8 @@ class CourtRepositoryTests {
         val court2 = courtRepoJdbc.createCourt("Court B".toName(), club.cid)
 
         val foundCourts = courtRepoJdbc.findByClubIdentifier(club.cid)
-        assertEquals(2, foundCourts.size)
+        val numOfCourts = courtRepoJdbc.count(club.cid)
+        assertEquals(2, numOfCourts)
         assertTrue(foundCourts.containsAll(listOf(court1, court2)))
     }
 

@@ -42,12 +42,13 @@ class ClubWebApi(
         request.handler {
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
+            val pageInfo = clubService.numberOfClubs().getOrThrow()
 
             clubService
                 .getClubs(limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput())) },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput(pageInfo))) },
                 )
         }
 

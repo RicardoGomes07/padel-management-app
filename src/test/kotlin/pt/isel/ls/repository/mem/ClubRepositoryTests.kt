@@ -74,7 +74,8 @@ class ClubRepositoryTests {
         val club2 = clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
         val allClubs = clubRepoInMem.findAll()
-        assertEquals(2, allClubs.size)
+        val numOfClubs = clubRepoInMem.count()
+        assertEquals(2, numOfClubs)
         assertTrue(allClubs.containsAll(listOf(club1, club2)))
     }
 

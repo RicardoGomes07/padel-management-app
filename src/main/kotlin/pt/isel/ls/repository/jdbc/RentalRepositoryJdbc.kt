@@ -188,6 +188,29 @@ class RentalRepositoryJdbc(
         }
     }
 
+    override fun numRentalsOfCourt(
+        crid: UInt,
+        date: LocalDate?,
+    ): Int {
+        val sql =
+            if (date != null) {
+                "SELECT COUNT(*) FROM rentals WHERE court_id = ? AND date_ = ?"
+            } else {
+                "SELECT COUNT(*) FROM rentals WHERE court_id = ?"
+            }
+
+        return connection.prepareStatement(sql).use { stmt ->
+            stmt.setInt(1, crid.toInt())
+            if (date != null) {
+                stmt.setObject(2, date.toEpochDays())
+            }
+
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) rs.getInt(1) else 0
+            }
+        }
+    }
+
     /**
      * Function that finds 'limit' rentals, skipping first 'offset', of a user.
      * @param renter The User to search rentals of
@@ -219,6 +242,16 @@ class RentalRepositoryJdbc(
                     rentals.add(rs.mapRental())
                 }
                 rentals
+            }
+        }
+    }
+
+    override fun numRentalsOfUser(renter: UInt): Int {
+        val sql = "SELECT COUNT(*) FROM rentals WHERE renter_id = ?"
+        return connection.prepareStatement(sql).use { stmt ->
+            stmt.setInt(1, renter.toInt())
+            stmt.executeQuery().use { rs ->
+                if (rs.next()) rs.getInt(1) else 0
             }
         }
     }

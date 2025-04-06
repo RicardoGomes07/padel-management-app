@@ -11,7 +11,12 @@ import java.sql.DriverManager
 import kotlin.test.*
 
 class ClubRepositoryTests {
-    private val connection: Connection = DriverManager.getConnection(DB_URL)
+    private val connection: Connection =
+        DriverManager
+            .getConnection(
+                System.getenv("DB_URL")
+                    ?: throw Exception("Missing DB_URL environment variable"),
+            )
 
     private val clubRepoJdbc = ClubRepositoryJdbc(connection)
     private val userRepoJdbc = UserRepositoryJdbc(connection)
@@ -70,7 +75,8 @@ class ClubRepositoryTests {
         val club2 = clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
         val allClubs = clubRepoJdbc.findAll()
-        assertEquals(2, allClubs.size)
+        val numOfClubs = clubRepoJdbc.count()
+        assertEquals(2, numOfClubs)
         assertTrue(allClubs.containsAll(listOf(club1, club2)))
     }
 

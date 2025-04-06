@@ -22,4 +22,10 @@ interface ClubRepository : Repository<Club> {
      * @return the Club with the given name or null if it doesn't exist.
      */
     fun findClubByName(name: Name): Club?
+
+    /**
+     * Function that returns the number of clubs in the system.
+     * @return the number of clubs in the system.
+     */
+    fun count(): Int
 }

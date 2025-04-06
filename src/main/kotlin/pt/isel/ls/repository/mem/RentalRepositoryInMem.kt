@@ -130,6 +130,11 @@ object RentalRepositoryInMem : RentalRepository {
             .take(limit)
     }
 
+    override fun numRentalsOfCourt(
+        crid: UInt,
+        date: LocalDate?,
+    ): Int = rentals.count { it.court.crid == crid && (date == null || it.date == date) }
+
     /**
      * Finds all rentals by a renter id.
      * @param renter The id of the renter.
@@ -150,6 +155,8 @@ object RentalRepositoryInMem : RentalRepository {
             }.drop(offset)
             .take(limit)
     }
+
+    override fun numRentalsOfUser(renter: UInt): Int = rentals.count { it.renter.uid == renter }
 
     override fun updateDateAndRentTime(
         rid: UInt,

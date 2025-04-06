@@ -3,6 +3,7 @@ package pt.isel.ls.services
 import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Name
 import pt.isel.ls.repository.TransactionManager
+import pt.isel.ls.webapi.dto.PaginationInfo
 
 class CourtService(
     private val trxManager: TransactionManager,
@@ -22,6 +23,13 @@ class CourtService(
         runCatching {
             trxManager.run {
                 courtRepo.findByClubIdentifier(cid, limit, skip)
+            }
+        }
+
+    fun numberOfCourts(cid: UInt): Result<PaginationInfo> =
+        runCatching {
+            trxManager.run {
+                PaginationInfo(courtRepo.count(cid))
             }
         }
 
