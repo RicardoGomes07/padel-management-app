@@ -33,6 +33,7 @@ export const router = {
 
 export const request = {
     getRequestArgs,
+    cleanArgs,
     path,
     query,
 }
@@ -50,15 +51,16 @@ function query(parameter){
     return args.query[parameter] ? args.query[parameter] : null
 }
 
+function cleanArgs(){
+    args =  { path: {}, query: {} }
+}
+
 function getRequestArgs(handler, path) {
     const template = routes.find(r => r.handler === handler)?.pathTemplate || null;
     if (!template) return
 
     const pathParts = path.split("/")
     const templateParts = template.split("/")
-
-
-    args = { path: {}, query: {} }
 
     templateParts.forEach((part, index) => {
         if (part.startsWith(":")) args.path[part.substring(1)] = pathParts[index] || null

@@ -29,6 +29,7 @@ function hashChangeHandler(){
     const path =  window.location.hash.replace("#", "")
 
     const handler = router.getRouteHandler(path)
+    request.cleanArgs() // Clean the previous argument values that can have the same name as skip and limit
     request.getRequestArgs(handler,path)
 
     handler(mainContent) //handler excusa de receber main content e apenas o estritamente necessario

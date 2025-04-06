@@ -1,17 +1,21 @@
 import Html from "../utils/htmlfuns.js";
 import {API_BASE_URL} from "./home.js";
 import { request } from "../router.js";
+import pagination from "../utils/pagination.js";
+
 const { div, a, ul, li, h1, h2 } = Html;
 const {path, query} = request
+const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT, createPaginationLinks } = pagination
 
 function getClubs(mainContent) {
-    const skip = query("skip") || "0"
-    const limit = query("limit") || "10"
+    const skip = query("skip") || DEFAULT_VALUE_SKIP
+    const limit = query("limit") || DEFAULT_VALUE_LIMIT
 
     fetch(`${API_BASE_URL}clubs?skip=${skip}&limit=${limit}`)
         .then(res => res.json())
         .then(clubsResponse => {
             const clubs = clubsResponse.clubs
+            const maxNumOfElems = clubsResponse.paginationInfo.totalElements
             const text = h1("Clubs")
             const clubsElements =
                 ul(
@@ -20,12 +24,8 @@ function getClubs(mainContent) {
                     )
                 )
             const container = div(text, clubsElements)
-            const nextLink = a("Next", `#clubs?skip=${Number(skip) + Number(limit)}&limit=${limit}`)
-            const prevLink = a("Prev", `#clubs?skip=${Number(skip) - Number(limit)}&limit=${limit}`)
-
-            if (skip <= 0) prevLink.style.display = "none"
-            if (Number(skip) + Number(limit) >= clubs.length) nextLink.style.display = "none"
-            mainContent.replaceChildren(container, prevLink, nextLink)
+            const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), maxNumOfElems)
+            mainContent.replaceChildren(container, navigation)
         })
 }
 
@@ -45,7 +45,6 @@ function getClub(mainContent) {
             mainContent.replaceChildren(header, info)
         })
 }
-
 
 const clubHandlers= {
     getClub,

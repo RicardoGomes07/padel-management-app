@@ -1,18 +1,23 @@
 import Html from "../utils/htmlfuns.js";
 import {request} from "../router.js";
 import {API_BASE_URL} from "./home.js";
+import pagination from "../utils/pagination.js";
+
+const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT, createPaginationLinks } = pagination
+
 const { div, a, ul, li, h1, h2 } = Html;
 const {path, query} = request
 
 function getCourtsByClub(mainContent) {
     const cid = path("cid")
-    const skip = query("skip") || "0"
-    const limit = query("limit") || "10"
+    const skip = query("skip") || DEFAULT_VALUE_SKIP
+    const limit = query("limit") || DEFAULT_VALUE_LIMIT
 
     fetch(`${API_BASE_URL}courts/clubs/${cid}?skip=${skip}&limit=${limit}`)
         .then(res => res.json())
         .then(courtsResponse => {
-                const courts = courtsResponse.courts;
+                const courts = courtsResponse.courts
+                const maxNumOfElems = courtsResponse.paginationInfo.totalElements
                 const all = div(
                     h1("Courts"),
                     ul(
@@ -21,12 +26,8 @@ function getCourtsByClub(mainContent) {
                         ),
                     ),
                 )
-                const nextLink = a("Next", `#clubs/${cid}/courts?skip=${Number(skip) + Number(limit)}&limit=${limit}`);
-                const prevLink = a("Prev", `#clubs/${cid}/courts?skip=${Number(skip) - Number(limit)}&limit=${limit}`);
-
-                if (skip <= 0) prevLink.style.display = "none";
-                if (Number(skip) + Number(limit) >= courts.length) nextLink.style.display = "none";
-                mainContent.replaceChildren(all, nextLink, prevLink)
+                const navigation = createPaginationLinks(`clubs/${cid}/courts`, Number(skip), Number(limit), maxNumOfElems)
+                mainContent.replaceChildren(all, navigation)
             }
         )
 }
@@ -54,14 +55,15 @@ function getCourt(mainContent) {
 function getCourtRentals(mainContent) {
     const cid = path("cid")
     const crid = path("crid")
-    const skip = query("skip") || "0"
-    const limit = query("limit") || "10"
+    const skip = query("skip") || DEFAULT_VALUE_SKIP
+    const limit = query("limit") || DEFAULT_VALUE_LIMIT
     const baseLink = `clubs/${cid}/courts/${crid}/rentals`
 
     fetch(`${API_BASE_URL}${baseLink}`)
         .then(res => res.json())
         .then(response => {
             const rentals = response.rentals
+            const maxNumOfElems = response.paginationInfo.totalElements
             const all = div(
                 h1("Rentals"),
                 ul(
@@ -72,13 +74,9 @@ function getCourtRentals(mainContent) {
                 a("Back", `#clubs/${cid}/courts/${crid}`),
             )
 
-            // const nextLink = a("Next", `#${baseLink}?skip=${Number(skip) + Number(limit)}&limit=${limit}`);
-            // const prevLink = a("Prev", `#${baseLink}?skip=${Number(skip) - Number(limit)}&limit=${limit}`);
+            const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), maxNumOfElems)
 
-            // if (skip === 0) prevLink.style.display = "none";
-            // if (Number(skip) + Number(limit) >= rentals.length) nextLink.style.display = "none";
-
-            mainContent.replaceChildren(all)
+            mainContent.replaceChildren(all, navigation)
         })
 }
 

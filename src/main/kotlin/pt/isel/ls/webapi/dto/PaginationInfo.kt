@@ -6,7 +6,7 @@ import pt.isel.ls.webapi.SKIP_VALUE_DEFAULT
 
 @Serializable
 data class PaginationInfo(
-    val total: Int,
+    val totalElements: Int,
     val defaultLimit: Int = LIMIT_VALUE_DEFAULT,
     val defaultSkip: Int = SKIP_VALUE_DEFAULT,
 )
