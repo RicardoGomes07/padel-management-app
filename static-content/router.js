@@ -42,11 +42,11 @@ let args = {
     query: {}
 }
 
-export function path(parameter){
+function path(parameter){
     return args.path[parameter] ? args.path[parameter] : null
 }
 
-export function query(parameter){
+function query(parameter){
     return args.query[parameter] ? args.query[parameter] : null
 }
 

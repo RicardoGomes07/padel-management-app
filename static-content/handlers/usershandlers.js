@@ -1,7 +1,8 @@
 import Html from "../utils/htmlfuns.js";
 import {API_BASE_URL} from "./home.js";
-import {path, query} from "../router.js";
+import {request} from "../router.js";
 const { div, a, ul, li, h1, h2 } = Html;
+const {path, query} = request
 
 function getUserRentals(mainContent) {
     const userId = path("uid")

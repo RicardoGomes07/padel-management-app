@@ -16,7 +16,7 @@ function loadHandler(){
     router.addRouteHandler("users/:uid/rentals", userHandlers.getUserRentals)
     router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourt)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals", courtHandlers.getCourtRentals)
-    router.addRouteHandler("courts/clubs/:cid", courtHandlers.getCourtsByClub)
+    router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
     router.addRouteHandler("rentals/:rid", rentalHandlers.getRentalDetails)
     router.addDefaultNotFoundRouteHandler(() => window.location.hash = "home")
 
