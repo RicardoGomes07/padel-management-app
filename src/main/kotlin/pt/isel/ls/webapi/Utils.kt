@@ -30,7 +30,7 @@ fun Request.log() {
     )
 }
 
-fun Request.handler(block: () -> Response): Response =
+inline fun Request.handler(block: () -> Response): Response =
     try {
         log()
         block()

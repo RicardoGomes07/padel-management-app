@@ -1,8 +1,9 @@
 import {API_BASE_URL} from "../home.js";
+import {handleResponse} from "../../utils/fetch";
 
 function fetchRentalDetails(rentalId) {
     return fetch(`${API_BASE_URL}rentals/${rentalId}`)
-        .then(res => res.json())
+        .then(handleResponse)
 }
 
 const rentalsRequests = {

@@ -45,13 +45,18 @@ function h2(text) {
     return createElement("h2", {textContent:text})
 }
 
+function p(text) {
+    return createElement("p", {textContent:text})
+}
+
 const Html = {
     div,
     a,
     ul,
     li,
     h1,
-    h2
+    h2,
+    p
 }
 
 export default Html;

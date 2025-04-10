@@ -1,9 +1,9 @@
 import { router, request } from "./router.js";
-import clubHandlers from "./handlers/clubhandlers.js";
+import clubHandlers from "./handlers/clubshandlers.js";
 import homeHandlers from "./handlers/home.js";
 import userHandlers from "./handlers/usershandlers.js";
 import courtHandlers from "./handlers/courtshandlers.js";
-import rentalHandlers from "./handlers/rentalhandlers.js";
+import rentalHandlers from "./handlers/rentalshandlers.js";
 
 window.addEventListener('load', loadHandler)
 window.addEventListener('hashchange', hashChangeHandler)
@@ -32,5 +32,5 @@ function hashChangeHandler(){
     request.cleanArgs() // Clean the previous argument values that can have the same name as skip and limit
     request.getRequestArgs(handler,path)
 
-    handler(mainContent) //handler excusa de receber main content e apenas o estritamente necessario
+    handler(contentHeader, mainContent) //handler excusa de receber main content e apenas o estritamente necessario
 }

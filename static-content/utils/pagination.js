@@ -1,5 +1,5 @@
 import Html from "./htmlfuns.js";
-const { div, a} = Html;
+const { div, a } = Html;
 
 const DEFAULT_VALUE_SKIP = "0"
 const DEFAULT_VALUE_LIMIT = "1"

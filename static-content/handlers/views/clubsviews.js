@@ -1,8 +1,8 @@
-import Html from "../utils/htmlfuns.js";
-import { createPaginationLinks } from "../utils/pagination.js";
+import Html from "../../utils/htmlfuns.js";
+import pagination  from "../../utils/pagination.js";
 
 const { div, a, ul, li, h1, h2 } = Html;
-
+const { createPaginationLinks } = pagination
 function renderClubView(mainContent, club){
     const header = h2("Club Info");
     const info = ul(
@@ -30,8 +30,8 @@ function renderClubsView(mainContent, clubsResponse){
     mainContent.replaceChildren(container, navigation);
 }
 
-const clubviews ={
+const clubViews ={
     renderClubView,
     renderClubsView
 }
-export default clubviews
+export default clubViews
