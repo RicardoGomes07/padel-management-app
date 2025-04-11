@@ -25,38 +25,59 @@ tasks.register<Copy>("copyRuntimeDependencies") {
     from(configurations.runtimeClasspath)
 }
 
-/*
-tasks.named<Test>("test") {
-    environment("DB_URL", "jdbc:postgresql://localhost:5439/db?user=dbuser&password=changeit")
-    dependsOn("dbTestsWait")
-    finalizedBy("dbTestsDown")
-}
+val psql =
+    System
+        .getenv("Path")
+        .split(";")
+        .find { it.contains("PostgreSQL") }
+        ?.let { "$it\\psql.exe" }
+        ?: throw Exception("Missing PostgreSQL environment variable")
 
-val dockerDir: Directory = project.layout.projectDirectory.dir("src/test/docker/")
-val dockerComposePath = dockerDir.file("docker-compose.yml").toString()
+val createTablesScript =
+    project
+        .layout
+        .projectDirectory
+        .dir("src/test/sql")
+        .file("createSchema.sql")
+        .toString()
 
-task<Exec>("dbTestsUp") {
+task<Exec>("createTestsDb") {
+    environment("PGPASSWORD", "postgres") // Needed for psql authentication
     commandLine(
-        "docker",
-        "compose",
-        "-p",
-        "padel-courts",
-        "-f",
-        dockerComposePath,
-        "up",
+        psql,
+        "-U",
+        "postgres",
+        "-c",
+        "CREATE DATABASE tests_db;",
+    )
+}
+task<Exec>("createTablesTestsDb") {
+    environment("PGPASSWORD", "postgres") // Needed for psql authentication
+    dependsOn("createTestsDb")
+    commandLine(
+        psql,
+        "-U",
+        "postgres",
         "-d",
-        "--build",
-        "--force-recreate",
-        "padel-courts-db",
+        "tests_db",
+        "-f",
+        createTablesScript,
     )
 }
 
-task<Exec>("dbTestsWait") {
-    commandLine("docker", "exec", "padel-courts-db", "/app/bin/wait-for-postgres.sh", "localhost")
-    dependsOn("dbTestsUp")
+task<Exec>("deleteTestsDb") {
+    environment("PGPASSWORD", "postgres") // Needed for psql authentication
+    commandLine(
+        psql,
+        "-U",
+        "postgres",
+        "-c",
+        "DROP DATABASE tests_db;",
+    )
 }
 
-task<Exec>("dbTestsDown") {
-    commandLine("docker", "compose", "-p", "padel-courts", "-f", dockerComposePath, "down", "padel-courts-db")
+tasks.named<Test>("test") {
+    environment("DB_URL", "jdbc:postgresql://localhost:5432/tests_db?user=postgres&password=postgres")
+    dependsOn("createTablesTestsDb")
+    finalizedBy("deleteTestsDb")
 }
-*/

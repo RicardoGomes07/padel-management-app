@@ -1,4 +1,3 @@
-/*
 @file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.repository.jdbc
@@ -232,4 +231,3 @@ class RentalRepositoryTests {
         assertEquals(TimeSlot(12u, 15u), retrievedRental?.rentTime)
     }
 }
-*/

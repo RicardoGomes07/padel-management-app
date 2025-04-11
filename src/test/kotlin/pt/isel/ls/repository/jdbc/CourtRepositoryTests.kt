@@ -1,4 +1,3 @@
-/*
 @file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.repository.jdbc
@@ -116,4 +115,3 @@ class CourtRepositoryTests {
         assertEquals("Updated Court A".toName(), retrievedCourt?.name)
     }
 }
-*/
