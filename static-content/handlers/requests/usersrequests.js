@@ -1,8 +1,8 @@
-import {API_BASE_URL} from "../home";
-import {handleResponse} from "../../utils/fetch";
+import {API_BASE_URL} from "../home.js";
+import {handleResponse} from "../../utils/fetch.js";
 
 function fetchUserRentals(userId, skip, limit) {
-    return fetch(API_BASE_URL + "users/" + userId + "/rentals" + "?skip=" + skip*2 + "&limit=" + limit*2)
+    return fetch(API_BASE_URL + "users/" + userId + "/rentals" + "?skip=" + skip + "&limit=" + limit*2)
         .then(handleResponse)
 }
 

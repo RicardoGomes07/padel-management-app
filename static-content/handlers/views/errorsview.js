@@ -1,11 +1,12 @@
-import Html from "../../utils/htmlfuns";
+import Html from "../../utils/htmlfuns.js";
 
-const { h1 , p} = Html
+const {p} = Html
 
-function errorView(response, mainContent) {
-    const errorTitle = h1(response.title)
+function errorView(response, contentHeader, content) {
     const errorDescription = p(response.description)
-    mainContent.replaceChildren(errorTitle, errorDescription)
+
+    contentHeader.replaceChildren(response.title)
+    content.replaceChildren(errorDescription)
 }
 
 const errorsViews = {

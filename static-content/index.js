@@ -4,6 +4,8 @@ import homeHandlers from "./handlers/home.js";
 import userHandlers from "./handlers/usershandlers.js";
 import courtHandlers from "./handlers/courtshandlers.js";
 import rentalHandlers from "./handlers/rentalshandlers.js";
+import handlerStateManager from "./handlerStateManager.js";
+const { clearIfNeeded } = handlerStateManager
 
 window.addEventListener('load', loadHandler)
 window.addEventListener('hashchange', hashChangeHandler)
@@ -25,12 +27,15 @@ function loadHandler(){
 
 function hashChangeHandler(){
 
-    const mainContent = document.getElementById("mainContent")
+    const contentHeader = document.getElementById("contentHeader")
+    const content = document.getElementById("content")
     const path =  window.location.hash.replace("#", "")
+
+    clearIfNeeded(path)
 
     const handler = router.getRouteHandler(path)
     request.cleanArgs() // Clean the previous argument values that can have the same name as skip and limit
     request.getRequestArgs(handler,path)
 
-    handler(contentHeader, mainContent) //handler excusa de receber main content e apenas o estritamente necessario
+    handler(contentHeader, content)
 }

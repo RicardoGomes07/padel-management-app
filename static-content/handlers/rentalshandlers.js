@@ -1,7 +1,7 @@
 import {request} from "../router.js"
 import rentalsViews from "./views/rentalsviews.js"
 import rentalsRequests from "./requests/rentalsrequests.js"
-import errorsViews from "./views/errorsview";
+import errorsViews from "./views/errorsview.js";
 
 const {getRentalDetailsView} = rentalsViews
 const {fetchRentalDetails} = rentalsRequests
@@ -11,9 +11,9 @@ const {path} = request
 async function getRentalDetails(contentHeader, content) {
     const rentalId = path("rid")
 
-    const rental = await fetchRentalDetails(rentalId)
-    if(rental.status !== 200) errorView(rental.data, content)
-    getRentalDetailsView(contentHeader, content, rental)
+    const result = await fetchRentalDetails(rentalId)
+    if(result.status !== 200) errorView(result.data, content)
+    getRentalDetailsView(contentHeader, content, result.data)
 }
 
 const rentalshandlers= {
