@@ -1,8 +1,9 @@
-import {API_BASE_URL} from "../home.js";
+import { API_BASE_URL } from "../home.js";
 import { handleResponse } from "../../utils/fetch.js"
 
-function fetchClub(cid){
-    return fetch(`${API_BASE_URL}clubs/${cid}`).then(handleResponse)
+function fetchClubDetails(cid){
+    return fetch(`${API_BASE_URL}clubs/${cid}`)
+        .then(handleResponse)
 }
 
 function fetchClubs(skip, limit) {
@@ -10,8 +11,8 @@ function fetchClubs(skip, limit) {
         .then(handleResponse)
 }
 
-const clubFetchers = {
-    fetchClub,
+const clubsRequests = {
+    fetchClubDetails,
     fetchClubs
 }
-export default clubFetchers
+export default clubsRequests

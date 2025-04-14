@@ -1,4 +1,4 @@
-import {request} from "../router.js";
+import { request } from "../router.js";
 import pagination from "../utils/pagination.js";
 import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
@@ -6,11 +6,11 @@ import errorsViews from "./views/errorsview.js"
 import routeStateManager from "../handlerStateManager.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
-const {path, query} = request
-const {fetchCourtsByClubId, fetchCourtDetails, fetchCourtRentals } = courtsRequests
-const {courtsView, courtDetailsView, courtRentalsView} = courtsViews
+const { path, query } = request
+const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
+const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView } = courtsViews
 const { errorView } = errorsViews
-const { routeState, prev, next, setStateValue } = routeStateManager
+const { routeState, onLinkClick, setStateValue } = routeStateManager
 
 async function getCourtsByClub(contentHeader, content) {
     const cid = path("cid")
@@ -18,33 +18,25 @@ async function getCourtsByClub(contentHeader, content) {
     const limit = query("limit") || DEFAULT_VALUE_LIMIT
 
     if(Object.keys(routeState).length === 0 || routeState.curr.length === 0) {
-        const result = await fetchCourtsByClubId(cid, skip, limit)
+        const result = await fetchCourtsByClub(cid, skip, limit)
         if (result.status !== 200) {
-            errorView(result.data, contentHeader, content)
+            errorView(contentHeader, content, result.data)
             return
         }
         setStateValue(result.data.courts, result.data.paginationInfo.totalElements)
     }
 
-    const courts = {courts: routeState.curr, paginationInfo: {totalElements: routeState.totalElements}}
-
-    courtsView(courts, cid, skip, limit, contentHeader, content, (action) => {
-        if (action === "next") {
-            next()
-        } else {
-            prev()
-        }
-    })
+    renderCourtsByClubView(contentHeader, content, routeState.curr, routeState.totalElements, cid, skip, limit, onLinkClick)
 }
 
-async function getCourt(contentHeader, content) {
+async function getCourtDetails(contentHeader, content) {
     const crid = path("crid")
     const cid = path("cid")
 
     const result = await fetchCourtDetails(crid)
 
-    if (result.status !== 200) errorView(result.data, contentHeader, content)
-    else courtDetailsView(result.data, cid, crid, contentHeader, content)
+    if (result.status !== 200) errorView(contentHeader, content, result.data)
+    else renderCourtDetailsView(contentHeader, content, result.data, cid, crid)
 }
 
 async function getCourtRentals(contentHeader, content) {
@@ -56,27 +48,19 @@ async function getCourtRentals(contentHeader, content) {
     if(Object.keys(routeState).length === 0 || routeState.curr.length === 0) {
         const result = await fetchCourtRentals(cid, crid)
         if (result.status !== 200) {
-            errorView(result.data, contentHeader, content)
+            errorView(contentHeader, content, result.data)
             return
         }
         setStateValue(result.data.rentals, result.data.paginationInfo.totalElements)
     }
 
-    const courtRentals = {rentals: routeState.curr, paginationInfo: {totalElements: routeState.totalElements}}
-
-    courtRentalsView(courtRentals, cid, crid, skip, limit, contentHeader, content, (action) => {
-        if (action === "next") {
-            next()
-        } else {
-            prev()
-        }
-    })
+    renderCourtRentalsView(contentHeader, content, routeState.curr, routeState.totalElements, cid, crid, skip, limit, onLinkClick)
 }
 
 
 const courtHandlers = {
     getCourtsByClub,
-    getCourt,
+    getCourtDetails,
     getCourtRentals,
 }
 

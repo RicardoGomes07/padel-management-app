@@ -1,16 +1,16 @@
 import { request } from "../router.js"
 import pagination from "../utils/pagination.js"
-import clubFetchers from "./requests/clubsrequests.js"
+import clubsRequests from "./requests/clubsrequests.js"
 import clubViews from "./views/clubsviews.js"
 import errorsViews from "./views/errorsview.js"
 import routeStateManager from "../handlerStateManager.js";
 
-const { fetchClub, fetchClubs } = clubFetchers
-const { renderClubView, renderClubsView } = clubViews
+const { fetchClubDetails, fetchClubs } = clubsRequests
+const { renderClubDetailsView, renderClubsView } = clubViews
 const { errorView } = errorsViews
-const {path, query} = request
+const { path, query } = request
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT } = pagination
-const { routeState, prev, next, setStateValue } = routeStateManager
+const { routeState, onLinkClick, setStateValue } = routeStateManager
 
 async function getClubs(contentHeader, content) {
     const skip = query("skip") || DEFAULT_VALUE_SKIP
@@ -19,33 +19,26 @@ async function getClubs(contentHeader, content) {
     if(Object.keys(routeState).length === 0 || routeState.curr.length === 0) {
         const result = await fetchClubs(skip, limit)
         if (result.status !== 200) {
-            errorView(result.data, contentHeader, content)
+            errorView(contentHeader, content, result.data)
             return
         }
         setStateValue(result.data.clubs, result.data.paginationInfo.totalElements)
     }
 
-    const clubs = {clubs: routeState.curr, paginationInfo: {totalElements: routeState.totalElements}}
-
-    renderClubsView(contentHeader, content, clubs, skip, limit, (action) => {
-        if (action === "next") {
-            next()
-        } else {
-            prev()
-        }
-    })
+    renderClubsView(contentHeader, content, routeState.curr, routeState.totalElements, skip, limit, onLinkClick)
 }
 
-async function getClub(contentHeader, content) {
+async function getClubDetails(contentHeader, content) {
     const cid = path("cid")
 
-    const result = await fetchClub(cid)
-    if( result.status !== 200) errorView(result.data, contentHeader, content)
-    else renderClubView(contentHeader, content, result.data)
+    const result = await fetchClubDetails(cid)
+
+    if( result.status !== 200) errorView(contentHeader, content, result.data)
+    else renderClubDetailsView(contentHeader, content, result.data)
 }
 
 const clubHandlers= {
-    getClub,
+    getClubDetails,
     getClubs,
 }
 

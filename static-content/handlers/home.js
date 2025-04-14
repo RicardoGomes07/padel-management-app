@@ -1,14 +1,15 @@
 import Html from "../utils/htmlfuns.js";
 
 const { a } = Html;
+
 export const API_BASE_URL = "http://localhost:9000/"
 
 function getHome(contentHeader, content) {
-    const title = "Welcome to the Home Page"
-    const clubs = a("Clubs", "#clubs")
+    const header = "Welcome to the Home Page"
+    const info = a("Clubs", "#clubs")
 
-    contentHeader.replaceChildren(title)
-    content.replaceChildren(clubs)
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(info)
 }
 const homeHandlers = {
     getHome

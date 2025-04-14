@@ -1,23 +1,23 @@
-import {API_BASE_URL} from "../home.js";
+import { API_BASE_URL } from "../home.js";
 import { handleResponse } from "../../utils/fetch.js"
 
-function fetchCourtsByClubId(cid, skip, limit) {
+function fetchCourtsByClub(cid, skip, limit) {
     return fetch(`${API_BASE_URL}courts/clubs/${cid}?skip=${skip}&limit=${limit*2}`)
         .then(handleResponse)
 }
 
-function fetchCourtDetails(courtId) {
-    return fetch(`${API_BASE_URL}courts/${courtId}`)
+function fetchCourtDetails(cid) {
+    return fetch(`${API_BASE_URL}courts/${cid}`)
         .then(handleResponse)
 }
 
-function fetchCourtRentals(clubId, courtId) {
-    return fetch(`${API_BASE_URL}clubs/${clubId}/courts/${courtId}/rentals`)
+function fetchCourtRentals(cid, crid) {
+    return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals`)
         .then(handleResponse)
 }
 
 const courtsRequests = {
-    fetchCourtsByClubId,
+    fetchCourtsByClub,
     fetchCourtDetails,
     fetchCourtRentals
 }

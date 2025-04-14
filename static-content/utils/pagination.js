@@ -1,4 +1,5 @@
 import Html from "./htmlfuns.js";
+
 const { div, a } = Html;
 
 const DEFAULT_VALUE_SKIP = "0"

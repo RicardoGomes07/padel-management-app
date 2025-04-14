@@ -1,13 +1,13 @@
-import {API_BASE_URL} from "../home.js";
-import {handleResponse} from "../../utils/fetch.js";
+import { API_BASE_URL } from "../home.js";
+import { handleResponse } from "../../utils/fetch.js";
 
-function fetchUserRentals(userId, skip, limit) {
-    return fetch(API_BASE_URL + "users/" + userId + "/rentals" + "?skip=" + skip + "&limit=" + limit*2)
+function fetchUserRentals(uid, skip, limit) {
+    return fetch(`${API_BASE_URL}users/${uid}/rentals?skip=${skip}&limit=${limit * 2}`)
         .then(handleResponse)
 }
 
-function fetchUserDetails(userId) {
-    return fetch(API_BASE_URL + "users/" + userId)
+function fetchUserDetails(uid) {
+    return fetch(`${API_BASE_URL}users/${uid}`)
         .then(handleResponse)
 }
 

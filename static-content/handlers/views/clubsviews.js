@@ -3,7 +3,9 @@ import pagination  from "../../utils/pagination.js";
 
 const { a, ul, li } = Html;
 const { createPaginationLinks } = pagination
-function renderClubView(contentHeader, content, club){
+
+function renderClubDetailsView(contentHeader, content, club){
+    const header = "Club Info"
     const info = ul(
         li(`Name: ${club.name}`),
         li("Owner: ", a(club.owner.name, `#users/${club.owner.uid}`)),
@@ -11,32 +13,28 @@ function renderClubView(contentHeader, content, club){
         a("All Clubs", "#clubs")
     );
 
-    contentHeader.replaceChildren("Club Info")
+    contentHeader.replaceChildren(header)
     content.replaceChildren(info);
 }
 
-function renderClubsView(contentHeader, content, clubsResponse, skip, limit, onLinkClick){
-    const clubs = clubsResponse.clubs
-    const maxNumOfElems = clubsResponse.paginationInfo.totalElements
-
+function renderClubsView(contentHeader, content, clubs, totalElements, skip, limit, onLinkClick){
     const currHeader = contentHeader.textContent
     const header = "Clubs"
-
-    const clubsElements =
+    const info =
         ul(
             ...clubs.map(club =>
                 li(a(club.name, `#clubs/${club.cid}`)),
             )
         )
 
-    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), maxNumOfElems, onLinkClick);
+    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), totalElements, onLinkClick);
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(clubsElements, navigation);
+    content.replaceChildren(info, navigation);
 }
 
 const clubViews ={
-    renderClubView,
+    renderClubDetailsView,
     renderClubsView
 }
 export default clubViews

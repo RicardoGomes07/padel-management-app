@@ -1,80 +1,62 @@
 import Html from "../../utils/htmlfuns.js";
 import pagination from "../../utils/pagination.js"
+
 const { createPaginationLinks } = pagination
-const { div, a, ul, li, h1, h2 } = Html
+const { div, a, ul, li } = Html
 
-function courtsView(
-    courtsResponse,
-    cid,
-    skip,
-    limit,
-    contentHeader,
-    content,
-    onLinkClick,
-) {
-    const courts = courtsResponse.courts
-    const maxNumOfElems = courtsResponse.paginationInfo.totalElements
-
+function renderCourtsByClubView(contentHeader, content, courts, totalElements, cid, skip, limit, onLinkClick) {
     const currHeader = contentHeader.textContent
     const header = "Courts"
-
-    const all =
+    const info =
         ul(
             ...courts.map(court =>
                 li(a(court.name, `#clubs/${cid}/courts/${court.clubId}`)),
             ),
         )
-    const navigation = createPaginationLinks(`clubs/${cid}/courts`, Number(skip), Number(limit), maxNumOfElems, onLinkClick)
+
+    const navigation = createPaginationLinks(`clubs/${cid}/courts`, Number(skip), Number(limit), totalElements, onLinkClick)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(all, navigation)
+    content.replaceChildren(info, navigation)
 }
 
-function courtDetailsView(
-    courtResponse,
-    cid,
-    crid,
-    contentHeader,
-    content,
-) {
-    const courtDetails =
+function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid) {
+    const header = "Court"
+    const info =
         ul(
             li(courtResponse.name),
             li(a("Club", `#clubs/${courtResponse.clubId}`)),
             li(a("Court Rentals", `#clubs/${cid}/courts/${crid}/rentals`)),
         )
 
-    content.replaceChildren("Court")
-    content.replaceChildren(courtDetails)
+    content.replaceChildren(header)
+    content.replaceChildren(info)
 }
 
-function courtRentalsView(courtRentals, clubId, courtId, skip, limit, contentHeader, content, onLinkClick) {
-    const rentals = courtRentals.rentals
-    const maxNumOfElems = courtRentals.paginationInfo.totalElements
-    const baseLink = `clubs/${clubId}/courts/${courtId}/rentals`
+function renderCourtRentalsView(contentHeader, content, rentals, totalElements, cid, crid, skip, limit, onLinkClick) {
+    const baseLink = `clubs/${cid}/courts/${crid}/rentals`
 
     const currHeader = contentHeader.textContent
     const header = "Rentals"
-
-    const all = div(
+    const info = div(
         ul(
             ...rentals.map(rental =>
                 li(a(`${rental.date.toString()}: `, `#rentals/${rental.rid}`))
             ),
         ),
-        a("Back", `#clubs/${clubId}/courts/${courtId}`),
+        a("Back", `#clubs/${cid}/courts/${crid}`),
     )
 
-    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), maxNumOfElems, onLinkClick)
+    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), totalElements, onLinkClick)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(all, navigation)
+    content.replaceChildren(info, navigation)
 }
 
 const courtsViews = {
-    courtsView,
-    courtDetailsView,
-    courtRentalsView
+    renderCourtsByClubView,
+    renderCourtDetailsView,
+    renderCourtRentalsView
 }
 
 export default courtsViews

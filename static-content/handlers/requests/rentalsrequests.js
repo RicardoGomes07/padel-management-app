@@ -1,8 +1,8 @@
-import {API_BASE_URL} from "../home.js";
-import {handleResponse} from "../../utils/fetch.js";
+import { API_BASE_URL } from "../home.js";
+import { handleResponse } from "../../utils/fetch.js";
 
-function fetchRentalDetails(rentalId) {
-    return fetch(`${API_BASE_URL}rentals/${rentalId}`)
+function fetchRentalDetails(rid) {
+    return fetch(`${API_BASE_URL}rentals/${rid}`)
         .then(handleResponse)
 }
 

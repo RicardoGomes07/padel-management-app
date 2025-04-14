@@ -27,6 +27,14 @@ function prev() {
     routeState.curr = [...removedValues]
 }
 
+function onLinkClick(action) {
+    if (action === "next") {
+        next()
+    } else {
+        prev()
+    }
+}
+
 function pushCurrToPrev() {
     if(routeState.prev.length > MAX_SIZE){
         routeState.prev.splice(0, routeState.curr.length)
@@ -70,8 +78,7 @@ function clearIfNeeded(currentPath){
 const routeStateManager = {
     routeState,
     lastBasePath,
-    prev,
-    next,
+    onLinkClick,
     clearIfNeeded,
     setStateValue,
 }

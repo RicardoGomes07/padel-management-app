@@ -2,7 +2,7 @@ import Html from "../../utils/htmlfuns.js";
 
 const { a, ul, li } = Html;
 
-function getRentalDetailsView(contentHeader, content, rental) {
+function renderRentalDetailsView(contentHeader, content, rental) {
     const header = "Rental Info"
     const info = ul(
         li("Court: ", a(rental.court.name, `#clubs/${rental.court.clubId}/courts/${rental.court.crid}`)),
@@ -16,6 +16,6 @@ function getRentalDetailsView(contentHeader, content, rental) {
 }
 
 const rentalsViews = {
-    getRentalDetailsView,
+    renderRentalDetailsView,
 }
 export default rentalsViews;

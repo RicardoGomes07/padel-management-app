@@ -5,6 +5,7 @@ import userHandlers from "./handlers/usershandlers.js";
 import courtHandlers from "./handlers/courtshandlers.js";
 import rentalHandlers from "./handlers/rentalshandlers.js";
 import handlerStateManager from "./handlerStateManager.js";
+
 const { clearIfNeeded } = handlerStateManager
 
 window.addEventListener('load', loadHandler)
@@ -13,10 +14,10 @@ window.addEventListener('hashchange', hashChangeHandler)
 function loadHandler(){
     router.addRouteHandler("home", homeHandlers.getHome)
     router.addRouteHandler("clubs", clubHandlers.getClubs)
-    router.addRouteHandler("clubs/:cid", clubHandlers.getClub)
+    router.addRouteHandler("clubs/:cid", clubHandlers.getClubDetails)
     router.addRouteHandler("users/:uid", userHandlers.getUserDetails)
     router.addRouteHandler("users/:uid/rentals", userHandlers.getUserRentals)
-    router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourt)
+    router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourtDetails)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals", courtHandlers.getCourtRentals)
     router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
     router.addRouteHandler("rentals/:rid", rentalHandlers.getRentalDetails)

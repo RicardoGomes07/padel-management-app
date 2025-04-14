@@ -4,9 +4,7 @@ import pagination from "../../utils/pagination.js";
 const { div, a, ul, li } = Html;
 const { createPaginationLinks } = pagination
 
-function getUserRentalsView(contentHeader, content, rentalsResponse, userId, skip, limit, onLinkClick) {
-    const rentals = rentalsResponse.rentals;
-    const maxNumOfElems = rentalsResponse.paginationInfo.totalElements
+function renderUserRentalsView(contentHeader, content, rentals, totalElements, uid, skip, limit, onLinkClick) {
     const currHeader = contentHeader.textContent
     const header = "Rentals"
     const info = div(
@@ -15,29 +13,30 @@ function getUserRentalsView(contentHeader, content, rentalsResponse, userId, ski
                 li(a(rental.date + ": ", "#rentals/" + rental.rid))
             ),
         ),
-        a("Back", "#users/" + userId),
+        a("Back", "#users/" + uid),
     )
 
-    const navigation = createPaginationLinks("users/" + userId + "/rentals", Number(skip), Number(limit), maxNumOfElems, onLinkClick)
+    const navigation = createPaginationLinks("users/" + uid + "/rentals", Number(skip), Number(limit), totalElements, onLinkClick)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(info, navigation);
 }
 
-function getUserDetailsView(contentHeader, content, user) {
+function renderUserDetailsView(contentHeader, content, user) {
+    const header = "User Info"
     const info = ul(
         li("Name: " + user.name),
         li("Email: " + user.email),
         li(a("User Rentals ", "#users/" + user.uid + "/rentals")),
     )
 
-    contentHeader.replaceChildren("User Info")
+    contentHeader.replaceChildren(header)
     content.replaceChildren(info)
 }
 
 const usersViews = {
-    getUserRentalsView,
-    getUserDetailsView,
+    renderUserRentalsView,
+    renderUserDetailsView,
 }
 
 export default usersViews;
