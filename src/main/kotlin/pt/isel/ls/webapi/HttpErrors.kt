@@ -39,4 +39,4 @@ fun Throwable.toResponse(): Response =
         is IllegalArgumentException -> Response(BAD_REQUEST).body(message ?: "Invalid request")
         is CustomError -> this.toResponse()
         else -> Response(INTERNAL_SERVER_ERROR).body("Unexpected error: ${this.message}")
-    }.also { println(this.message) }
+    }

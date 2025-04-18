@@ -2,7 +2,7 @@ import { API_BASE_URL } from "../home.js";
 import { handleResponse } from "../../utils/fetch.js";
 
 function fetchUserRentals(uid, skip, limit) {
-    return fetch(`${API_BASE_URL}users/${uid}/rentals?skip=${skip}&limit=${limit * 2}`)
+    return fetch(`${API_BASE_URL}users/${uid}/rentals?skip=${skip}&limit=${limit}`)
         .then(handleResponse)
 }
 
@@ -16,4 +16,4 @@ const usersRequests = {
     fetchUserDetails,
 }
 
-export default usersRequests;
+export default usersRequests

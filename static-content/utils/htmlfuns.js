@@ -1,11 +1,15 @@
-function createElement(tag, props, ...children) {
+function createElement(tag, props = {}, ...children) {
     const element = document.createElement(tag)
 
     Object.entries(props).forEach(([key, value]) => {
         if (key.startsWith("on") && typeof value === "function") {
             element.addEventListener(key.slice(2).toLowerCase(), value)
+        } else if (key === "className") {
+            element.className = value
+        } else if (key === "style" && typeof value === "object") {
+            Object.assign(element.style, value)
         } else {
-            element[key] = value;
+            element[key] = value
         }
     })
 
@@ -22,31 +26,31 @@ function createElement(tag, props, ...children) {
 
 
 function div(...children) {
-    return createElement("div", {},...children)
+    return createElement("div", {  },...children)
 }
 
-function a(text, href) {
-    return createElement("a", {textContent:text, href: href})
+function a(text, href, classname="") {
+    return createElement("a", {textContent:text, href: href, className: classname})
 }
 
 function ul(...children) {
-    return createElement("ul",{},...children)
+    return createElement("ul",{ },...children)
 }
 
 function li(...children) {
-    return createElement("li", {}, ...children)
+    return createElement("li", {  }, ...children)
 }
 
-function h1(text) {
-    return createElement("h1", {textContent:text})
+function h1(text, classname = "") {
+    return createElement("h1", {textContent:text, className: classname})
 }
 
-function h2(text) {
-    return createElement("h2", {textContent:text})
+function h2(text, classname = "") {
+    return createElement("h2", {textContent:text, className: classname})
 }
 
-function p(text) {
-    return createElement("p", {textContent:text})
+function p(text, classname = "") {
+    return createElement("p", {textContent:text, className: classname})
 }
 
 const Html = {

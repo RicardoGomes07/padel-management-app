@@ -2,7 +2,7 @@ import { API_BASE_URL } from "../home.js";
 import { handleResponse } from "../../utils/fetch.js"
 
 function fetchCourtsByClub(cid, skip, limit) {
-    return fetch(`${API_BASE_URL}courts/clubs/${cid}?skip=${skip}&limit=${limit*2}`)
+    return fetch(`${API_BASE_URL}courts/clubs/${cid}?skip=${skip}&limit=${limit}`)
         .then(handleResponse)
 }
 
@@ -11,8 +11,8 @@ function fetchCourtDetails(cid) {
         .then(handleResponse)
 }
 
-function fetchCourtRentals(cid, crid) {
-    return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals`)
+function fetchCourtRentals(crid, skip, limit) {
+    return fetch(`${API_BASE_URL}rentals/courts/${crid}/rentals?skip=${skip}&limit=${limit}`)
         .then(handleResponse)
 }
 

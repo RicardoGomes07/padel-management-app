@@ -7,7 +7,7 @@ function fetchClubDetails(cid){
 }
 
 function fetchClubs(skip, limit) {
-    return fetch(`${API_BASE_URL}clubs?skip=${skip}&limit=${limit*2}`)
+    return fetch(`${API_BASE_URL}clubs?skip=${skip}&limit=${limit}`)
         .then(handleResponse)
 }
 

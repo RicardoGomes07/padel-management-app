@@ -1,7 +1,7 @@
 import Html from "../../utils/htmlfuns.js";
 import pagination  from "../../utils/pagination.js";
 
-const { a, ul, li } = Html;
+const { a, ul, li, p} = Html;
 const { createPaginationLinks } = pagination
 
 function renderClubDetailsView(contentHeader, content, club){
@@ -14,23 +14,24 @@ function renderClubDetailsView(contentHeader, content, club){
     );
 
     contentHeader.replaceChildren(header)
-    content.replaceChildren(info);
+    content.replaceChildren(info)
 }
 
-function renderClubsView(contentHeader, content, clubs, totalElements, skip, limit, onLinkClick){
+function renderClubsView(contentHeader, content, clubs, totalElements, skip, limit){
     const currHeader = contentHeader.textContent
     const header = "Clubs"
-    const info =
-        ul(
+    const info = clubs.length > 0
+        ? ul(
             ...clubs.map(club =>
                 li(a(club.name, `#clubs/${club.cid}`)),
             )
         )
+        : p("No clubs found")
 
-    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), totalElements, onLinkClick);
+    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), totalElements)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(info, navigation);
+    content.replaceChildren(info, navigation)
 }
 
 const clubViews ={

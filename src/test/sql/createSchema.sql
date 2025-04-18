@@ -1,7 +1,8 @@
-drop table if exists users;
-drop table if exists clubs;
-drop table if exists courts;
 drop table if exists rentals;
+drop table if exists courts;
+drop table if exists clubs;
+drop table if exists users;
+
 
 create table users (
     uid serial primary key,

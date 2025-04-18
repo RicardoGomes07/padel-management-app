@@ -317,7 +317,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /rentals/clubs/{cid}/courts/{crid}:
+  /rentals/courts/{crid}:
     get:
       security:
         - bearerAuth: []
@@ -327,12 +327,6 @@ paths:
       description: Get a list with the rentals, given the following parameters
       operationId: listRentals
       parameters:
-        - in: path
-          name: cid
-          schema:
-            type: integer
-          required: true
-          description: Club id to search the rental details
         - in: path
           name: crid
           schema:
@@ -396,22 +390,16 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
-  /clubs/{cid}/courts/{crid}/available:
+  /courts/{crid}/available:
     post:
       security:
         - bearerAuth: []
       tags:
-        - Rental
+        - Court
       summary: Get available hours for court rental
       description: Get a list with the available hours to rent a court of a club on a specific date
       operationId: listAvailableHours
       parameters:
-        - in: path
-          name: cid
-          schema:
-            type: integer
-          required: true
-          description: Club id
         - in: path
           name: crid
           schema:

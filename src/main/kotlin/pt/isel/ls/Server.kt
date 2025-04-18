@@ -59,14 +59,13 @@ fun main() {
             "/" bind POST to clubApi::createClub,
             "/" bind GET to clubApi::getAllClubs,
             "/{cid}" bind GET to clubApi::getClubInfo,
-            "/{cid}/courts/{crid}/available" bind POST to clubApi::getAvailableHours,
-            "/{cid}/courts/{crid}/rentals" bind GET to rentalApi::getRentalsOnCourt,
         )
     val courtsRoutes =
         routes(
             "/" bind POST to courtApi::createCourt,
             "/clubs/{cid}" bind GET to courtApi::getCourtsByClub,
             "/{crid}" bind GET to courtApi::getCourtInfo,
+            "/{crid}/available" bind POST to clubApi::getAvailableHours,
         )
     val rentalsRoutes =
         routes(
@@ -74,6 +73,7 @@ fun main() {
             "/{rid}" bind GET to rentalApi::getRentalInfo,
             "/{rid}" bind DELETE to rentalApi::deleteRental,
             "/{rid}" bind PUT to rentalApi::updateRental,
+            "/courts/{crid}/rentals" bind GET to rentalApi::getRentalsOnCourt,
         )
 
     val app =

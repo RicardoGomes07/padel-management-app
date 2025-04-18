@@ -1,25 +1,29 @@
 import Html from "../../utils/htmlfuns.js";
 import pagination from "../../utils/pagination.js";
 
-const { div, a, ul, li } = Html;
+const { div, a, ul, li, p } = Html;
 const { createPaginationLinks } = pagination
 
-function renderUserRentalsView(contentHeader, content, rentals, totalElements, uid, skip, limit, onLinkClick) {
+function renderUserRentalsView(contentHeader, content, rentals, totalElements, uid, skip, limit) {
     const currHeader = contentHeader.textContent
     const header = "Rentals"
-    const info = div(
-        ul(
+
+    const backLink = a("Back", "#users/" + uid)
+
+    const rentalList = rentals.length > 0
+        ? ul(
             ...rentals.map(rental =>
                 li(a(rental.date + ": ", "#rentals/" + rental.rid))
-            ),
-        ),
-        a("Back", "#users/" + uid),
-    )
+            )
+        )
+        : p("No rentals found")
 
-    const navigation = createPaginationLinks("users/" + uid + "/rentals", Number(skip), Number(limit), totalElements, onLinkClick)
+    const info = div(backLink, rentalList)
+    const baseLink = "users/" + uid + "/rentals"
+    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), totalElements)
 
-    if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(info, navigation);
+    if (currHeader !== header) contentHeader.replaceChildren(header)
+    content.replaceChildren(info, navigation)
 }
 
 function renderUserDetailsView(contentHeader, content, user) {
