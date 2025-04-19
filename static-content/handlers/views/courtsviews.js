@@ -1,5 +1,5 @@
 import Html from "../../utils/htmlfuns.js";
-import pagination from "../../utils/pagination.js"
+import pagination from "./pagination.js"
 
 const { createPaginationLinks } = pagination
 const { div, a, ul, li, p } = Html
@@ -41,7 +41,8 @@ function renderCourtRentalsView(contentHeader, content, rentals, totalElements, 
     const currHeader = contentHeader.textContent
     const header = "Rentals"
 
-    const backLink = a("Back", `#clubs/${cid}/courts/${crid}`)
+    const backLink = div(a("Back", `#clubs/${cid}/courts/${crid}`))
+
     const rentalList = rentals.length > 0
         ? ul(
             ...rentals.map(rental =>
@@ -50,12 +51,10 @@ function renderCourtRentalsView(contentHeader, content, rentals, totalElements, 
         )
         : p("No rentals found")
 
-    const info = div(backLink, rentalList)
-
     const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), totalElements)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(info, navigation)
+    content.replaceChildren(backLink, rentalList, navigation)
 }
 
 const courtsViews = {

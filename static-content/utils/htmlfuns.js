@@ -1,3 +1,8 @@
+import classnames from "../handlers/views/classnames.js";
+const { listClassName, listElemClassName, linksClassName,
+    textInfoClassName, centerDivClassName, h1ClassName,
+    h2ClassName} = classnames
+
 function createElement(tag, props = {}, ...children) {
     const element = document.createElement(tag)
 
@@ -26,31 +31,31 @@ function createElement(tag, props = {}, ...children) {
 
 
 function div(...children) {
-    return createElement("div", {  },...children)
+    return createElement("div", { className: centerDivClassName  },...children)
 }
 
-function a(text, href, classname="") {
+function a(text, href, classname=linksClassName) {
     return createElement("a", {textContent:text, href: href, className: classname})
 }
 
 function ul(...children) {
-    return createElement("ul",{ },...children)
+    return createElement("ul",{ className: listClassName },...children)
 }
 
 function li(...children) {
-    return createElement("li", {  }, ...children)
+    return createElement("li", { className: listElemClassName }, ...children)
 }
 
-function h1(text, classname = "") {
+function h1(text, classname = h1ClassName) {
     return createElement("h1", {textContent:text, className: classname})
 }
 
-function h2(text, classname = "") {
+function h2(text, classname = h2ClassName) {
     return createElement("h2", {textContent:text, className: classname})
 }
 
-function p(text, classname = "") {
-    return createElement("p", {textContent:text, className: classname})
+function p(text, classname = textInfoClassName) {
+    return createElement("p", {textContent:text, class: classname})
 }
 
 const Html = {

@@ -1,7 +1,7 @@
 import Html from "../../utils/htmlfuns.js";
-import pagination  from "../../utils/pagination.js";
+import pagination  from "./pagination.js";
 
-const { a, ul, li, p} = Html;
+const { div, a, ul, li, p} = Html;
 const { createPaginationLinks } = pagination
 
 function renderClubDetailsView(contentHeader, content, club){
@@ -10,7 +10,7 @@ function renderClubDetailsView(contentHeader, content, club){
         li(`Name: ${club.name}`),
         li("Owner: ", a(club.owner.name, `#users/${club.owner.uid}`)),
         li(a("Courts", `#clubs/${club.cid}/courts`)),
-        a("All Clubs", "#clubs")
+        a("All Clubs", "#clubs"),
     );
 
     contentHeader.replaceChildren(header)

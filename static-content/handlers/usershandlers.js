@@ -1,5 +1,5 @@
 import { request } from "../router.js"
-import pagination from "../utils/pagination.js"
+import pagination from "./views/pagination.js"
 import usersViews from "./views/usersviews.js"
 import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";

@@ -1,5 +1,5 @@
 import { request } from "../router.js"
-import pagination from "../utils/pagination.js"
+import pagination from "./views/pagination.js"
 import clubsRequests from "./requests/clubsrequests.js"
 import clubViews from "./views/clubsviews.js"
 import errorsViews from "./views/errorsview.js"
