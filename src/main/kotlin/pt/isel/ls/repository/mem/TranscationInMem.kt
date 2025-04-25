@@ -1,4 +1,4 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
+@file:Suppress("ktlint:standard:filename", "ktlint:standard:no-wildcard-imports")
 
 package pt.isel.ls.repository.mem
 

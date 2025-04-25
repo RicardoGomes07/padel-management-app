@@ -4,8 +4,6 @@ import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
 import pt.isel.ls.repository.TransactionManager
-import pt.isel.ls.webapi.LIMIT_VALUE_DEFAULT
-import pt.isel.ls.webapi.SKIP_VALUE_DEFAULT
 import pt.isel.ls.webapi.dto.PaginationInfo
 
 class ClubService(

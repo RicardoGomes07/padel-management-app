@@ -81,3 +81,10 @@ tasks.named<Test>("test") {
     dependsOn("createTablesTestsDb")
     finalizedBy("deleteTestsDb")
 }
+
+tasks.register<JavaExec>("run") {
+    description = "Run the server"
+    group = "application"
+    mainClass.set("pt.isel.ls.ServerKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}
