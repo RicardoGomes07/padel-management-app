@@ -153,9 +153,9 @@ in the API and returned to the client.
 There are a couple of improvements to be made:
 
 - The first is increasing test coverage, specifically within Web API branches, and ensuring all possible cases are covered across packages.
-- The second is implementing conditional execution of Gradle tasks, so that database-related tasks run only when JDBC tests are executed. This aims to enable testing of JDBC repositories while avoiding unnecessary overhead from Docker-related tasks when not needed.
+- The second is to increase the number of tests for the frontend, especially for the components that are more complex and have more logic.
 
-## Route handling:
+## Route handling
 The module that contains the logic for handling requests to each respective path is the 'handlers' module. This module, along with the others that follow, maintain the previous design, where for each endpoint corresponds to a specific handler:
 - home
 - usershandlers
@@ -170,20 +170,36 @@ The general implementation of each handlers follows these steps:
 
 To achieve the first step the handlers use functions defined in the router. For the second step they call the request fetcher from the 'requests' module, and for the third step, they use the 'views' module. In the case of a resource that has pagination, there is a significant design change where the information in step 2 is managed through the pagination managers where a request to the server is only made is the required information is not already cached.
 
-## Requests:
+## Requests
 This module is responsible for making requests to the database. For each resource that requires database information, there is a corresponding fetcher in this module to retrieve the necessary information.
 
-## Views:
+## Views
 This module builds the content to show in the resource and replaces the previously displayed content. Updates the header to match the current resource, builds the pagination links, if necessary, with the use of the 'createPaginationLinks' from pagination.js, and the rest of the necessary information for the page and replaces the content with the combination of the later 2.
 
 
 ## Pagination Manager
 
-In order to avoid making unnecessary requests to our backend, we implemented a function that internally
-stores an array containing elements fetched from the backend. This function returns two utilities: one that
-allows us to extract elements from the array, and another that indicates its current size. When we try to
-access elements that are not yet in the array, the function automatically triggers a new request but only
-if the backend still has more elements available. This approach helps us reduce the number of requests made
-to the backend. Finally, we also implemented a pagination manager for cases where the elements we fetch are
+In order to avoid making unnecessary backend requests, we implemented a function that internally
+stores an array containing elements fetched from the backend. 
+
+This function provides the following functionalities:
+* Extracts elements from the array
+* Indicates its current size
+
+The function automatically fetches new elements from the backend only when needed and only if more data is available, minimizing unnecessary requests.
+Finally, we also implemented a pagination manager for cases where the elements we fetch are
 associated with a resource on the server identified by an ID. In this manager, we store a map that links each
 resource ID to its corresponding pagination manager.
+
+
+## Index and Router
+
+The Index.js is the main entry point of the application, responsible for:
+* Setting up the event listeners 
+* Defining the routes for the application
+* Processing the URL hash changes
+
+The router.js implements a custom routing system, with:
+* Route management
+* URL matching system
+* Request arguments processing
