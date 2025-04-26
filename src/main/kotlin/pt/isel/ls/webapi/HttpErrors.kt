@@ -36,7 +36,17 @@ private fun CustomError.toResponse(): Response {
 
 fun Throwable.toResponse(): Response =
     when (this) {
-        is IllegalArgumentException -> Response(BAD_REQUEST).body(message ?: "Invalid request")
+        is IllegalArgumentException ->
+            Response(BAD_REQUEST).body(
+                Json.encodeToString(
+                    ProblemOutput("Invalid request format", message ?: "Invalid request input format"),
+                ),
+            )
         is CustomError -> this.toResponse()
-        else -> Response(INTERNAL_SERVER_ERROR).body("Unexpected error: ${this.message}")
+        else ->
+            Response(INTERNAL_SERVER_ERROR).body(
+                Json.encodeToString(
+                    ProblemOutput("Unexpected error", this.message ?: "Unknown Cause"),
+                ),
+            )
     }

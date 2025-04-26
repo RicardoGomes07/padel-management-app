@@ -25,6 +25,34 @@ tasks.register<Copy>("copyRuntimeDependencies") {
     from(configurations.runtimeClasspath)
 }
 
+tasks.register<JavaExec>("run") {
+    description = "Run the server"
+    group = "application"
+    mainClass.set("pt.isel.ls.ServerKt")
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
+tasks.register<Exec>("BuildDataBase") {
+    environment("PGPASSWORD", "postgres")
+    commandLine(
+        psql,
+        "-U",
+        "postgres",
+        "-f",
+        createTablesScript,
+    )
+}
+tasks.register<Exec>("InsertValuesIntoDb") {
+    environment("PGPASSWORD", "postgres")
+    commandLine(
+        psql,
+        "-U",
+        "postgres",
+        "-f",
+        insertValuesScript,
+    )
+}
+
 val psql =
     System
         .getenv("Path")
@@ -39,6 +67,14 @@ val createTablesScript =
         .projectDirectory
         .dir("src/test/sql")
         .file("createSchema.sql")
+        .toString()
+
+val insertValuesScript =
+    project
+        .layout
+        .projectDirectory
+        .dir("src/test/sql")
+        .file("addData.sql")
         .toString()
 
 task<Exec>("createTestsDb") {
@@ -80,11 +116,4 @@ tasks.named<Test>("test") {
     environment("DB_URL", "jdbc:postgresql://localhost:5432/tests_db?user=postgres&password=postgres")
     dependsOn("createTablesTestsDb")
     finalizedBy("deleteTestsDb")
-}
-
-tasks.register<JavaExec>("run") {
-    description = "Run the server"
-    group = "application"
-    mainClass.set("pt.isel.ls.ServerKt")
-    classpath = sourceSets["main"].runtimeClasspath
 }

@@ -73,7 +73,7 @@ fun main() {
             "/{rid}" bind GET to rentalApi::getRentalInfo,
             "/{rid}" bind DELETE to rentalApi::deleteRental,
             "/{rid}" bind PUT to rentalApi::updateRental,
-            "/courts/{crid}/rentals" bind GET to rentalApi::getRentalsOnCourt,
+            "/courts/{crid}" bind GET to rentalApi::getRentalsOnCourt,
         )
 
     val app =

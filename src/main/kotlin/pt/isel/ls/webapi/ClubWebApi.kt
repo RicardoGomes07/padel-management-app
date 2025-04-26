@@ -2,7 +2,6 @@
 
 package pt.isel.ls.webapi
 
-import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -11,6 +10,7 @@ import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.Name
 import pt.isel.ls.services.*
+import pt.isel.ls.webapi.dto.AvailableHoursInput
 import pt.isel.ls.webapi.dto.ClubCreationInput
 import pt.isel.ls.webapi.dto.ClubDetailsOutput
 import pt.isel.ls.webapi.dto.toClubsOutput
@@ -73,7 +73,7 @@ class ClubWebApi(
 
             requireNotNull(courtId) { "Invalid court id" }
 
-            val date = Json.decodeFromString<LocalDate>(request.bodyString())
+            val date = Json.decodeFromString<AvailableHoursInput>(request.bodyString()).date
 
             require(date >= currentDate()) { "Date must not be in the past" }
 

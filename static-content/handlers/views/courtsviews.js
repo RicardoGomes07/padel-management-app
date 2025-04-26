@@ -46,7 +46,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, totalElements, 
     const rentalList = rentals.length > 0
         ? ul(
             ...rentals.map(rental =>
-                li(a(`${rental.date.toString()}: `, `#rentals/${rental.rid}`))
+                li(a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour} `, `#rentals/${rental.rid}`))
             )
         )
         : p("No rentals found")

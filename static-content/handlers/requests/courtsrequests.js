@@ -12,7 +12,7 @@ function fetchCourtDetails(cid) {
 }
 
 function fetchCourtRentals(crid, skip, limit) {
-    return fetch(`${API_BASE_URL}rentals/courts/${crid}/rentals?skip=${skip}&limit=${limit}`)
+    return fetch(`${API_BASE_URL}rentals/courts/${crid}?skip=${skip}&limit=${limit}`)
         .then(handleResponse)
 }
 

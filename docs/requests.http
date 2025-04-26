@@ -1,98 +1,164 @@
-@authToken = 71c78a21-8edd-4711-bfaa-ac50a65e7911
+@authToken = eb57402c-4692-4234-b312-7d28cc96a824
+@host = http://localhost:9000
+
+### DEMO
 
 ### Creates a new user
-POST http://localhost:8080/users
+POST {{host}}/users
 Content-Type: application/json
 
 {
-    "name": "Riczão",
-    "email": "ric@gmail.com"
+    "name": "Jonh",
+    "email": "jonh@gmail.com"
+}
+
+### Creates a new user
+POST {{host}}/users
+Content-Type: application/json
+
+{
+    "name": "David",
+    "email": "david@gmail.com"
+}
+
+### Create an Invalid user
+POST {{host}}/users
+Content-Type: application/json
+
+{
+    "name": "Colton",
+    "email": "david@gmail.com"
 }
 
 ### Returns user information
-GET http://localhost:8080/users/me
-Authorization: {{authToken}}
-
-### Get a list with the rentals of a user
-GET http://localhost:8080/users/rentals
-Authorization: {{authToken}}
-
-### Get a list with the rentals of a user with pagination
-GET http://localhost:8080/users/rentals?skip=0&limit=10
+GET {{host}}/users/me
 Authorization: {{authToken}}
 
 ### Creates a new club
-POST http://localhost:8080/clubs
+POST {{host}}/clubs
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-    "name": "Benfica"
+    "name": "Fly Padel"
 }
 
-### List clubs
-GET http://localhost:8080/clubs
-Authorization: {{authToken}}
-
-### List clubs with pagination
-GET http://localhost:8080/clubs?skip=0&limit=10
-Authorization:  {{authToken}}
-
-### Get Club Details by ID
-GET http://localhost:8080/clubs/1
-Authorization: {{authToken}}
-
-### Create new court
-POST http://localhost:8080/courts
+### Creates a new club
+POST {{host}}/clubs
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-    "name": "Pista1",
+    "name": "Padel Club"
+}
+
+### Create new court
+POST {{host}}/courts
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+    "name": "Court 1",
+    "cid": 1 
+}
+
+### Create new court
+POST {{host}}/courts
+Content-Type: application/json
+Authorization: {{authToken}}
+
+{
+    "name": "Court 2",
     "cid": 1 
 }
 
 ### List Courts of a club
-GET http://localhost:8080/courts/clubs/1
-Authorization: {{authToken}}
+GET {{host}}/courts/clubs/1
 
-### List Courts of a club with pagination
-GET http://localhost:8080/courts/clubs/1?skip=0&limit=10
+### Get available hours for court rental
+POST {{host}}/courts/1/available
 Authorization: {{authToken}}
+Content-Type: application/json
 
-### Get court details
-GET http://localhost:8080/courts/1
-Authorization: {{authToken}}
+{
+    "date": "2025-04-26"
+}
 
-### Create a new rental
-POST http://localhost:8080/rentals
+### Create a invalid date rental
+POST {{host}}/rentals
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
     "cid": 1,
     "crid": 1,
-    "date": "2025-03-22T10:00:00",
-    "duration": "1h"
+    "date": "2025-03-22",
+    "initialHour": 8,
+    "finalHour": 10
 }
 
-### Get a list with the rentals
-GET http://localhost:8080/rentals/clubs/1/courts/1
+
+### Create a new rental
+POST {{host}}/rentals
+Content-Type: application/json
 Authorization: {{authToken}}
 
-### Get a list with the rentals filtered by date with pagination
-GET http://localhost:8080/rentals/clubs/1/courts/1?date=2025-03-19&skip=0&limit=10
+{
+    "cid": 1,
+    "crid": 1,
+    "date": "2025-04-27",
+    "initialHour": 8,
+    "finalHour": 10
+}
+
+### Create a new rental
+POST {{host}}/rentals
+Content-Type: application/json
 Authorization: {{authToken}}
 
-### Get rental details
-GET http://localhost:8080/rentals/1
+{
+    "cid": 1,
+    "crid": 1,
+    "date": "2025-04-27",
+    "initialHour": 10,
+    "finalHour": 12
+}
+
+### Create a new rental
+POST {{host}}/rentals
+Content-Type: application/json
 Authorization: {{authToken}}
 
-### Get available hours for court rental
-POST http://localhost:8080/clubs/1/courts/1/available
+{
+    "cid": 1,
+    "crid": 1,
+    "date": "2025-04-27",
+    "initialHour": 18,
+    "finalHour": 22
+}
+
+
+### Get available hours for court rentals
+POST {{host}}/courts/1/available
 Authorization: {{authToken}}
 Content-Type: application/json
 
 {
-    "date": "2025-03-19"
+    "date": "2025-04-27"
 }
+
+### Get a list with the rentals
+GET {{host}}/rentals/courts/1
+
+### Get rental details
+GET {{host}}/rentals/1
+
+### Get a list with the rentals
+GET {{host}}/rentals/courts/1?skip=0&limit=2
+
+### Delete a rental
+DELETE {{host}}/rentals/1
+Authorization: {{authToken}}
+
+### Show details of deleted rental
+GET {{host}}/rentals/1

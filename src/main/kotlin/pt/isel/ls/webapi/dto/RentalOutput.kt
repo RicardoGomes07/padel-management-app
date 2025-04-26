@@ -8,10 +8,14 @@ import pt.isel.ls.domain.Rental
 data class RentalOutput(
     val rid: UInt,
     val date: LocalDate,
+    val initialHour: UInt,
+    val finalHour: UInt,
 ) {
     constructor(rental: Rental) :
         this(
             rental.rid,
             rental.date,
+            rental.rentTime.start,
+            rental.rentTime.end,
         )
 }
