@@ -155,6 +155,28 @@ There are a couple of improvements to be made:
 - The first is increasing test coverage, specifically within Web API branches, and ensuring all possible cases are covered across packages.
 - The second is implementing conditional execution of Gradle tasks, so that database-related tasks run only when JDBC tests are executed. This aims to enable testing of JDBC repositories while avoiding unnecessary overhead from Docker-related tasks when not needed.
 
+## Route handling:
+The module that contains the logic for handling requests to each respective path is the 'handlers' module. This module, along with the others that follow, maintain the previous design, where for each endpoint corresponds to a specific handler:
+- home
+- usershandlers
+- clubshandlers
+- courtshandlers
+- rentalhandlers
+
+The general implementation of each handlers follows these steps:
+- 1 - read information from the path and query string
+- 2 - fetch information from the backend server
+- 3 - render the respective view with the information gathered
+
+To achieve the first step the handlers use functions defined in the router. For the second step they call the request fetcher from the 'requests' module, and for the third step, they use the 'views' module. In the case of a resource that has pagination, there is a significant design change where the information in step 2 is managed through the pagination managers where a request to the server is only made is the required information is not already cached.
+
+## Requests:
+This module is responsible for making requests to the database. For each resource that requires database information, there is a corresponding fetcher in this module to retrieve the necessary information.
+
+## Views:
+This module builds the content to show in the resource and replaces the previously displayed content. Updates the header to match the current resource, builds the pagination links, if necessary, with the use of the 'createPaginationLinks' from pagination.js, and the rest of the necessary information for the page and replaces the content with the combination of the later 2.
+
+
 ## Pagination Manager
 
 In order to avoid making unnecessary requests to our backend, we implemented a function that internally
