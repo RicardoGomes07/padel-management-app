@@ -147,9 +147,21 @@ detailing what went wrong.
 * We use CustomError classes for each error type, which are converted into JSON objects
 in the API and returned to the client.
 
+
 ## Critical Evaluation
 
 There are a couple of improvements to be made:
 
 - The first is increasing test coverage, specifically within Web API branches, and ensuring all possible cases are covered across packages.
 - The second is implementing conditional execution of Gradle tasks, so that database-related tasks run only when JDBC tests are executed. This aims to enable testing of JDBC repositories while avoiding unnecessary overhead from Docker-related tasks when not needed.
+
+## Pagination Manager
+
+In order to avoid making unnecessary requests to our backend, we implemented a function that internally
+stores an array containing elements fetched from the backend. This function returns two utilities: one that
+allows us to extract elements from the array, and another that indicates its current size. When we try to
+access elements that are not yet in the array, the function automatically triggers a new request but only
+if the backend still has more elements available. This approach helps us reduce the number of requests made
+to the backend. Finally, we also implemented a pagination manager for cases where the elements we fetch are
+associated with a resource on the server identified by an ID. In this manager, we store a map that links each
+resource ID to its corresponding pagination manager.
