@@ -1,5 +1,6 @@
 package pt.isel.ls.webapi
 
+import kotlinx.serialization.json.Json
 import org.http4k.core.Method.GET
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -25,14 +26,16 @@ class UtilsTests {
                 throw Exception("Test exception")
             }
         assertEquals(500, internalError.status.code)
-        assertEquals("Unexpected error: Test exception", internalError.bodyString())
+        val (title, description) = ProblemOutput("Unexpected error", "Test exception")
+        assertTrue(internalError.bodyString().contains(title))
+        assertTrue(internalError.bodyString().contains(description))
 
         val illegalArgError =
             request.handler {
                 throw IllegalArgumentException("Invalid request")
             }
         assertEquals(400, illegalArgError.status.code)
-        assertEquals("Invalid request", illegalArgError.bodyString())
+        assertTrue(illegalArgError.bodyString().contains("Invalid request"))
 
         val customError =
             request.handler {

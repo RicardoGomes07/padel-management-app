@@ -12,6 +12,7 @@ import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.AvailableHoursInput
 import pt.isel.ls.webapi.dto.ClubCreationInput
 import pt.isel.ls.webapi.dto.ClubDetailsOutput
 import pt.isel.ls.webapi.dto.ClubsOutput
@@ -34,7 +35,7 @@ val clubsRoutes =
         "clubs" bind POST to clubApi::createClub,
         "clubs" bind GET to clubApi::getAllClubs,
         "clubs/{cid}" bind GET to clubApi::getClubInfo,
-        "clubs/{cid}/courts/{crid}/available" bind POST to clubApi::getAvailableHours,
+        "courts/{crid}/available" bind POST to clubApi::getAvailableHours,
     )
 
 fun createClub(token: String): ClubDetailsOutput {
@@ -112,15 +113,14 @@ class ClubWebApiTests {
 
     @Test
     fun `get available hours with invalid court`() {
-        val clubId = 1
         val courtId = 999
         val date = LocalDate.parse("2025-06-01")
         val token = createUser()
         val getAvailableHoursRequest =
             clubsRoutes(
-                Request(POST, "clubs/$clubId/courts/$courtId/available")
+                Request(POST, "courts/$courtId/available")
                     .header("Authorization", token)
-                    .body(Json.encodeToString(date)),
+                    .body(Json.encodeToString<AvailableHoursInput>(AvailableHoursInput(date))),
             )
         assertEquals(Status.NOT_FOUND, getAvailableHoursRequest.status)
     }
@@ -134,9 +134,9 @@ class ClubWebApiTests {
 
         val getAvailableHoursRequest =
             clubsRoutes(
-                Request(POST, "clubs/$clubId/courts/${courtId.crid}/available")
+                Request(POST, "courts/${courtId.crid}/available")
                     .header("Authorization", token)
-                    .body(Json.encodeToString<LocalDate>(date)),
+                    .body(Json.encodeToString<AvailableHoursInput>(AvailableHoursInput(date))),
             )
         assertEquals(Status.OK, getAvailableHoursRequest.status)
         val availableHours =
@@ -154,7 +154,7 @@ class ClubWebApiTests {
 
         val getAvailableHoursRequest =
             clubsRoutes(
-                Request(POST, "clubs/$clubID/courts/${courtId.crid}/available")
+                Request(POST, "courts/${courtId.crid}/available")
                     .header("Authorization", token)
                     .body(Json.encodeToString(date)),
             )
