@@ -5,7 +5,6 @@ package pt.isel.ls.webapi
 import kotlinx.serialization.json.Json
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.BAD_REQUEST
-import org.http4k.core.Status.Companion.CONFLICT
 import org.http4k.core.Status.Companion.INTERNAL_SERVER_ERROR
 import org.http4k.core.Status.Companion.NOT_FOUND
 import pt.isel.ls.services.*
@@ -15,10 +14,10 @@ private fun CustomError.toResponse(): Response {
     val status =
         when (this) {
             // User Errors
-            is UserError.UserAlreadyExists -> CONFLICT
+            is UserError.UserAlreadyExists -> BAD_REQUEST
 
             // Club Errors
-            is ClubError.ClubAlreadyExists -> CONFLICT
+            is ClubError.ClubAlreadyExists -> BAD_REQUEST
             is ClubError.OwnerNotFound, is ClubError.ClubNotFound -> NOT_FOUND
 
             // Court Errors
@@ -28,7 +27,7 @@ private fun CustomError.toResponse(): Response {
             // Rental Errors
             is RentalError.RentalNotFound, is RentalError.RenterNotFound, is RentalError.MissingCourt -> NOT_FOUND
             is RentalError.RentalDateInThePast -> BAD_REQUEST
-            is RentalError.OverlapInTimeSlot -> CONFLICT
+            is RentalError.OverlapInTimeSlot -> BAD_REQUEST
             is RentalError.RentalUpdateFailed -> NOT_FOUND
         }
     return Response(status).body(Json.encodeToString(ProblemOutput(this.description, this.message)))

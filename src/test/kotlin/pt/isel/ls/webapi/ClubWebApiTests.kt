@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package pt.isel.ls.webapi
 
 import kotlinx.datetime.LocalDate
@@ -12,10 +14,7 @@ import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
-import pt.isel.ls.webapi.dto.AvailableHoursInput
-import pt.isel.ls.webapi.dto.ClubCreationInput
-import pt.isel.ls.webapi.dto.ClubDetailsOutput
-import pt.isel.ls.webapi.dto.ClubsOutput
+import pt.isel.ls.webapi.dto.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -140,9 +139,11 @@ class ClubWebApiTests {
             )
         assertEquals(Status.OK, getAvailableHoursRequest.status)
         val availableHours =
-            Json.decodeFromString<List<UInt>>(getAvailableHoursRequest.bodyString())
+            Json.decodeFromString<AvailableHours>(getAvailableHoursRequest.bodyString()).hours
         assert(availableHours.isNotEmpty())
-        assert(availableHours.size == 24)
+        assert(availableHours.size == 1)
+        assert(availableHours.first().start == 0u)
+        assert(availableHours.first().end == 23u)
     }
 
     @Test

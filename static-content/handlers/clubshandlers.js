@@ -18,11 +18,12 @@ async function getClubs(contentHeader, content) {
     const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
-    const clubs = await clubsPagination.getPage(
-        skip,
-        limit,
-        (message) => { errorView(contentHeader, content, message) }
-    )
+    const clubs = await clubsPagination
+        .getPage(
+            skip,
+            limit,
+            (message) => { errorView(contentHeader, content, message) }
+        )
 
     const total = clubsPagination.getTotal()
 

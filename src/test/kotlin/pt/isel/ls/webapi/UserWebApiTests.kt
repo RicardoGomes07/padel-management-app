@@ -84,7 +84,7 @@ class UserWebApiTests {
                     .header("Content-Type", "application/json")
                     .body(Json.encodeToString<UserInput>(UserInput("Riczao", "riczao@gmail.com"))),
             )
-        assertEquals(Status.CONFLICT, response1.status)
+        assertEquals(Status.BAD_REQUEST, response1.status)
     }
 
     @Test

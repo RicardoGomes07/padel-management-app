@@ -28,13 +28,17 @@ class RentalWebApi(
             val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
 
             val timeSlot = TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt())
+            val courtId = request.path("crid")?.toUIntOrNull()
+            requireNotNull(courtId) { "Invalid court id" }
+            val clubId = request.path("cid")?.toUIntOrNull()
+            requireNotNull(clubId) { "Invalid club id" }
 
             rentalService
                 .createRental(
                     input.date,
                     timeSlot,
-                    input.cid.toUInt(),
-                    input.crid.toUInt(),
+                    clubId,
+                    courtId,
                 ).fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(CREATED).body(Json.encodeToString(RentalDetailsOutput(it))) },

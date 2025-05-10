@@ -27,9 +27,9 @@ val courtApi =
 
 val courtsRoutes =
     routes(
-        "courts" bind POST to courtApi::createCourt,
-        "courts/clubs/{cid}" bind GET to courtApi::getCourtsByClub,
-        "courts/{crid}" bind GET to courtApi::getCourtInfo,
+        "clubs/{cid}/courts" bind POST to courtApi::createCourt,
+        "clubs/{cid}/courts" bind GET to courtApi::getCourtsByClub,
+        "clubs/{cid}/courts/{crid}" bind GET to courtApi::getCourtInfo,
     )
 
 fun createCourt(
@@ -39,10 +39,10 @@ fun createCourt(
     val name = "Court-${randomString(10)}"
     val courtResponse =
         courtsRoutes(
-            Request(POST, "courts")
+            Request(POST, "clubs/$clubId/courts")
                 .header("Content-Type", "application/json")
                 .header("Authorization", token)
-                .body("""{"cid":$clubId,"name":"$name"}"""),
+                .body("""{"name":"$name"}"""),
         )
     assertEquals(Status.CREATED, courtResponse.status)
     return Json.decodeFromString<CourtDetailsOutput>(courtResponse.bodyString())
@@ -72,7 +72,7 @@ class CourtWebApiTests {
         val courtCreated = createCourt(token, clubID)
         val getCourtInfoRequest =
             courtsRoutes(
-                Request(GET, "courts/${courtCreated.crid.toInt()}"),
+                Request(GET, "clubs/$clubID/courts/${courtCreated.crid.toInt()}"),
             )
         assertEquals(Status.OK, getCourtInfoRequest.status)
         val court = Json.decodeFromString<CourtOutput>(getCourtInfoRequest.bodyString())
@@ -81,11 +81,11 @@ class CourtWebApiTests {
 
     @Test
     fun `get court info with invalid court id`() {
-        val token = createUser()
         val invalidCourtId = 999
+        val clubId = 1
         val getCourtInfoRequest =
             courtsRoutes(
-                Request(GET, "courts/$invalidCourtId"),
+                Request(GET, "clubs/$clubId/courts/$invalidCourtId"),
             )
         assertEquals(Status.NOT_FOUND, getCourtInfoRequest.status)
     }
@@ -96,7 +96,7 @@ class CourtWebApiTests {
         val clubID = createClub(token).cid.toInt()
         val getAllCourtsRequest =
             courtsRoutes(
-                Request(GET, "courts/clubs/$clubID"),
+                Request(GET, "clubs/$clubID/courts"),
             )
         val getAllCourtsResponse = Json.decodeFromString<CourtsOutput>(getAllCourtsRequest.bodyString())
         assertEquals(Status.OK, getAllCourtsRequest.status)

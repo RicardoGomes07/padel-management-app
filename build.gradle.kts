@@ -30,6 +30,7 @@ tasks.register<JavaExec>("run") {
     group = "application"
     mainClass.set("pt.isel.ls.ServerKt")
     classpath = sourceSets["main"].runtimeClasspath
+    standardInput = System.`in`
 }
 
 tasks.register<Exec>("BuildDataBase") {
@@ -42,6 +43,7 @@ tasks.register<Exec>("BuildDataBase") {
         createTablesScript,
     )
 }
+
 tasks.register<Exec>("InsertValuesIntoDb") {
     environment("PGPASSWORD", "postgres")
     commandLine(
@@ -68,6 +70,7 @@ val createTablesScript =
         .dir("src/test/sql")
         .file("createSchema.sql")
         .toString()
+val postgresPswd = "postgres"
 
 val insertValuesScript =
     project
@@ -78,7 +81,7 @@ val insertValuesScript =
         .toString()
 
 task<Exec>("createTestsDb") {
-    environment("PGPASSWORD", "postgres") // Needed for psql authentication
+    environment("PGPASSWORD", postgresPswd) // Needed for psql authentication
     commandLine(
         psql,
         "-U",
@@ -88,7 +91,7 @@ task<Exec>("createTestsDb") {
     )
 }
 task<Exec>("createTablesTestsDb") {
-    environment("PGPASSWORD", "postgres") // Needed for psql authentication
+    environment("PGPASSWORD", postgresPswd) // Needed for psql authentication
     dependsOn("createTestsDb")
     commandLine(
         psql,
@@ -102,7 +105,7 @@ task<Exec>("createTablesTestsDb") {
 }
 
 task<Exec>("deleteTestsDb") {
-    environment("PGPASSWORD", "postgres") // Needed for psql authentication
+    environment("PGPASSWORD", postgresPswd) // Needed for psql authentication
     commandLine(
         psql,
         "-U",

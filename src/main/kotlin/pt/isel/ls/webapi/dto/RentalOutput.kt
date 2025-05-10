@@ -7,6 +7,7 @@ import pt.isel.ls.domain.Rental
 @Serializable
 data class RentalOutput(
     val rid: UInt,
+    val uid: UInt,
     val date: LocalDate,
     val initialHour: UInt,
     val finalHour: UInt,
@@ -14,6 +15,7 @@ data class RentalOutput(
     constructor(rental: Rental) :
         this(
             rental.rid,
+            rental.renter.uid,
             rental.date,
             rental.rentTime.start,
             rental.rentTime.end,

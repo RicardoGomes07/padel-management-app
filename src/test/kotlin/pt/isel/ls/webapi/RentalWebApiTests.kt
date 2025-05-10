@@ -27,12 +27,12 @@ val rentalApi =
     )
 val rentalsRoutes =
     routes(
-        "rentals" bind POST to rentalApi::createRental,
-        "rentals/clubs/courts/{crid}" bind GET to rentalApi::getRentalsOnCourt,
-        "rentals/{rid}" bind GET to rentalApi::getRentalInfo,
+        "clubs/{cid}/courts/{crid}/rentals" bind POST to rentalApi::createRental,
+        "clubs/{cid}/courts/{crid}/rentals" bind GET to rentalApi::getRentalsOnCourt,
+        "clubs/{cid}/courts/{crid}/rentals/{rid}" bind GET to rentalApi::getRentalInfo,
         "users/{uid}/rentals" bind GET to rentalApi::getUserRentals,
-        "rentals/{rid}" bind DELETE to rentalApi::deleteRental,
-        "rentals/{rid}" bind PUT to rentalApi::updateRental,
+        "clubs/{cid}/courts/{crid}/rentals/{rid}" bind DELETE to rentalApi::deleteRental,
+        "clubs/{cid}/courts/{crid}/rentals/{rid}" bind PUT to rentalApi::updateRental,
     )
 
 fun createRental(token: String): RentalDetailsOutput {
@@ -51,25 +51,23 @@ fun createRental(token: String): RentalDetailsOutput {
     val name = "Court-${randomString(10)}"
     val courtResponse =
         courtsRoutes(
-            Request(POST, "courts")
+            Request(POST, "clubs/${club.cid}/courts")
                 .header("Content-Type", "application/json")
                 .header("Authorization", token)
-                .body("""{"cid":${club.cid.toInt()},"name":"$name"}"""),
+                .body(Json.encodeToString(CourtCreationInput(name))),
         )
     assertEquals(Status.CREATED, courtResponse.status)
     val court = Json.decodeFromString<CourtDetailsOutput>(courtResponse.bodyString())
 
     val rental =
         rentalsRoutes(
-            Request(POST, "rentals")
+            Request(POST, "clubs/${club.cid}/courts/${court.crid}/rentals")
                 .header("Content-Type", "application/json")
                 .header("Authorization", token)
                 .body(
                     Json
                         .encodeToString(
                             RentalCreationInput(
-                                club.cid.toInt(),
-                                court.crid.toInt(),
                                 LocalDate.parse("2025-06-$day"),
                                 10,
                                 12,
@@ -99,7 +97,7 @@ class RentalWebApiTests {
         val court = createCourt(token, club.cid.toInt())
         val rental =
             rentalsRoutes(
-                Request(POST, "rentals")
+                Request(POST, "clubs/${club.cid}/courts/${court.crid}/rentals")
                     .header("Content-Type", "application/json")
                     .header("Authorization", token)
                     .body(
@@ -108,8 +106,6 @@ class RentalWebApiTests {
                                 date = LocalDate.parse("2025-06-15"),
                                 initialHour = 10,
                                 finalHour = 12,
-                                cid = club.cid.toInt(),
-                                crid = court.crid.toInt(),
                             ),
                         ),
                     ),
@@ -124,21 +120,20 @@ class RentalWebApiTests {
     @Test
     fun `get rental info with valid rental id`() {
         val token = createUser()
-        createRental(token)
+        val rental = createRental(token)
         val getRentalInfoRequest =
             rentalsRoutes(
-                Request(GET, "rentals/1"),
+                Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1"),
             )
         assertEquals(Status.OK, getRentalInfoRequest.status)
     }
 
     @Test
     fun `get rental info with invalid rental id`() {
-        createUser()
         val invalidRentalId = 999
         val getRentalInfoRequest =
             rentalsRoutes(
-                Request(GET, "rentals/$invalidRentalId"),
+                Request(GET, "clubs/1/courts/1/rentals/$invalidRentalId"),
             )
         assertEquals(Status.NOT_FOUND, getRentalInfoRequest.status)
     }
@@ -149,7 +144,7 @@ class RentalWebApiTests {
         val rental = createRental(token)
         val getAllRentalsRequest =
             rentalsRoutes(
-                Request(GET, "rentals/clubs/courts/1"),
+                Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals"),
             )
         val rentals = Json.decodeFromString<RentalsOutput>(getAllRentalsRequest.bodyString())
         assertTrue(rentals.rentals.any { it.date == rental.date })
@@ -183,7 +178,7 @@ class RentalWebApiTests {
 
         val updateRequest =
             rentalsRoutes(
-                Request(PUT, "rentals/1")
+                Request(PUT, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1")
                     .header("Authorization", token)
                     .body(
                         Json.encodeToString<RentalUpdateInput>(
@@ -212,14 +207,14 @@ class RentalWebApiTests {
 
         val deleteRequest =
             rentalsRoutes(
-                Request(DELETE, "rentals/1")
+                Request(DELETE, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1")
                     .header("Authorization", token),
             )
         assertEquals(Status.OK, deleteRequest.status)
 
         val getRentalInfoRequest =
             rentalsRoutes(
-                Request(GET, "rentals/1")
+                Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1")
                     .header("Authorization", token),
             )
         assertEquals(Status.NOT_FOUND, getRentalInfoRequest.status)

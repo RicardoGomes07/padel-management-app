@@ -5,8 +5,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class RentalCreationInput(
-    val cid: Int,
-    val crid: Int,
     val date: LocalDate,
     val initialHour: Int,
     val finalHour: Int,

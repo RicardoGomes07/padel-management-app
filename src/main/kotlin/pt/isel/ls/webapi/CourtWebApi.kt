@@ -8,7 +8,7 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
-import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.toName
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.CourtCreationInput
 import pt.isel.ls.webapi.dto.CourtDetailsOutput
@@ -24,12 +24,13 @@ class CourtWebApi(
 ) {
     fun createCourt(request: Request): Response =
         request.handlerWithAuth(userService::validateUser) {
-            val input = Json.decodeFromString<CourtCreationInput>(request.bodyString())
+            val courtName = Json.decodeFromString<CourtCreationInput>(request.bodyString()).name.toName()
 
-            val courtName = Name(input.name)
+            val clubId = request.path("cid")?.toUIntOrNull()
+            requireNotNull(clubId) { "Invalid club id" }
 
             courtService
-                .createCourt(courtName, input.cid)
+                .createCourt(courtName, clubId)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(CREATED).body(Json.encodeToString(CourtDetailsOutput(it))) },

@@ -40,7 +40,7 @@ class UtilsTests {
             request.handler {
                 throw UserError.UserAlreadyExists("User already exists")
             }
-        assertEquals(409, customError.status.code)
+        assertEquals(400, customError.status.code)
         val probOut =
             ProblemOutput("Error during user operation", "User already exists")
         assertTrue(customError.bodyString().contains(probOut.title))

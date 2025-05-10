@@ -2,19 +2,23 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
     const cache = []
     let total = 0
 
-    const hasElementsCached = (skip, limit) => {
-        const cached = cache.slice(skip, skip + limit)
-        return cached.length === limit && !cached.includes(undefined)
+    let dynamicParams = []
+    let currentFilterProp = null
+    let currentFilterValue = null
+
+    const filteredElems = () => {
+        return currentFilterProp
+            ? cache.filter(item => item?.[currentFilterProp] === currentFilterValue)
+            : cache
     }
 
     const getElements = (skip, limit) => {
-        return cache.slice(skip, skip + limit)
+        const filtered = filteredElems()
+        return filtered.slice(skip, skip + limit)
     }
 
-    const updateCache = (items, skip) => {
-        for (let i = 0; i < items.length; i++) {
-            cache[skip + i] = items[i]
-        }
+    const updateCache = (items) => {
+        cache.push(...items)
 
         if (cache.length > maxCacheSize) {
             const overflow = cache.length - maxCacheSize
@@ -22,40 +26,56 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
         }
     }
 
-    const fetchAndCache = async (skip, limit, onError) => {
+    const fetchAndCache = async (userSkip, limit, onError) => {
+        const filtered = filteredElems()
+        const filteredCount = filtered.length
 
-        if (total !== 0 && limit >= total) {
-            return getElements(skip, limit)
-        }
+        const needed = (userSkip + limit) - filteredCount
 
-        if (hasElementsCached(skip, limit) ) {
-            return getElements(skip, limit)
-        }
+        if (needed > 0) {
+            try {
+                const res = await fetchFun(...dynamicParams, filteredCount, needed)
 
-        try {
-            const res = await fetchFun(skip, limit)
+                if (res.status !== 200) {
+                    onError(res.data)
+                    return []
+                }
 
-            if (res.status !== 200) {
-                onError(res.data)
-                return
+                const items = res.data[jsonProp] ?? []
+                total = res.data.paginationInfo?.totalElements ?? 0
+
+                updateCache(items)
+            } catch (err) {
+                onError(err.message ?? "Unknown error occurred.")
+                return []
             }
-            const items = res.data[jsonProp] ?? []
-            total = res.data.paginationInfo.totalElements
-
-            updateCache(items, skip)
-            return getElements(skip, limit)
-
-        } catch (err) {
-            onError(err.message || "Unknown error occurred.")
         }
+
+        return getElements(userSkip, limit)
     }
 
     return {
+        reqParams(...params) {
+            dynamicParams = params
+            return this
+        },
+
+        filterBy(propName, propValue) {
+            if (currentFilterProp !== propName || currentFilterValue !== propValue) {
+                cache.length = 0 // reset cache se filtro mudou
+            }
+            currentFilterProp = propName
+            currentFilterValue = propValue
+            return this
+        },
+
         async getPage(skip, limit, onError) {
             return await fetchAndCache(skip, limit, onError)
         },
+
         getTotal() {
             return total
         }
     }
 }
+

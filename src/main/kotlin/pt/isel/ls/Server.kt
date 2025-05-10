@@ -59,29 +59,21 @@ fun main() {
             "/" bind POST to clubApi::createClub,
             "/" bind GET to clubApi::getAllClubs,
             "/{cid}" bind GET to clubApi::getClubInfo,
-        )
-    val courtsRoutes =
-        routes(
-            "/" bind POST to courtApi::createCourt,
-            "/clubs/{cid}" bind GET to courtApi::getCourtsByClub,
-            "/{crid}" bind GET to courtApi::getCourtInfo,
-            "/{crid}/available" bind POST to clubApi::getAvailableHours,
-        )
-    val rentalsRoutes =
-        routes(
-            "/" bind POST to rentalApi::createRental,
-            "/{rid}" bind GET to rentalApi::getRentalInfo,
-            "/{rid}" bind DELETE to rentalApi::deleteRental,
-            "/{rid}" bind PUT to rentalApi::updateRental,
-            "/courts/{crid}" bind GET to rentalApi::getRentalsOnCourt,
+            "/{cid}/courts" bind POST to courtApi::createCourt,
+            "/{cid}/courts" bind GET to courtApi::getCourtsByClub,
+            "/{cid}/courts/{crid}" bind GET to courtApi::getCourtInfo,
+            "/{cid}/courts/{crid}/available" bind POST to clubApi::getAvailableHours,
+            "/{cid}/courts/{crid}/rentals" bind POST to rentalApi::createRental,
+            "/{cid}/courts/{crid}/rentals" bind GET to rentalApi::getRentalsOnCourt,
+            "/{cid}/courts/{crid}/rentals/{rid}" bind GET to rentalApi::getRentalInfo,
+            "/{cid}/courts/{crid}/rentals/{rid}" bind DELETE to rentalApi::deleteRental,
+            "/{cid}/courts/{crid}/rentals/{rid}" bind PUT to rentalApi::updateRental,
         )
 
     val app =
         routes(
             "/users" bind userRoutes,
             "/clubs" bind clubsRoutes,
-            "/courts" bind courtsRoutes,
-            "/rentals" bind rentalsRoutes,
             singlePageApp(ResourceLoader.Directory("static-content")),
         )
 

@@ -3,28 +3,32 @@ import pagination from "./views/pagination.js";
 import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
-import { createMultiPaginationManager } from "../managers/multiPaginationManager.js"
+import {createPaginationManager} from "../managers/paginationManager.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
 const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView } = courtsViews
 const { errorView } = errorsViews
+
 const courtsOfClubPagination =
-    createMultiPaginationManager(fetchCourtsByClub, "courts")
-const courtRentalsPagination =
-    createMultiPaginationManager(fetchCourtRentals, "rentals")
+    createPaginationManager(fetchCourtsByClub, "courts")
 
 async function getCourtsByClub(contentHeader, content) {
     const cid = path("cid")
     const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
-    const courts = await courtsOfClubPagination.getPage(cid, skip, limit,
-        (message) => { errorView(contentHeader, content, message) }
-    )
+    const courts = await courtsOfClubPagination
+        .reqParams(Number(cid))
+        .filterBy("cid", Number(cid))
+        .getPage(
+            skip,
+            limit,
+            (message) => { errorView(contentHeader, content, message) }
+        )
 
-    const totalCount = courtsOfClubPagination.getTotal(cid)
+    const totalCount = courtsOfClubPagination.getTotal()
 
     renderCourtsByClubView(
         contentHeader,
@@ -41,7 +45,7 @@ async function getCourtDetails(contentHeader, content) {
     const crid = path("crid")
     const cid = path("cid")
 
-    const result = await fetchCourtDetails(crid)
+    const result = await fetchCourtDetails(cid, crid)
 
     if (result.status !== 200) errorView(contentHeader, content, result.data)
     else renderCourtDetailsView(contentHeader, content, result.data, cid, crid)
@@ -54,19 +58,13 @@ async function getCourtRentals(contentHeader, content) {
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
 
-    const courtRentals = await courtRentalsPagination.getPage(
-        crid,
-        skip,
-        limit,
-        (message) => { errorView(contentHeader, content, message) }
-    )
-
-    const totalCount = courtRentalsPagination.getTotal(crid)
-
+    const response = await fetchCourtRentals(cid, crid, skip, limit).then(result => result.data)
+    const rentals = response.rentals ?? []
+    const totalCount = response.paginationInfo?.totalElements ?? 0
     renderCourtRentalsView(
         contentHeader,
         content,
-        courtRentals,
+        rentals,
         totalCount,
         cid,
         crid,

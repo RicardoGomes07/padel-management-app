@@ -31,8 +31,7 @@ Content-Type: application/json
 }
 
 ### Returns user information
-GET {{host}}/users/me
-Authorization: {{authToken}}
+GET {{host}}/users/1
 
 ### Creates a new club
 POST {{host}}/clubs
@@ -53,27 +52,25 @@ Authorization: {{authToken}}
 }
 
 ### Create new court
-POST {{host}}/courts
+POST {{host}}/clubs/1/courts
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
     "name": "Court 1",
-    "cid": 1 
 }
 
 ### Create new court
-POST {{host}}/courts
+POST {{host}}/clubs/1/courts
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
     "name": "Court 2",
-    "cid": 1 
 }
 
 ### List Courts of a club
-GET {{host}}/courts/clubs/1
+GET {{host}}/clubs/1/courts
 
 ### Get available hours for court rental
 POST {{host}}/courts/1/available
@@ -85,13 +82,11 @@ Content-Type: application/json
 }
 
 ### Create a invalid date rental
-POST {{host}}/rentals
+POST {{host}}clubs/1/courts/1/rentals
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-    "cid": 1,
-    "crid": 1,
     "date": "2025-03-22",
     "initialHour": 8,
     "finalHour": 10
@@ -99,39 +94,33 @@ Authorization: {{authToken}}
 
 
 ### Create a new rental
-POST {{host}}/rentals
+POST {{host}}clubs/1/courts/1/rentals
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-    "cid": 1,
-    "crid": 1,
     "date": "2025-04-27",
     "initialHour": 8,
     "finalHour": 10
 }
 
 ### Create a new rental
-POST {{host}}/rentals
+POST {{host}}clubs/1/courts/1/rentals
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-    "cid": 1,
-    "crid": 1,
     "date": "2025-04-27",
     "initialHour": 10,
     "finalHour": 12
 }
 
 ### Create a new rental
-POST {{host}}/rentals
+POST {{host}}clubs/1/courts/1/rentals
 Content-Type: application/json
 Authorization: {{authToken}}
 
 {
-    "cid": 1,
-    "crid": 1,
     "date": "2025-04-27",
     "initialHour": 18,
     "finalHour": 22

@@ -7,7 +7,7 @@ import pt.isel.ls.domain.Court
 data class CourtOutput(
     val crid: UInt,
     val name: String,
-    val clubId: UInt,
+    val cid: UInt,
 ) {
     constructor(court: Court) :
         this(

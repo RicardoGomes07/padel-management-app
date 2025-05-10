@@ -10,14 +10,14 @@ window.addEventListener('hashchange', hashChangeHandler)
 
 function loadHandler(){
     router.addRouteHandler("home", homeHandlers.getHome)
-    router.addRouteHandler("clubs", clubHandlers.getClubs)
-    router.addRouteHandler("clubs/:cid", clubHandlers.getClubDetails)
     router.addRouteHandler("users/:uid", userHandlers.getUserDetails)
     router.addRouteHandler("users/:uid/rentals", userHandlers.getUserRentals)
+    router.addRouteHandler("clubs", clubHandlers.getClubs)
+    router.addRouteHandler("clubs/:cid", clubHandlers.getClubDetails)
+    router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
     router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourtDetails)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals", courtHandlers.getCourtRentals)
-    router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
-    router.addRouteHandler("rentals/:rid", rentalHandlers.getRentalDetails)
+    router.addRouteHandler("clubs/:cid/courts/:crid/rentals/:rid", rentalHandlers.getRentalDetails)
     router.addDefaultNotFoundRouteHandler(() => window.location.hash = "home")
 
     hashChangeHandler()
