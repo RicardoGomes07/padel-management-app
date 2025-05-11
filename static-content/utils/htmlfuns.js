@@ -58,6 +58,39 @@ function p(text, classname = textInfoClassName) {
     return createElement("p", {textContent:text, class: classname})
 }
 
+function formRequest(fields, submitHandler, formProps = {}) {
+    const formElements = [];
+    fields.forEach(field => {
+        const label = createElement("label", { hmtlfor: field.id, className: "label" }, field.label);
+        const input = createElement("input", {
+            type: field.type || "text",
+            id: field.id,
+            name: field.name,
+            className: "input",
+            required: field.required,
+            value: field.value || "",
+            placeholder: field.placeholder
+        });
+
+        formElements.push(label);
+        formElements.push(input);
+    });
+
+    const submitButton = createElement("button", {
+        type: "submit",
+        className: "button",
+        textContent: formProps.submitText || "Submit"
+    });
+
+    formElements.push(submitButton);
+
+    return createElement("form", {
+        className: "form",
+        id: formProps.id,
+        onSubmit: submitHandler
+    }, ...formElements);
+}
+
 const Html = {
     div,
     a,
@@ -65,7 +98,8 @@ const Html = {
     li,
     h1,
     h2,
-    p
+    p,
+    formRequest,
 }
 
 export default Html;

@@ -16,10 +16,16 @@ function fetchCourtRentals(cid, crid, skip, limit) {
         .then(handleResponse)
 }
 
+function fetchCourtsAvailableHours(cid, crid, options) {
+    return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/available`, options)
+        .then(handleResponse)
+}
+
 const courtsRequests = {
     fetchCourtsByClub,
     fetchCourtDetails,
-    fetchCourtRentals
+    fetchCourtRentals,
+    fetchCourtsAvailableHours
 }
 
 export default courtsRequests

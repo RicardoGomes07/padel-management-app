@@ -4,12 +4,14 @@ import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
 import {createPaginationManager} from "../managers/paginationManager.js";
+import Html from "../utils/htmlfuns.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
-const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
-const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView } = courtsViews
+const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals, fetchCourtsAvailableHours } = courtsRequests
+const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView, renderCourtAvailableHoursView } = courtsViews
 const { errorView } = errorsViews
+const { formRequest } = Html
 
 const courtsOfClubPagination =
     createPaginationManager(fetchCourtsByClub, "courts")
@@ -73,11 +75,63 @@ async function getCourtRentals(contentHeader, content) {
     )
 }
 
+function getCourtAvailableHours(contentHeader, content) {
+    const cid = path("cid")
+    const crid = path("crid")
+
+    const fields = [
+        { id: "date", label: "Select Date", type: "date", required: true },
+    ]
+
+    const handleSubmit = async function(e){
+        e.preventDefault()
+        const inputDate = document.querySelector("#date")
+        const selectedDate = inputDate.value;
+        if (!inputDate) {
+            console.error("Input date not found")
+            return
+        }
+        const options = {
+            method: "POST",
+            headers: {
+                "Content-Type" : "application/json",
+                "Accept" : "application/json"
+            },
+            body: JSON.stringify({
+                date: inputDate.value
+            })
+        }
+        const response = await fetchCourtsAvailableHours(cid, crid, options)
+        if (response.status !== 200) {
+            errorView(contentHeader, content, response.data)
+            return
+        }else{
+            renderCourtAvailableHoursView(
+            contentHeader,
+            content,
+            response.data.hours,
+            cid,
+            crid,
+            selectedDate
+            )
+        }
+    }
+
+    const form = formRequest(fields, handleSubmit, { 
+        className: "form",
+        submitText: "Get Available Hours"
+     });
+    
+    contentHeader.replaceChildren("Available Hours")
+    content.replaceChildren(form)
+}
+
 
 const courtHandlers = {
     getCourtsByClub,
     getCourtDetails,
     getCourtRentals,
+    getCourtAvailableHours
 }
 
 export default courtHandlers
