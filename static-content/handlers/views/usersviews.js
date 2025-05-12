@@ -1,12 +1,12 @@
-import Html from "../../utils/htmlfuns.js";
+    import Html from "../../utils/htmlfuns.js";
 import pagination from "./pagination.js";
 
 const { div, a, ul, li, p } = Html;
 const { createPaginationLinks } = pagination
 
-function renderUserRentalsView(contentHeader, content, rentals, totalElements, uid, skip, limit) {
+function renderUserRentalsView(contentHeader, content, rentals, totalElements, username,  uid, skip, limit) {
     const currHeader = contentHeader.textContent
-    const header = "Rentals"
+    const header = "Rentals of " + username
 
     const backLink = div(a("Back", "#users/" + uid))
 

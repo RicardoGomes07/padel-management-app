@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "../home.js";
 import { handleResponse } from "../../utils/fetch.js"
+import {userAuthManager} from "../usershandlers.js";
+const userToken = userAuthManager.getCurrToken()
 
 function fetchClubDetails(cid){
     return fetch(`${API_BASE_URL}clubs/${cid}`)
@@ -11,8 +13,20 @@ function fetchClubs(skip, limit) {
         .then(handleResponse)
 }
 
+function createClub(clubName) {
+    return fetch(`${API_BASE_URL}clubs`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${userToken}`,
+        },
+        body: JSON.stringify({ name: clubName })
+    }).then(handleResponse)
+}
+
 const clubsRequests = {
     fetchClubDetails,
-    fetchClubs
+    fetchClubs,
+    createClub
 }
 export default clubsRequests

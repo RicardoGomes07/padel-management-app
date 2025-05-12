@@ -3,6 +3,7 @@ import pagination from "./views/pagination.js"
 import usersViews from "./views/usersviews.js"
 import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";
+import userAuthenticationManager from "../managers/userAuthenticationManager.js";
 
 const { path, query } = request
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT } = pagination
@@ -10,6 +11,8 @@ const { renderUserRentalsView, renderUserDetailsView } = usersViews
 const { fetchUserRentals, fetchUserDetails } = usersRequests
 const { errorView } = errorsViews
 
+export const userAuthManager = userAuthenticationManager()
+                                .setCurrToken("b734312a-94c6-492e-a243-5ebe17e023ca")
 
 async function getUserRentals(contentHeader, content) {
     const uid = path("uid")
@@ -20,11 +23,14 @@ async function getUserRentals(contentHeader, content) {
     const rentals = response.rentals ?? []
     const totalCount = response.paginationInfo?.totalElements ?? 0
 
+    const userName = await fetchUserDetails(Number(uid)).then(user => user.data.name)
+
     renderUserRentalsView(
         contentHeader,
         content,
         rentals,
         totalCount,
+        userName,
         uid,
         skip,
         limit

@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "../home.js";
 import { handleResponse } from "../../utils/fetch.js"
+import {userAuthManager} from "../usershandlers.js";
+const userToken = userAuthManager.getCurrToken()
 
 function fetchCourtsByClub(cid, skip, limit) {
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/?skip=${skip}&limit=${limit}`)
@@ -16,16 +18,33 @@ function fetchCourtRentals(cid, crid, skip, limit) {
         .then(handleResponse)
 }
 
-function fetchCourtsAvailableHours(cid, crid, options) {
-    return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/available`, options)
-        .then(handleResponse)
+function createCourt(clubId, courtName) {
+    return fetch(`${API_BASE_URL}clubs/${clubId}/courts`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${userToken}`,
+        },
+        body: JSON.stringify({ name: courtName })
+    }).then(handleResponse)
+}
+
+function getAvailableHours(cid, crid, date) {
+    return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/available`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${userToken}`,
+        },
+        body: JSON.stringify({ date: date })
+    }).then(handleResponse)
 }
 
 const courtsRequests = {
     fetchCourtsByClub,
     fetchCourtDetails,
     fetchCourtRentals,
-    fetchCourtsAvailableHours
+    getAvailableHours
 }
 
 export default courtsRequests

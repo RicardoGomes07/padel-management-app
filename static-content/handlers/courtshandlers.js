@@ -74,14 +74,9 @@ async function getCourtRentals(contentHeader, content) {
         limit
     )
 }
-
 function getCourtAvailableHours(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")
-
-    const fields = [
-        { id: "date", label: "Select Date", type: "date", required: true },
-    ]
 
     const handleSubmit = async function(e){
         e.preventDefault()
@@ -91,41 +86,33 @@ function getCourtAvailableHours(contentHeader, content) {
             console.error("Input date not found")
             return
         }
-        const options = {
-            method: "POST",
-            headers: {
-                "Content-Type" : "application/json",
-                "Accept" : "application/json"
-            },
-            body: JSON.stringify({
-                date: inputDate.value
-            })
-        }
-        const response = await fetchCourtsAvailableHours(cid, crid, options)
+        const response = await courtsRequests.getAvailableHours(cid, crid, selectedDate)
         if (response.status !== 200) {
             errorView(contentHeader, content, response.data)
-            return
         }else{
             renderCourtAvailableHoursView(
-            contentHeader,
-            content,
-            response.data.hours,
-            cid,
-            crid,
-            selectedDate
+                contentHeader,
+                content,
+                response.data.hours,
+                cid,
+                crid,
+                selectedDate
             )
         }
     }
 
-    const form = formRequest(fields, handleSubmit, { 
+    const fields = [
+        { id: "date", label: "Select Date", type: "date", required: true },
+    ]
+
+    const form = formRequest(fields, handleSubmit, {
         className: "form",
         submitText: "Get Available Hours"
-     });
-    
+    })
+
     contentHeader.replaceChildren("Available Hours")
     content.replaceChildren(form)
 }
-
 
 const courtHandlers = {
     getCourtsByClub,
