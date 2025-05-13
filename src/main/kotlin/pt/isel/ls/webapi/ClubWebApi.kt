@@ -39,13 +39,12 @@ class ClubWebApi(
         request.handler {
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
-            val pageInfo = clubService.numberOfClubs().getOrThrow()
 
             clubService
                 .getClubs(limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput(pageInfo))) },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput())) },
                 )
         }
 
@@ -73,12 +72,16 @@ class ClubWebApi(
             val date = Json.decodeFromString<AvailableHoursInput>(request.bodyString()).date
 
             require(date >= currentDate()) { "Date must not be in the past" }
-
+            val currHour = currentHour()
             rentalService
                 .getAvailableHours(courtId, date)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toAvailableHours())) },
+                    onSuccess = {
+                        val hours = if (date == currentDate()) it.filter { hour -> hour > currHour.toUInt() } else it
+                        Response(OK)
+                            .body(Json.encodeToString(hours.toAvailableHours()))
+                    },
                 )
         }
 }

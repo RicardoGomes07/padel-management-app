@@ -17,9 +17,12 @@ function loadHandler(){
     router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
     router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourtDetails)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals/create", rentalHandlers.createRental)
-    router.addRouteHandler("clubs/:cid/courts/:crid/available", courtHandlers.getCourtAvailableHours)
+    router.addRouteHandler("clubs/:cid/courts/:crid/available_hours", courtHandlers.getCourtAvailableHours)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals", courtHandlers.getCourtRentals)
+    router.addRouteHandler("clubs/:cid/courts/:crid/rentals/search", rentalHandlers.searchRentals)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals/:rid", rentalHandlers.getRentalDetails)
+    router.addRouteHandler("clubs/:cid/courts/:crid/rentals/:rid/update", rentalHandlers.updateRental)
+    router.addRouteHandler("clubs/:cid/courts/:crid/rentals/:rid/delete", rentalHandlers.deleteRental)
     router.addDefaultNotFoundRouteHandler(() => window.location.hash = "home")
 
     hashChangeHandler()

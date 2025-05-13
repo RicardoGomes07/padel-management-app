@@ -7,7 +7,7 @@ const DEFAULT_VALUE_SKIP = 0
 const DEFAULT_VALUE_LIMIT = 1
 const { paginationLinksClassName, paginationLinkClassName} = classnames
 
-function createPaginationLinks(baseLink, skip, limit, totalElements) {
+function createPaginationLinks(baseLink, skip, limit, hasNext) {
     const nextSkip = skip + limit
     const prevSkip = Math.max(0, skip - limit)
 
@@ -19,7 +19,7 @@ function createPaginationLinks(baseLink, skip, limit, totalElements) {
         children.push(prevLink)
     }
 
-    if (nextSkip < totalElements) {
+    if (hasNext) {
         const nextPath = `#${baseLink}?skip=${nextSkip}&limit=${limit}`
         const nextLink = a("Next", nextPath, paginationLinkClassName)
         children.push(nextLink)

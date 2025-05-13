@@ -4,7 +4,6 @@ import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
 import pt.isel.ls.repository.TransactionManager
-import pt.isel.ls.webapi.dto.PaginationInfo
 
 class ClubService(
     private val trxManager: TransactionManager,
@@ -20,15 +19,6 @@ class ClubService(
         runCatching {
             trxManager.run {
                 clubRepo.findAll(limit, skip)
-            }
-        }
-
-    fun numberOfClubs(): Result<PaginationInfo> =
-        runCatching {
-            trxManager.run {
-                PaginationInfo(
-                    clubRepo.count(),
-                )
             }
         }
 

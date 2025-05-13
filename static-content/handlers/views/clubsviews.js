@@ -17,7 +17,7 @@ function renderClubDetailsView(contentHeader, content, club){
     content.replaceChildren(info)
 }
 
-function renderClubsView(contentHeader, content, clubs, totalElements, skip, limit){
+function renderClubsView(contentHeader, content, clubs, skip, limit, hasNext){
     const currHeader = contentHeader.textContent
     const header = "Clubs"
     const info = clubs.length > 0
@@ -28,14 +28,29 @@ function renderClubsView(contentHeader, content, clubs, totalElements, skip, lim
         )
         : p("No clubs found")
 
-    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), totalElements)
+    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), hasNext)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(info, navigation)
 }
 
+function renderClubCreationView(contentHeader, content){
+    const header = "Create Club"
+    const info = div(
+        p("Create a new club"),
+        div(
+            input({ type: "text", placeholder: "Club Name" }),
+            button("Create", { type: "submit" })
+        )
+    )
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(info)
+}
+
 const clubViews ={
     renderClubDetailsView,
-    renderClubsView
+    renderClubsView,
+    renderClubCreationView,
 }
 export default clubViews

@@ -1,10 +1,10 @@
 export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) {
     const cache = []
-    let total = 0
 
     let dynamicParams = []
     let currentFilterProp = null
     let currentFilterValue = null
+    let hasNext = false
 
     const filteredElems = () => {
         return currentFilterProp
@@ -14,6 +14,8 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
 
     const getElements = (skip, limit) => {
         const filtered = filteredElems()
+        const filteredCount = filtered.length
+        hasNext = filteredCount > (skip + limit)
         return filtered.slice(skip, skip + limit)
     }
 
@@ -30,7 +32,8 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
         const filtered = filteredElems()
         const filteredCount = filtered.length
 
-        const needed = (userSkip + limit) - filteredCount
+        const needed = (userSkip + limit + 1) - filteredCount
+        console.log(needed)
 
         if (needed > 0) {
             try {
@@ -42,7 +45,6 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
                 }
 
                 const items = res.data[jsonProp] ?? []
-                total = res.data.paginationInfo?.totalElements ?? 0
 
                 updateCache(items)
             } catch (err) {
@@ -73,8 +75,8 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
             return await fetchAndCache(skip, limit, onError)
         },
 
-        getTotal() {
-            return total
+        hasNext() {
+            return hasNext
         }
     }
 }

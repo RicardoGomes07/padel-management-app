@@ -4,7 +4,7 @@ import pagination from "./pagination.js";
 const { div, a, ul, li, p } = Html;
 const { createPaginationLinks } = pagination
 
-function renderUserRentalsView(contentHeader, content, rentals, totalElements, username,  uid, skip, limit) {
+function renderUserRentalsView(contentHeader, content, rentals, username,  uid, skip, limit, hasNext) {
     const currHeader = contentHeader.textContent
     const header = "Rentals of " + username
 
@@ -20,7 +20,7 @@ function renderUserRentalsView(contentHeader, content, rentals, totalElements, u
 
     const info = div(rentalList)
     const baseLink = "users/" + uid + "/rentals"
-    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), totalElements)
+    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), hasNext)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, info, navigation)

@@ -25,15 +25,15 @@ async function getClubs(contentHeader, content) {
             (message) => { errorView(contentHeader, content, message) }
         )
 
-    const total = clubsPagination.getTotal()
+    const hasNext = clubsPagination.hasNext()
 
     renderClubsView(
         contentHeader,
         content,
         clubs,
-        total,
         skip,
-        limit
+        limit,
+        hasNext
     )
 }
 
@@ -46,9 +46,14 @@ async function getClubDetails(contentHeader, content) {
     else renderClubDetailsView(contentHeader, content, result.data)
 }
 
+async function createClub(contentHeader, content) {
+    // TODO: Implement the create club functionality
+}
+
 const clubHandlers= {
     getClubDetails,
     getClubs,
+    createClub,
 }
 
 export default clubHandlers

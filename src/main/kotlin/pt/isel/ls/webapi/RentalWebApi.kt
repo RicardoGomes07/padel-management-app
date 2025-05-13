@@ -54,13 +54,12 @@ class RentalWebApi(
             val date = request.query("date")?.let { LocalDate.parse(it) }
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
-            val pageInfo = rentalService.numberOfRentals(courtId, date).getOrThrow()
 
             rentalService
                 .getRentals(courtId, date, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput(pageInfo))) },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
                 )
         }
 
@@ -72,13 +71,11 @@ class RentalWebApi(
             val userId = request.path("uid")?.toUIntOrNull()
             requireNotNull(userId) { "Invalid user id" }
 
-            val pageInfo = rentalService.numberOfUserRentals(userId).getOrThrow()
-
             rentalService
                 .getUserRentals(userId, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput(pageInfo))) },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
                 )
         }
 

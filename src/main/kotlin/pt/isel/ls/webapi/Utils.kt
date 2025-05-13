@@ -66,3 +66,10 @@ fun currentDate() =
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .toJavaLocalDateTime()
         .let { LocalDate(it.year, it.month, it.dayOfMonth) }
+
+fun currentHour() =
+    Clock
+        .System
+        .now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .hour

@@ -8,7 +8,7 @@ import Html from "../utils/htmlfuns.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
-const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals, fetchCourtsAvailableHours } = courtsRequests
+const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
 const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView, renderCourtAvailableHoursView } = courtsViews
 const { errorView } = errorsViews
 const { formRequest } = Html
@@ -30,16 +30,16 @@ async function getCourtsByClub(contentHeader, content) {
             (message) => { errorView(contentHeader, content, message) }
         )
 
-    const totalCount = courtsOfClubPagination.getTotal()
+    const hasNext = courtsOfClubPagination.hasNext()
 
     renderCourtsByClubView(
         contentHeader,
         content,
         courts,
-        totalCount,
         cid,
         skip,
-        limit
+        limit,
+        hasNext
     )
 }
 
@@ -60,20 +60,22 @@ async function getCourtRentals(contentHeader, content) {
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
 
-    const response = await fetchCourtRentals(cid, crid, skip, limit).then(result => result.data)
-    const rentals = response.rentals ?? []
-    const totalCount = response.paginationInfo?.totalElements ?? 0
+    const rsp = await fetchCourtRentals(cid, crid, skip, limit+1).then(result => result.data)
+    const rentals = rsp.rentals.slice(0, limit) ?? []
+    const hasNext = rsp.rentals.length > limit
+
     renderCourtRentalsView(
         contentHeader,
         content,
         rentals,
-        totalCount,
         cid,
         crid,
         skip,
-        limit
+        limit,
+        hasNext
     )
 }
+
 function getCourtAvailableHours(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")

@@ -19,21 +19,20 @@ async function getUserRentals(contentHeader, content) {
     const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
-    const response = await fetchUserRentals(uid, skip, limit).then(result => result.data)
-    const rentals = response.rentals ?? []
-    const totalCount = response.paginationInfo?.totalElements ?? 0
-
+    const rsp = await fetchUserRentals(uid, skip, limit+1).then(result => result.data)
+    const rentals = rsp.rentals.slice(0, limit) ?? []
+    const hasNext = rsp.rentals.length > limit
     const userName = await fetchUserDetails(Number(uid)).then(user => user.data.name)
 
     renderUserRentalsView(
         contentHeader,
         content,
         rentals,
-        totalCount,
         userName,
         uid,
         skip,
-        limit
+        limit,
+        hasNext
     )
 }
 

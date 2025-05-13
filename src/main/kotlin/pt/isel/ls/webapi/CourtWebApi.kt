@@ -45,13 +45,12 @@ class CourtWebApi(
 
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
-            val pageInfo = courtService.numberOfCourts(clubId).getOrThrow()
 
             courtService
                 .getCourts(clubId, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toCourtsOutput(pageInfo))) },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.toCourtsOutput())) },
                 )
         }
 

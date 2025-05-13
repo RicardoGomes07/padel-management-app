@@ -5,7 +5,7 @@ import { splitIntoHourlySlots } from "../../utils/auxfuns.js"
 const { createPaginationLinks } = pagination
 const { div, a, ul, li, p } = Html
 
-function renderCourtsByClubView(contentHeader, content, courts, totalElements, cid, skip, limit) {
+function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit, hasNext) {
     const currHeader = contentHeader.textContent
     const header = "Courts"
 
@@ -17,7 +17,7 @@ function renderCourtsByClubView(contentHeader, content, courts, totalElements, c
         )
         : p("No courts found")
 
-    const navigation = createPaginationLinks(`clubs/${cid}/courts`, Number(skip), Number(limit), totalElements)
+    const navigation = createPaginationLinks(`clubs/${cid}/courts`, Number(skip), Number(limit), hasNext)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(courtList, navigation)
@@ -30,14 +30,14 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
             li(courtResponse.name),
             li(a("Club", `#clubs/${cid}`)),
             li(a("Court Rentals", `#clubs/${cid}/courts/${crid}/rentals`)),
-            li(a("Available Hours", `#clubs/${cid}/courts/${crid}/available`))
+            li(a("Available Hours", `#clubs/${cid}/courts/${crid}/available_hours`))
         )
 
     contentHeader.replaceChildren(header)
     content.replaceChildren(info)
 }
 
-function renderCourtRentalsView(contentHeader, content, rentals, totalElements, cid, crid, skip, limit) {
+function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip, limit, hasNext) {
     const baseLink = `clubs/${cid}/courts/${crid}/rentals`
 
     const currHeader = contentHeader.textContent
@@ -53,7 +53,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, totalElements, 
         )
         : p("No rentals found")
 
-    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), totalElements)
+    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), hasNext)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, rentalList, navigation)
