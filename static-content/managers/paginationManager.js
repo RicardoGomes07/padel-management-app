@@ -6,17 +6,9 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
     let currentFilterValue = null
     let hasNext = false
 
-    const filteredElems = () => {
-        return currentFilterProp
-            ? cache.filter(item => item?.[currentFilterProp] === currentFilterValue)
-            : cache
-    }
-
     const getElements = (skip, limit) => {
-        const filtered = filteredElems()
-        const filteredCount = filtered.length
-        hasNext = filteredCount > (skip + limit)
-        return filtered.slice(skip, skip + limit)
+        hasNext = cache.length > (skip + limit)
+        return cache.slice(skip, skip + limit)
     }
 
     const updateCache = (items) => {
@@ -29,18 +21,17 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
     }
 
     const fetchAndCache = async (userSkip, limit, onError) => {
-        const filtered = filteredElems()
-        const filteredCount = filtered.length
+        const cacheSize = cache.length
 
-        const needed = (userSkip + limit + 1) - filteredCount
-        console.log(needed)
+        const needed = (userSkip + limit + 1) - cacheSize
 
         if (needed > 0) {
             try {
-                const res = await fetchFun(...dynamicParams, filteredCount, needed)
+                const res = await fetchFun(...dynamicParams, cacheSize, needed)
 
                 if (res.status !== 200) {
                     onError(res.data)
+                    hasNext = false
                     return []
                 }
 
