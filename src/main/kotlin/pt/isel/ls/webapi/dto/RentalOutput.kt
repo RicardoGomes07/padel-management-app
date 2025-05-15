@@ -8,6 +8,8 @@ import pt.isel.ls.domain.Rental
 data class RentalOutput(
     val rid: UInt,
     val uid: UInt,
+    val cid: UInt,
+    val crid: UInt,
     val date: LocalDate,
     val initialHour: UInt,
     val finalHour: UInt,
@@ -16,6 +18,8 @@ data class RentalOutput(
         this(
             rental.rid,
             rental.renter.uid,
+            rental.court.club.cid,
+            rental.court.crid,
             rental.date,
             rental.rentTime.start,
             rental.rentTime.end,

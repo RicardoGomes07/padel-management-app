@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../home.js";
-import { handleResponse } from "../../utils/fetch.js"
+import { handleResponse } from "./fetch.js"
 import {userAuthManager} from "../usershandlers.js";
 const userToken = userAuthManager.getCurrToken()
 

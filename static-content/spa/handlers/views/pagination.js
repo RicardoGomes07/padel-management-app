@@ -1,10 +1,10 @@
-import Html from "../../utils/htmlfuns.js"
+import Html from "../../dsl/htmlfuns.js"
 import classnames from "./classnames.js";
 
 
 const { div, a } = Html
 const DEFAULT_VALUE_SKIP = 0
-const DEFAULT_VALUE_LIMIT = 1
+const DEFAULT_VALUE_LIMIT = 3
 const { paginationLinksClassName, paginationLinkClassName} = classnames
 
 function createPaginationLinks(baseLink, skip, limit, hasNext) {

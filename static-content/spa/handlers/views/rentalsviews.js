@@ -1,4 +1,4 @@
-import Html from "../../utils/htmlfuns.js";
+import Html from "../../dsl/htmlfuns.js";
 
 const { a, ul, li } = Html;
 

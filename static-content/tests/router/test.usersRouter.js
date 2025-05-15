@@ -1,5 +1,5 @@
-import router from "../../router.js";
-import usershandlers from "../../handlers/usershandlers.js";
+import router from "../../spa/router.js";
+import usershandlers from "../../spa/handlers/usershandlers.js";
 
   describe('user_routes', function () {
 

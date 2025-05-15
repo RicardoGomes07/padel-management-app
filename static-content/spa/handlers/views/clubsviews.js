@@ -1,4 +1,4 @@
-import Html from "../../utils/htmlfuns.js";
+import Html from "../../dsl/htmlfuns.js";
 import pagination  from "./pagination.js";
 
 const { div, a, ul, li, p} = Html;

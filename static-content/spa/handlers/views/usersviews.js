@@ -1,4 +1,4 @@
-    import Html from "../../utils/htmlfuns.js";
+    import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
 
 const { div, a, ul, li, p } = Html;
@@ -13,7 +13,7 @@ function renderUserRentalsView(contentHeader, content, rentals, username,  uid, 
     const rentalList = rentals.length > 0
         ? ul(
             ...rentals.map(rental =>
-                li(a(`${rental.date} ${rental.initialHour} to ${rental.finalHour}`, "#rentals/" + rental.rid))
+                li(a(`${rental.date} ${rental.initialHour} to ${rental.finalHour}`, `#clubs/${rental.cid}/courts/${rental.crid}/rentals/${rental.rid}`))
             )
         )
         : p("No rentals found")

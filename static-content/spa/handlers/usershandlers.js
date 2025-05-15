@@ -41,7 +41,7 @@ async function getUserDetails(contentHeader, content){
 
     const result = await fetchUserDetails(userId)
 
-    if (result.status !== 200) errorView(content, result.data)
+    if (result.status !== 200) errorView(contentHeader, content, `#home`,result.data)
     else renderUserDetailsView(contentHeader, content, result.data)
 }
 

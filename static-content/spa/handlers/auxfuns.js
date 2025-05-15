@@ -20,4 +20,34 @@ function parseHourFromString(hourString) {
     return hour;
 }
 
-export { splitIntoHourlySlots, parseHourFromString }
+
+function isValidDate(dateString) {
+    const date = new Date(dateString)
+    return !isNaN(date.getTime())
+}
+
+function isValidHour(hourString) {
+    const hour = parseInt(hourString, 10)
+    return !isNaN(hour) && hour >= 0 && hour <= 23
+}
+
+function contains(availableHours, hour) {
+    return availableHours.some(range => range.start <= hour && hour <= range.end)
+}
+function getFinalRentalHours(availableHours, initialHour) {
+    return availableHours
+        .filter(range => range.start <= initialHour && initialHour <= range.end)
+        .map(range => ({ start: initialHour, end: range.end }))
+}
+
+
+const auxiliaryFuns = {
+    splitIntoHourlySlots,
+    parseHourFromString,
+    isValidDate,
+    isValidHour,
+    contains,
+    getFinalRentalHours
+}
+
+export default auxiliaryFuns

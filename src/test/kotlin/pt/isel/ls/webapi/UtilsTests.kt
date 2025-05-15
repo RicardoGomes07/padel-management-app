@@ -9,7 +9,10 @@ import pt.isel.ls.domain.toName
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserError
 import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.AvailableHours
 import pt.isel.ls.webapi.dto.ProblemOutput
+import pt.isel.ls.webapi.dto.UIntInterval
+import pt.isel.ls.webapi.dto.toAvailableHours
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -64,5 +67,34 @@ class UtilsTests {
                 }
         assertEquals(requestWithAuth.status.code, 200)
         assertTrue(requestWithAuth.bodyString().contains(user.getOrThrow().toString()))
+    }
+
+    @Test
+    fun testToAvailableHours() {
+        val availableHour = listOf(0u, 1u, 3u, 4u, 5u, 6u, 7u, 8u)
+        val expected =
+            AvailableHours(
+                listOf(
+                    UIntInterval(0u, 2u),
+                    UIntInterval(3u, 9u),
+                ),
+            )
+        assertEquals(
+            expected,
+            availableHour.toAvailableHours(),
+        )
+
+        val otherHours =
+            listOf(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u, 9u, 10u, 11u, 12u, 13u, 14u, 15u, 16u, 17u, 18u, 19u, 20u, 21u, 22u, 23u)
+        val expectedOther =
+            AvailableHours(
+                listOf(
+                    UIntInterval(0u, 23u),
+                ),
+            )
+        assertEquals(
+            expectedOther,
+            otherHours.toAvailableHours(),
+        )
     }
 }

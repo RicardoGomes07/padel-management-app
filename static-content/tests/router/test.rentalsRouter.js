@@ -1,5 +1,5 @@
-import router from "../../router.js";
-import rentalHandlers from "../../handlers/rentalshandlers.js";
+import router from "../../spa/router.js";
+import rentalHandlers from "../../spa/handlers/rentalshandlers.js";
 
 describe('rental_routes', function () {
     it('should find getRentalDetails', function () {

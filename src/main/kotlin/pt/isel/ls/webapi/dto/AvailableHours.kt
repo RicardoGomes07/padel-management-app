@@ -4,27 +4,37 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class AvailableHours(
-    val hours: List<UIntRange>,
+    val hours: List<UIntInterval>,
 )
 
 fun List<UInt>.toAvailableHours(): AvailableHours {
-    val sorted = this.sorted()
+    if (isEmpty()) return AvailableHours(emptyList())
 
-    val ranges =
-        sorted
-            .fold(emptyList<Pair<UInt, UInt>>()) { acc, current ->
-                when {
-                    acc.isEmpty() -> listOf(current to current)
-                    acc.last().second + 1u == current -> acc.dropLast(1) + (acc.last().first to current)
-                    else -> acc + (current to current)
-                }
-            }
+    val singleRanges =
+        this
+            .map { if (it == 23u) UIntInterval(it, it) else UIntInterval(it, it + 1u) }
+            .sortedBy { it.start }
 
-    return AvailableHours(ranges.map { (start, end) -> UIntRange(start, end) })
+    val mergedRanges = mutableListOf<UIntInterval>()
+    var current = singleRanges.first()
+
+    for (i in 1 until singleRanges.size) {
+        val next = singleRanges[i]
+        if (current.end == next.start) {
+            current = UIntInterval(current.start, next.end)
+        } else {
+            mergedRanges.add(current)
+            current = next
+        }
+    }
+
+    mergedRanges.add(current)
+
+    return AvailableHours(mergedRanges)
 }
 
 @Serializable
-data class UIntRange(
+data class UIntInterval(
     val start: UInt,
     val end: UInt,
 ) {

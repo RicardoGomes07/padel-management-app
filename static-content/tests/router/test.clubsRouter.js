@@ -1,5 +1,5 @@
-import router from "../../router.js";
-import clubHandlers from "../../handlers/clubshandlers.js";
+import router from "../../spa/router.js";
+import clubHandlers from "../../spa/handlers/clubshandlers.js";
 
 describe('club_routes', function () {
     it('should find getClubs', function () {

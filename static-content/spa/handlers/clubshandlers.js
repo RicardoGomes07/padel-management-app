@@ -11,6 +11,7 @@ const { renderClubDetailsView, renderClubsView } = clubViews
 const { errorView } = errorsViews
 const { path, query } = request
 const {DEFAULT_VALUE_LIMIT, DEFAULT_VALUE_SKIP} = pagination
+
 const clubsPagination =
     createPaginationManager(fetchClubs, "clubs")
 
@@ -22,7 +23,7 @@ async function getClubs(contentHeader, content) {
         .getPage(
             skip,
             limit,
-            (message) => { errorView(contentHeader, content, message) }
+            (message) => { errorView(contentHeader, content, "#clubs" ,message) }
         )
 
     const hasNext = clubsPagination.hasNext()
@@ -42,7 +43,7 @@ async function getClubDetails(contentHeader, content) {
 
     const result = await fetchClubDetails(cid)
 
-    if( result.status !== 200) errorView(contentHeader, content, result.data)
+    if( result.status !== 200) errorView(contentHeader, content, "#clubs" ,result.data)
     else renderClubDetailsView(contentHeader, content, result.data)
 }
 

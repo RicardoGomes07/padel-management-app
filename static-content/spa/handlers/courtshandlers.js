@@ -4,14 +4,15 @@ import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
 import {createPaginationManager} from "../managers/paginationManager.js";
-import Html from "../utils/htmlfuns.js";
+import auxiliaryFuns from "./auxfuns.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
-const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView, renderCourtAvailableHoursView } = courtsViews
+const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView,
+    renderCourtAvailableHoursView, renderCalendarToSearchAvailableHours} = courtsViews
 const { errorView } = errorsViews
-const { formRequest } = Html
+const { isValidDate } = auxiliaryFuns
 
 const courtsOfClubPagination =
     createPaginationManager(fetchCourtsByClub, "courts")
@@ -27,7 +28,7 @@ async function getCourtsByClub(contentHeader, content) {
         .getPage(
             skip,
             limit,
-            (message) => { errorView(contentHeader, content, message) }
+            (message) => { errorView(contentHeader, content, `#clubs/${cid}`, message) }
         )
 
     const hasNext = courtsOfClubPagination.hasNext()
@@ -49,7 +50,7 @@ async function getCourtDetails(contentHeader, content) {
 
     const result = await fetchCourtDetails(cid, crid)
 
-    if (result.status !== 200) errorView(contentHeader, content, result.data)
+    if (result.status !== 200) errorView(contentHeader, content, `#clubs/${cid}` ,result.data)
     else renderCourtDetailsView(contentHeader, content, result.data, cid, crid)
 }
 
@@ -60,9 +61,13 @@ async function getCourtRentals(contentHeader, content) {
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
 
-    const rsp = await fetchCourtRentals(cid, crid, skip, limit+1).then(result => result.data)
-    const rentals = rsp.rentals.slice(0, limit) ?? []
-    const hasNext = rsp.rentals.length > limit
+    const rsp = await fetchCourtRentals(cid, crid, skip, limit+1)
+    if (rsp.status !== 200){
+        errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/rentals`, rsp.data)
+        return
+    }
+    const rentals = rsp.data.rentals.slice(0, limit) ?? []
+    const hasNext = rsp.data.rentals.length > limit
 
     renderCourtRentalsView(
         contentHeader,
@@ -76,45 +81,29 @@ async function getCourtRentals(contentHeader, content) {
     )
 }
 
-function getCourtAvailableHours(contentHeader, content) {
+async function getCourtAvailableHours(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")
+    const date = query("date")
 
-    const handleSubmit = async function(e){
-        e.preventDefault()
-        const inputDate = document.querySelector("#date")
-        const selectedDate = inputDate.value;
-        if (!inputDate) {
-            console.error("Input date not found")
-            return
+    if (date === null || !isValidDate(date)) {
+        renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid)
+    } else if (isValidDate(date)) {
+        const response = await courtsRequests.getAvailableHours(cid, crid, date)
+        if (response.status === 200){
+            renderCourtAvailableHoursView(contentHeader, content, response.data.hours, cid, crid, date)
+        } else {
+            errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/available_hours` ,response.data)
         }
-        const response = await courtsRequests.getAvailableHours(cid, crid, selectedDate)
-        if (response.status !== 200) {
-            errorView(contentHeader, content, response.data)
-        }else{
-            renderCourtAvailableHoursView(
-                contentHeader,
-                content,
-                response.data.hours,
-                cid,
-                crid,
-                selectedDate
-            )
-        }
+    } else {
+        errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/available_hours`, {
+            title: "Invalid date",
+            description: "The selected date is not valid"
+        })
     }
-
-    const fields = [
-        { id: "date", label: "Select Date", type: "date", required: true },
-    ]
-
-    const form = formRequest(fields, handleSubmit, {
-        className: "form",
-        submitText: "Get Available Hours"
-    })
-
-    contentHeader.replaceChildren("Available Hours")
-    content.replaceChildren(form)
 }
+
+
 
 const courtHandlers = {
     getCourtsByClub,

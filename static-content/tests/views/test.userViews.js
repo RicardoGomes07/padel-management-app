@@ -1,5 +1,5 @@
 import { before, describe, it } from "node:test";
-import usersViews from "../../handlers/views/usersviews.js";
+import usersViews from "../../spa/handlers/views/usersviews.js";
 
 describe('UsersViews', function () {
     let contentHeader, content;
