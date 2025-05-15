@@ -4,7 +4,7 @@ import auxiliaryFuns from "../auxfuns.js"
 
 const { splitIntoHourlySlots } = auxiliaryFuns
 const { createPaginationLinks } = pagination
-const { div, a, ul, li, p, formRequest } = Html
+const { div, a, ul, li, p, formRequest, span } = Html
 
 function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit, hasNext) {
     const currHeader = contentHeader.textContent
@@ -25,12 +25,17 @@ function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit
 }
 
 function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid) {
-    const header = "Court"
+    const header = "Court Info"
     const info =
         ul(
-            li(courtResponse.name),
+            li(`Name : ${courtResponse.name}`),
             li(a("Club", `#clubs/${cid}`)),
-            li(a("Court Rentals", `#clubs/${cid}/courts/${crid}/rentals`)),
+            li(
+                span(
+                    a("Court Rentals", `#clubs/${cid}/courts/${crid}/rentals`),
+                    a("by date", `#clubs/${cid}/courts/${crid}/rentals/search`),
+                )
+            ),
             li(a("Available Hours", `#clubs/${cid}/courts/${crid}/available_hours`))
         )
 
@@ -149,13 +154,38 @@ function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid)
     content.replaceChildren(children)
 }
 
+function renderCreateClubForm(contentHeader, content, cid) {
+    const header = "Create Court"
+    const handleSubmit = function (e) {
+        e.preventDefault()
+        const courtName = document.querySelector("#courtName").value
+        window.location.hash = `#clubs/${cid}/courts/create?name=${courtName}`
+    }
+
+    const fields = [
+        { id: "courtName", label: "Name: ", type: "text", required: true, placeholder: "Enter Court Name" },
+    ]
+
+    const backLink = div(a("Back", `#clubs/${cid}`))
+    const children = li(
+        formRequest(fields, handleSubmit, {
+            className: "form",
+            submitText: "Create Court"
+        })
+    )
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(children, backLink)
+}
+
 const courtsViews = {
     renderCourtsByClubView,
     renderCourtDetailsView,
     renderCourtRentalsView,
     renderCourtAvailableHoursView,
     renderCalendarToSearchAvailableHours,
-    renderRentalAvailableFinalHours
+    renderRentalAvailableFinalHours,
+    renderCreateClubForm
 }
 
 export default courtsViews

@@ -10,7 +10,7 @@ const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
 const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView,
-    renderCourtAvailableHoursView, renderCalendarToSearchAvailableHours} = courtsViews
+    renderCourtAvailableHoursView, renderCalendarToSearchAvailableHours, renderCreateClubForm} = courtsViews
 const { errorView } = errorsViews
 const { isValidDate } = auxiliaryFuns
 
@@ -60,7 +60,6 @@ async function getCourtRentals(contentHeader, content) {
     const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
-
     const rsp = await fetchCourtRentals(cid, crid, skip, limit+1)
     if (rsp.status !== 200){
         errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/rentals`, rsp.data)
@@ -103,13 +102,30 @@ async function getCourtAvailableHours(contentHeader, content) {
     }
 }
 
+async function createCourt(contentHeader, content) {
+    const cid = path("cid")
+    const name = query("name")
+
+    if(name === null){
+        renderCreateClubForm(contentHeader, content, cid)
+    }else{
+        const response = await courtsRequests.createCourt(cid, name)
+        if (response.status === 201){
+            const crid = response.data.crid
+            window.location.hash = `#clubs/${cid}/courts/${crid}`
+        } else {
+            errorView(contentHeader, content, `#clubs/${cid}`, response.data)
+        }
+    }
+}
 
 
 const courtHandlers = {
     getCourtsByClub,
     getCourtDetails,
     getCourtRentals,
-    getCourtAvailableHours
+    getCourtAvailableHours,
+    createCourt
 }
 
 export default courtHandlers

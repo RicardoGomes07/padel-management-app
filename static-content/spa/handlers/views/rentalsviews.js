@@ -1,6 +1,6 @@
 import Html from "../../dsl/htmlfuns.js";
 
-const { a, ul, li } = Html;
+const { a, ul, li, div, formRequest } = Html;
 
 function renderRentalDetailsView(contentHeader, content, rental) {
     const header = "Rental Info"
@@ -15,7 +15,32 @@ function renderRentalDetailsView(contentHeader, content, rental) {
     content.replaceChildren(info)
 }
 
+function renderCalendarToSearchRentals(contentHeader, content, date, cid, crid) {
+    const header = "Search Rentals"
+    const handleSubmit = function(e){
+        e.preventDefault()
+        const validDate = document.querySelector("#date").value
+        window.location.hash = `#clubs/${cid}/courts/${crid}/rentals/search?date=${validDate}`
+    }
+
+    const fields = [
+        { id: "date", label: "Select Date", type: "date", required: true },
+    ]
+
+    const backLink = div(a("Back", `#clubs/${cid}/courts/${crid}`))
+    const children = li(
+        formRequest(fields, handleSubmit, {
+            className: "form",
+            submitText: "Search Rentals"
+        })
+    )
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(children, backLink)
+}
+
 const rentalsViews = {
     renderRentalDetailsView,
+    renderCalendarToSearchRentals
 }
 export default rentalsViews;

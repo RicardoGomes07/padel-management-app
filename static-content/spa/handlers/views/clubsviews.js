@@ -1,7 +1,7 @@
 import Html from "../../dsl/htmlfuns.js";
 import pagination  from "./pagination.js";
 
-const { div, a, ul, li, p} = Html;
+const { div, a, ul, li, p, span} = Html;
 const { createPaginationLinks } = pagination
 
 function renderClubDetailsView(contentHeader, content, club){
@@ -9,7 +9,11 @@ function renderClubDetailsView(contentHeader, content, club){
     const info = ul(
         li(`Name: ${club.name}`),
         li("Owner: ", a(club.owner.name, `#users/${club.owner.uid}`)),
-        li(a("Courts", `#clubs/${club.cid}/courts`)),
+        li(
+            span(
+                a("Courts", `#clubs/${club.cid}/courts`)),
+                a("Create Court", `#clubs/${club.cid}/courts/create`)
+        ),
         a("All Clubs", "#clubs"),
     );
 

@@ -18,6 +18,11 @@ function fetchCourtRentals(cid, crid, skip, limit) {
         .then(handleResponse)
 }
 
+function fetchCourtRentalsByDate(cid, crid, skip, limit, date) {
+    return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals?skip=${skip}&limit=${limit}&date=${date}`)
+        .then(handleResponse)
+}
+
 function createCourt(clubId, courtName) {
     return fetch(`${API_BASE_URL}clubs/${clubId}/courts`, {
         method: "POST",
@@ -44,7 +49,9 @@ const courtsRequests = {
     fetchCourtsByClub,
     fetchCourtDetails,
     fetchCourtRentals,
-    getAvailableHours
+    getAvailableHours, 
+    createCourt,
+    fetchCourtRentalsByDate
 }
 
 export default courtsRequests

@@ -61,12 +61,12 @@ function p(text, classname = textInfoClassName) {
 function formRequest(fields, submitHandler, formProps = {}) {
     const formElements = [];
     fields.forEach(field => {
-        const label = createElement("label", { hmtlfor: field.id, className: "label" }, field.label);
+        const label = createElement("label", { hmtlfor: field.id, className: "form-label" }, field.label);
         const input = createElement("input", {
             type: field.type || "text",
             id: field.id,
             name: field.name,
-            className: "input",
+            className: "form-control",
             required: field.required,
             value: field.value || "",
             placeholder: field.placeholder
@@ -78,7 +78,7 @@ function formRequest(fields, submitHandler, formProps = {}) {
 
     const submitButton = createElement("button", {
         type: "submit",
-        className: "button",
+        className: "btn btn-primary mt-2",
         textContent: formProps.submitText || "Submit"
     });
 
@@ -91,6 +91,10 @@ function formRequest(fields, submitHandler, formProps = {}) {
     }, ...formElements);
 }
 
+function span(...children) {
+    return createElement("span", {}, ...children)
+}
+
 const Html = {
     div,
     a,
@@ -100,6 +104,7 @@ const Html = {
     h2,
     p,
     formRequest,
+    span,
 }
 
 export default Html;

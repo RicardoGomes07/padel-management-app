@@ -1,4 +1,5 @@
 import { request } from "../router.js"
+import pagination from "./views/pagination.js";
 import rentalsViews from "./views/rentalsviews.js"
 import rentalsRequests from "./requests/rentalsrequests.js"
 import errorsViews from "./views/errorsview.js";
@@ -6,12 +7,13 @@ import auxiliaryFuns from "./auxfuns.js";
 import courtsRequests from "./requests/courtsrequests.js";
 import courtsViews from "./views/courtsviews.js";
 
-const { renderRentalDetailsView } = rentalsViews
+const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
+const { renderRentalDetailsView, renderCalendarToSearchRentals } = rentalsViews
 const { fetchRentalDetails,  } = rentalsRequests
 const { errorView } = errorsViews
 const { path, query } = request
 const { isValidDate, isValidHour, parseHourFromString, getFinalRentalHours, contains, splitIntoHourlySlots } = auxiliaryFuns
-const { renderRentalAvailableFinalHours } = courtsViews
+const { renderRentalAvailableFinalHours, renderCourtRentalsView } = courtsViews
 
 
 async function getRentalDetails(contentHeader, content) {
@@ -64,8 +66,35 @@ function deleteRental(contentHeader, content) {
     // TODO: Implement the delete rental functionality
 }
 
-function searchRentals(contentHeader, content) {
-    // TODO: Implement the search rentals by date functionality
+async function searchRentals(contentHeader, content) {
+    const cid = path("cid")
+    const crid = path("crid")
+    const date = query("date")
+    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
+    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
+
+    if(date == null){
+        renderCalendarToSearchRentals(contentHeader, content, date, cid, crid)
+    }else{
+        const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, limit+1, date)
+        if (rsp.status !== 200){
+            errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/rentals`, rsp.data)
+            return
+        }
+        const rentals = rsp.data.rentals.slice(0, limit) ?? []
+        const hasNext = rsp.data.rentals.length > limit
+
+        renderCourtRentalsView(
+        contentHeader,
+        content,
+        rentals,
+        cid,
+        crid,
+        skip,
+        limit,
+        hasNext
+    )
+    }
 }
 
 const rentalsHandlers= {
