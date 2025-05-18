@@ -165,6 +165,18 @@ object RentalRepositoryInMem : RentalRepository {
     ): Rental {
         val rental = rentals.firstOrNull { it.rid == rid }
         requireNotNull(rental)
+        val rentalsInDay =
+            rentals
+                .filter { rental -> rental.date == date }
+                .filterNot { rental -> rental.rid == rid }
+        print(rentalsInDay)
+        require(
+            rentalsInDay.none { rental ->
+                rental.rentTime.start <= rentTime.end && rental.rentTime.end >= rentTime.start
+            },
+        ) {
+            "There is already a rental in the given time slot"
+        }
         rentals.removeIf { it.rid == rid }
         val newRental =
             Rental(

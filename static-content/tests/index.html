@@ -6,21 +6,23 @@
     <link href="https://unpkg.com/mocha@4.0.1/mocha.css" rel="stylesheet" />
 </head>
 <body>
-<div id="mocha"></div>
+    <div id="mocha"></div>
 
-<script src="https://unpkg.com/chai@4.0.1/chai.js"></script>
-<script src="https://unpkg.com/mocha@4.0.1/mocha.js"></script>
+    <script src="https://unpkg.com/chai@4.0.1/chai.js"></script>
+    <script src="https://unpkg.com/mocha@4.0.1/mocha.js"></script>
 
-<script class="mocha-init" type="module">
-    mocha.setup('bdd')
-</script>
-<script src="test.users.router.js" type="module"></script>
-<script src="test.clubs.router.js" type="module"></script>
+    <script class="mocha-init" type="module">
+        mocha.setup('bdd');
+    </script>
 
-<script type="module" class="mocha-exec">
-    mocha.checkLeaks();
-    chai.should()
-    mocha.run();
-</script>
+    <script src="views/test.rentalsViews.js" type="module"></script>
+    <script src="views/test.userViews.js" type="module"></script>
+    <script src ="views/test.courtsViews.js" type="module"></script>
+
+    <script type="module" class="mocha-exec">
+        mocha.checkLeaks();
+        chai.should();
+        mocha.run();
+    </script>
 </body>
 </html>

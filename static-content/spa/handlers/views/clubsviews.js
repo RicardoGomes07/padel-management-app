@@ -1,5 +1,6 @@
 import Html from "../../dsl/htmlfuns.js";
 import pagination  from "./pagination.js";
+import uriManager from "../../managers/uriManager.js";
 
 const { div, a, ul, li, p, span} = Html;
 const { createPaginationLinks } = pagination
@@ -8,13 +9,12 @@ function renderClubDetailsView(contentHeader, content, club){
     const header = "Club Info"
     const info = ul(
         li(`Name: ${club.name}`),
-        li("Owner: ", a(club.owner.name, `#users/${club.owner.uid}`)),
+        li("Owner: ", a(club.owner.name, uriManager.getUserProfile(club.owner.uid))),
         li(
-            span(
-                a("Courts", `#clubs/${club.cid}/courts`)),
-                a("Create Court", `#clubs/${club.cid}/courts/create`)
+            span(a("Courts", uriManager.listClubCourts(club.cid))),
+            a("Create Court", uriManager.createCourtForm(club.cid)),
         ),
-        a("All Clubs", "#clubs"),
+        a("All Clubs", uriManager.listClubs()),
     );
 
     contentHeader.replaceChildren(header)
@@ -27,7 +27,7 @@ function renderClubsView(contentHeader, content, clubs, skip, limit, hasNext){
     const info = clubs.length > 0
         ? ul(
             ...clubs.map(club =>
-                li(a(club.name, `#clubs/${club.cid}`)),
+                li(a(club.name, uriManager.getClubDetails(club.cid))),
             )
         )
         : p("No clubs found")

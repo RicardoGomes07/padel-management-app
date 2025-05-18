@@ -3,6 +3,7 @@ import pagination from "./views/pagination.js"
 import clubsRequests from "./requests/clubsrequests.js"
 import clubViews from "./views/clubsviews.js"
 import errorsViews from "./views/errorsview.js"
+import uriManager from "../managers/uriManager.js";
 import {createPaginationManager} from "../managers/paginationManager.js"
 
 
@@ -23,7 +24,7 @@ async function getClubs(contentHeader, content) {
         .getPage(
             skip,
             limit,
-            (message) => { errorView(contentHeader, content, "#clubs" ,message) }
+            (message) => { errorView(contentHeader, content, uriManager.listClubs() ,message) }
         )
 
     const hasNext = clubsPagination.hasNext()
@@ -43,7 +44,7 @@ async function getClubDetails(contentHeader, content) {
 
     const result = await fetchClubDetails(cid)
 
-    if( result.status !== 200) errorView(contentHeader, content, "#clubs" ,result.data)
+    if( result.status !== 200) errorView(contentHeader, content, uriManager.listClubs() ,result.data)
     else renderClubDetailsView(contentHeader, content, result.data)
 }
 

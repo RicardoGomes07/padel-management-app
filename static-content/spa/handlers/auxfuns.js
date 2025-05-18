@@ -1,15 +1,15 @@
 // Auxiliary function to split the available hours into hourly slots
-// [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-// Will appear as:
-// 00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00, 09:00, 10:00, 11:00
+// {start: 1, end:2} => ["01:00"]
+// {start: 1, end:3} => ["01:00", "02:00"]
+// {start: 1, end:24} => ["01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
 function splitIntoHourlySlots(start, end) {
     const result = []
-    for (let hour = start; hour <= end; hour++) {
-        const startStr = `${hour.toString().padStart(2, "0")}:00`
-        result.push({ start: startStr })
+    for (let hour = start; hour < end; hour++) {
+        result.push(`${hour.toString().padStart(2, "0")}:00`)
     }
     return result
 }
+
 
 // Just a simple function to parse the hour from a string
 // This function receives the hour string is in the format "HH:MM" how it is shown in the UI
@@ -17,7 +17,7 @@ function splitIntoHourlySlots(start, end) {
 // For example, "14:00" will return 14 
 function parseHourFromString(hourString) {
     const [hour, minute] = hourString.split(":").map(Number)
-    return hour;
+    return hour
 }
 
 
@@ -37,7 +37,7 @@ function contains(availableHours, hour) {
 function getFinalRentalHours(availableHours, initialHour) {
     return availableHours
         .filter(range => range.start <= initialHour && initialHour <= range.end)
-        .map(range => ({ start: initialHour, end: range.end }))
+        .map(range => ({ start: initialHour, end: range.end }))[0]
 }
 
 

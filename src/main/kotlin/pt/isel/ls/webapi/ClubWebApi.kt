@@ -78,9 +78,7 @@ class ClubWebApi(
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = {
-                        println("Available hours: $it")
                         val hours = if (date == currentDate()) it.filter { hour -> hour > currHour.toUInt() } else it
-                        println("Range of hours: ${hours.toAvailableHours()}")
                         Response(OK)
                             .body(Json.encodeToString(hours.toAvailableHours()))
                     },

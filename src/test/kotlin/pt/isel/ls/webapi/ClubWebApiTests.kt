@@ -143,7 +143,7 @@ class ClubWebApiTests {
         assert(availableHours.isNotEmpty())
         assert(availableHours.size == 1)
         assert(availableHours.first().start == 0u)
-        assert(availableHours.first().end == 23u)
+        assert(availableHours.first().end == 24u)
     }
 
     @Test

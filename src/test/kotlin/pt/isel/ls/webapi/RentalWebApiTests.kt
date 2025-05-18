@@ -35,9 +35,12 @@ val rentalsRoutes =
         "clubs/{cid}/courts/{crid}/rentals/{rid}" bind PUT to rentalApi::updateRental,
     )
 
-fun createRental(token: String): RentalDetailsOutput {
-    val number = (1..30).random()
-    val day = if (number < 10) "0$number" else number.toString()
+fun createRental(
+    token: String,
+    date: LocalDate,
+    start: UInt,
+    end: UInt,
+): RentalDetailsOutput {
     val clubName = "Club-${randomString(10)}"
     val clubResponse =
         clubsRoutes(
@@ -68,9 +71,9 @@ fun createRental(token: String): RentalDetailsOutput {
                     Json
                         .encodeToString(
                             RentalCreationInput(
-                                LocalDate.parse("2025-06-$day"),
-                                10,
-                                12,
+                                date,
+                                start,
+                                end,
                             ),
                         ),
                 ),
@@ -104,8 +107,8 @@ class RentalWebApiTests {
                         Json.encodeToString<RentalCreationInput>(
                             RentalCreationInput(
                                 date = LocalDate.parse("2025-06-15"),
-                                initialHour = 10,
-                                finalHour = 12,
+                                initialHour = 10u,
+                                finalHour = 12u,
                             ),
                         ),
                     ),
@@ -120,7 +123,7 @@ class RentalWebApiTests {
     @Test
     fun `get rental info with valid rental id`() {
         val token = createUser()
-        val rental = createRental(token)
+        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
         val getRentalInfoRequest =
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1"),
@@ -141,7 +144,7 @@ class RentalWebApiTests {
     @Test
     fun `get all rentals for a court`() {
         val token = createUser()
-        val rental = createRental(token)
+        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
         val getAllRentalsRequest =
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals"),
@@ -174,7 +177,7 @@ class RentalWebApiTests {
     @Test
     fun `update the date and rentTime of a rental`() {
         val token = createUser()
-        val rental = createRental(token)
+        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
 
         val updateRequest =
             rentalsRoutes(
@@ -200,9 +203,36 @@ class RentalWebApiTests {
     }
 
     @Test
+    fun `update a rental time slot that overlaps other rental should throw an error`() {
+        val token = createUser()
+
+        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val token2 = createUser()
+        val rental2 = createRental(token2, LocalDate.parse("2025-06-15"), 12u, 14u)
+        assertNotNull(rental)
+        assertNotNull(rental2)
+
+        val updateRequest =
+            rentalsRoutes(
+                Request(PUT, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/${rental.rid}")
+                    .header("Authorization", token)
+                    .body(
+                        Json.encodeToString<RentalUpdateInput>(
+                            RentalUpdateInput(
+                                date = LocalDate.parse("2025-06-15"),
+                                initialHour = 11,
+                                finalHour = 13,
+                            ),
+                        ),
+                    ),
+            )
+        assertEquals(Status.BAD_REQUEST, updateRequest.status)
+    }
+
+    @Test
     fun `delete a rental`() {
         val token = createUser()
-        val rental = createRental(token)
+        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
         assertNotNull(rental)
 
         val deleteRequest =

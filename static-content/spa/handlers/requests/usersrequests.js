@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "../home.js";
+import {API_BASE_URL} from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js";
 
 function fetchUserRentals(uid, skip, limit) {

@@ -89,7 +89,7 @@ class UtilsTests {
         val expectedOther =
             AvailableHours(
                 listOf(
-                    UIntInterval(0u, 23u),
+                    UIntInterval(0u, 24u),
                 ),
             )
         assertEquals(

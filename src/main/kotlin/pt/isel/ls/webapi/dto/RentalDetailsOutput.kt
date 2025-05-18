@@ -6,6 +6,7 @@ import pt.isel.ls.domain.Rental
 
 @Serializable
 data class RentalDetailsOutput(
+    val rid: UInt,
     val court: CourtOutput,
     val renter: UserDetails,
     val date: LocalDate,
@@ -19,6 +20,7 @@ data class RentalDetailsOutput(
     }
     constructor(rental: Rental) :
         this(
+            rental.rid,
             CourtOutput(
                 rental.court,
             ),

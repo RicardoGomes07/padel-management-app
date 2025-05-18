@@ -60,36 +60,62 @@ function p(text, classname = textInfoClassName) {
 
 function formRequest(fields, submitHandler, formProps = {}) {
     const formElements = [];
-    fields.forEach(field => {
-        const label = createElement("label", { hmtlfor: field.id, className: "form-label" }, field.label);
-        const input = createElement("input", {
-            type: field.type || "text",
-            id: field.id,
-            name: field.name,
-            className: "form-control",
-            required: field.required,
-            value: field.value || "",
-            placeholder: field.placeholder
-        });
 
-        formElements.push(label);
-        formElements.push(input);
-    });
+    fields.forEach(field => {
+        const label = createElement("label", {
+            htmlFor: field.id,
+            className: "form-label"
+        }, field.label)
+
+        let input
+
+        if (field.type === "hour") {
+            // Cria um <select> com opções de 00 a 23
+            input = createElement("select", {
+                    id: field.id,
+                    name: field.name || field.id,
+                    className: "form-control",
+                    required: field.required
+                },
+                ...Array.from({ length: 25 }, (_, i) => {
+                    const hour = i.toString().padStart(2, "0")
+                    return createElement("option", {
+                        value: hour,
+                        textContent: hour,
+                        selected: field.value === hour
+                    })
+                })
+            )
+        } else {
+            input = createElement("input", {
+                type: field.type || "text",
+                id: field.id,
+                name: field.name || field.id,
+                className: "form-control",
+                required: field.required,
+                value: field.value || "",
+                placeholder: field.placeholder
+            })
+        }
+
+        formElements.push(label, input)
+    })
 
     const submitButton = createElement("button", {
         type: "submit",
         className: "btn btn-primary mt-2",
         textContent: formProps.submitText || "Submit"
-    });
+    })
 
-    formElements.push(submitButton);
+    formElements.push(submitButton)
 
     return createElement("form", {
-        className: "form",
+        className: formProps.className || "form",
         id: formProps.id,
         onSubmit: submitHandler
-    }, ...formElements);
+    }, ...formElements)
 }
+
 
 function span(...children) {
     return createElement("span", {}, ...children)

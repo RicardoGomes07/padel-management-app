@@ -4,6 +4,7 @@ import usersViews from "./views/usersviews.js"
 import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";
 import userAuthenticationManager from "../managers/userAuthenticationManager.js";
+import uriManager from "../managers/uriManager.js";
 
 const { path, query } = request
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT } = pagination
@@ -41,7 +42,7 @@ async function getUserDetails(contentHeader, content){
 
     const result = await fetchUserDetails(userId)
 
-    if (result.status !== 200) errorView(contentHeader, content, `#home`,result.data)
+    if (result.status !== 200) errorView(contentHeader, content, uriManager.home(),result.data)
     else renderUserDetailsView(contentHeader, content, result.data)
 }
 

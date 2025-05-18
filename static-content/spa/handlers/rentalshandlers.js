@@ -6,13 +6,14 @@ import errorsViews from "./views/errorsview.js";
 import auxiliaryFuns from "./auxfuns.js";
 import courtsRequests from "./requests/courtsrequests.js";
 import courtsViews from "./views/courtsviews.js";
+import uriManager from "../managers/uriManager.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
-const { renderRentalDetailsView, renderCalendarToSearchRentals } = rentalsViews
+const { renderRentalDetailsView, renderCalendarToSearchRentals, renderUpdateRentalView } = rentalsViews
 const { fetchRentalDetails,  } = rentalsRequests
 const { errorView } = errorsViews
 const { path, query } = request
-const { isValidDate, isValidHour, parseHourFromString, getFinalRentalHours, contains, splitIntoHourlySlots } = auxiliaryFuns
+const { isValidDate, isValidHour, parseHourFromString, getFinalRentalHours, contains} = auxiliaryFuns
 const { renderRentalAvailableFinalHours, renderCourtRentalsView } = courtsViews
 
 
@@ -24,46 +25,103 @@ async function getRentalDetails(contentHeader, content) {
     const result = await fetchRentalDetails(clubId, courtId, rentalId)
 
     if(result.status !== 200)
-        errorView(contentHeader, content, `#clubs/${clubId}/courts/${courtId}/rentals` ,result.data)
+        errorView(contentHeader, content, uriManager.listCourtRentals(courtId, courtId) ,result.data)
     else
         renderRentalDetailsView(contentHeader, content, result.data)
 }
 
 async function createRental(contentHeader, content) {
-    const cid = path("cid")
-    const crid = path("crid")
+    const cid = Number(path("cid"))
+    const crid = Number(path("crid"))
     const date = query("date")
     const initialHour = query("start")
     const finalHour = query("end")
+
+    const isDateValid = isValidDate(date)
+    const isInitialHourValid = isValidHour(initialHour)
+    const isFinalHourValid = isValidHour(finalHour)
+
+    if (!isDateValid || !isInitialHourValid) {
+        errorView(contentHeader, content, uriManager.getCourtAvailableHours(cid, crid),
+            {title: "Invalid hours or date", description: "Invalid date or hour format "}
+        )
+        return
+    }
+
     const startHour = parseHourFromString(initialHour)
 
-    if (isValidDate(date) && isValidHour(initialHour) && isValidHour(finalHour)) {
+    if (isFinalHourValid) {
         const endHour = parseHourFromString(finalHour)
-        const rental =  await rentalsRequests.createRental(Number(cid), Number(crid), date, startHour, endHour)
-        if (rental.status === 201)  window.location.hash = `#clubs/${cid}/courts/${crid}/rentals`
-        else errorView(contentHeader, content, `#/#clubs/${cid}/courts/${crid}/available_hours?date=${date}`,rental.data)
-    } else if (isValidDate(date) && isValidHour(initialHour)) {
-        const availableHours = await courtsRequests.getAvailableHours(Number(cid), Number(crid), date)
-        if (availableHours.status !== 200){
-            errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/available_hours` ,availableHours.data)
-        }else if (!contains(availableHours.data.hours, startHour)){
-            errorView(contentHeader, content,`#clubs/${cid}/courts/${crid}/available_hours?date=${date}&start=${initialHour}`, {
-                title: "Hour not available",
-                description: `The selected hour is not available in day ${date}`
-            })
-        }else {
-            const finalRentalHours = getFinalRentalHours(availableHours.data.hours, startHour)
-            renderRentalAvailableFinalHours(contentHeader, content, initialHour, finalRentalHours, cid, crid, date, initialHour)
+
+        const rental = await rentalsRequests.createRental(cid, crid, date, startHour, endHour)
+
+        if (rental.status === 201) {
+            window.location.hash = uriManager.listCourtRentals(cid,crid)
+        } else {
+            errorView(contentHeader, content, uriManager.getAvailableHoursByDate(cid,crid,date), rental.data)
+        }
+        return
+    }
+
+    const availableHours = await courtsRequests.getAvailableHours(cid, crid, date)
+
+    if (availableHours.status !== 200) {
+        errorView(contentHeader, content, uriManager.getCourtAvailableHours(cid,crid), availableHours.data)
+        return
+    }
+
+    if (!contains(availableHours.data.hours, startHour)) {
+        errorView(contentHeader, content, uriManager.getAvailableHoursByDateAndStart(cid,crid,date,initialHour), {
+            title: "Hour not available",
+            description: `The selected hour is not available on ${date}`
+        })
+        return
+    }
+
+    const finalRentalHours = getFinalRentalHours(availableHours.data.hours, startHour)
+    renderRentalAvailableFinalHours(contentHeader, content, initialHour, finalRentalHours, cid, crid, date, startHour)
+}
+
+async function updateRental(contentHeader, content) {
+    const cid = Number(path("cid"))
+    const crid = Number(path("crid"))
+    const rid = Number(path("rid"))
+    const date = query("date")
+    const startHour = query("start")
+    const endHour = query("end")
+
+    if (date!== null && startHour !== null && endHour !== null) {
+        const response = await rentalsRequests.editRental(cid, crid, rid, date, startHour, endHour);
+
+        if (response.status === 200) {
+            window.location.hash = uriManager.getRentalDetails(cid, crid, rid);
+        } else {
+            errorView(contentHeader, content, uriManager.getRentalDetails(cid,crid,rid), response.data);
+        }
+
+    } else {
+        const response = await rentalsRequests.fetchRentalDetails(cid, crid, rid);
+
+        if (response.status === 200) {
+            renderUpdateRentalView(contentHeader, content, response.data);
+        } else {
+            errorView(contentHeader, content, uriManager.listCourtRentals(cid, crid), response.data);
         }
     }
 }
 
-function updateRental(contentHeader, content) {
-    // TODO: Implement the update rental functionality
-}
+async function deleteRental(contentHeader, content) {
+    const cid = Number(path("cid"))
+    const crid = Number(path("crid"))
+    const rid = Number(path("rid"))
 
-function deleteRental(contentHeader, content) {
-    // TODO: Implement the delete rental functionality
+    const result = await rentalsRequests.deleteRental(cid, crid, rid)
+
+    if (result.status !== 200) {
+        errorView(contentHeader, content, uriManager.listCourtRentals(cid,crid), result.data)
+    } else {
+        window.location.hash = uriManager.listCourtRentals(cid, crid)
+    }
 }
 
 async function searchRentals(contentHeader, content) {
@@ -78,7 +136,7 @@ async function searchRentals(contentHeader, content) {
     }else{
         const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, limit+1, date)
         if (rsp.status !== 200){
-            errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/rentals`, rsp.data)
+            errorView(contentHeader, content, uriManager.listCourtRentals(cid,crid), rsp.data)
             return
         }
         const rentals = rsp.data.rentals.slice(0, limit) ?? []

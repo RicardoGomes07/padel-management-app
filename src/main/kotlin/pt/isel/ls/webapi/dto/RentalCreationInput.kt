@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RentalCreationInput(
     val date: LocalDate,
-    val initialHour: Int,
-    val finalHour: Int,
+    val initialHour: UInt,
+    val finalHour: UInt,
 ) {
     init {
-        require(initialHour in 0..23) { "Invalid initial hour" }
-        require(finalHour in 0..23) { "Invalid final hour" }
+        require(initialHour in 0u..23u) { "Invalid initial hour" }
+        require(finalHour in 0u..23u) { "Invalid final hour" }
         require(initialHour < finalHour) { "Initial hour must be before final hour" }
     }
 }

@@ -5,6 +5,7 @@ import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
 import {createPaginationManager} from "../managers/paginationManager.js";
 import auxiliaryFuns from "./auxfuns.js";
+import uriManager from "../managers/uriManager.js";
 
 const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
@@ -28,7 +29,7 @@ async function getCourtsByClub(contentHeader, content) {
         .getPage(
             skip,
             limit,
-            (message) => { errorView(contentHeader, content, `#clubs/${cid}`, message) }
+            (message) => { errorView(contentHeader, content, uriManager.getClubDetails(cid), message) }
         )
 
     const hasNext = courtsOfClubPagination.hasNext()
@@ -62,7 +63,7 @@ async function getCourtRentals(contentHeader, content) {
 
     const rsp = await fetchCourtRentals(cid, crid, skip, limit+1)
     if (rsp.status !== 200){
-        errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/rentals`, rsp.data)
+        errorView(contentHeader, content, uriManager.listCourtRentals(cid, crid), rsp.data)
         return
     }
     const rentals = rsp.data.rentals.slice(0, limit) ?? []
@@ -85,20 +86,24 @@ async function getCourtAvailableHours(contentHeader, content) {
     const crid = path("crid")
     const date = query("date")
 
-    if (date === null || !isValidDate(date)) {
+    if (date === null) {
         renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid)
-    } else if (isValidDate(date)) {
-        const response = await courtsRequests.getAvailableHours(cid, crid, date)
-        if (response.status === 200){
-            renderCourtAvailableHoursView(contentHeader, content, response.data.hours, cid, crid, date)
-        } else {
-            errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/available_hours` ,response.data)
-        }
-    } else {
-        errorView(contentHeader, content, `#clubs/${cid}/courts/${crid}/available_hours`, {
+        return
+    }
+
+    if (!isValidDate(date)) {
+        errorView(contentHeader, content, uriManager.getCourtAvailableHours(cid, crid), {
             title: "Invalid date",
             description: "The selected date is not valid"
         })
+        return
+    }
+
+    const response = await courtsRequests.getAvailableHours(cid, crid, date)
+    if (response.status === 200) {
+        renderCourtAvailableHoursView(contentHeader, content, response.data.hours, cid, crid, date)
+    } else {
+        errorView(contentHeader, content, uriManager.getCourtAvailableHours(cid,crid), response.data)
     }
 }
 
@@ -112,9 +117,9 @@ async function createCourt(contentHeader, content) {
         const response = await courtsRequests.createCourt(cid, name)
         if (response.status === 201){
             const crid = response.data.crid
-            window.location.hash = `#clubs/${cid}/courts/${crid}`
+            window.location.hash = uriManager.getCourtDetails(cid, crid)
         } else {
-            errorView(contentHeader, content, `#clubs/${cid}`, response.data)
+            errorView(contentHeader, content, uriManager.getClubDetails(cid), response.data)
         }
     }
 }

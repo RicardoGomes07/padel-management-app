@@ -12,7 +12,7 @@ fun List<UInt>.toAvailableHours(): AvailableHours {
 
     val singleRanges =
         this
-            .map { if (it == 23u) UIntInterval(it, it) else UIntInterval(it, it + 1u) }
+            .map { UIntInterval(it, it + 1u) }
             .sortedBy { it.start }
 
     val mergedRanges = mutableListOf<UIntInterval>()

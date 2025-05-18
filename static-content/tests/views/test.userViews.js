@@ -1,4 +1,3 @@
-import { before, describe, it } from "node:test";
 import usersViews from "../../spa/handlers/views/usersviews.js";
 
 describe('UsersViews', function () {
@@ -7,7 +6,7 @@ describe('UsersViews', function () {
     before(function () {
         contentHeader = document.createElement('div');
         content = document.createElement('div');
-      });
+    });
 
     describe('renderUserDetailsView', function () {
         context('when rendering user details', function () {
