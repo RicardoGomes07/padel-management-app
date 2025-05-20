@@ -29,7 +29,7 @@ export const router = {
     addRouteHandler,
     getRouteHandler,
     addDefaultNotFoundRouteHandler,
-}
+}   
 
 export const request = {
     getRequestArgs,
@@ -71,4 +71,5 @@ function getRequestArgs(handler, path) {
         const [key, value] = entry.split("=")
         if (key) args.query[key] = value || null
     })
+    return args
 }
