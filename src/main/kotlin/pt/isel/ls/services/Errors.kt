@@ -61,7 +61,7 @@ sealed class RentalError(
         date: LocalDate,
         timeSlot: TimeSlot,
     ) : RentalError(
-            "Rental already exists for date $date with initial hour ${timeSlot.start} and final hour ${timeSlot.end}",
+            "Rental already exists for date $date and the time slot you provided: $timeSlot overlaps with an existing rental",
         )
 
     class RenterNotFound(

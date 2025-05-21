@@ -3,6 +3,7 @@ export const API_BASE_URL = "http://localhost:9000/"
 const uriManager = {
     home: () => `#home`,
     getUserProfile: (uid) => `#users/${uid}`,
+    getUserRentals: (uid) => `#users/${uid}/rentals`,
 
     listClubs: () =>`#clubs`,
     getClubDetails: (cid) => `#clubs/${cid}`,

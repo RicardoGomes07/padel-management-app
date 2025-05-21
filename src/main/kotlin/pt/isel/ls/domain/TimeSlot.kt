@@ -7,4 +7,6 @@ data class TimeSlot(
     init {
         require(start < end && end < 24u)
     }
+
+    override fun toString(): String = "$start to $end"
 }

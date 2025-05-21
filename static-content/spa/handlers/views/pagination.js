@@ -4,7 +4,7 @@ import classnames from "./classnames.js";
 
 const { div, a } = Html
 const DEFAULT_VALUE_SKIP = 0
-const DEFAULT_VALUE_LIMIT = 3
+const DEFAULT_VALUE_LIMIT = 1
 const { paginationLinksClassName, paginationLinkClassName} = classnames
 
 function createPaginationLinks(baseLink, skip, limit, hasNext) {
@@ -14,13 +14,13 @@ function createPaginationLinks(baseLink, skip, limit, hasNext) {
     const children = []
 
     if (skip > 0) {
-        const prevPath = `#${baseLink}?skip=${prevSkip}&limit=${limit}`
+        const prevPath = `${baseLink}?skip=${prevSkip}&limit=${limit}`
         const prevLink = a("Prev", prevPath, paginationLinkClassName)
         children.push(prevLink)
     }
 
     if (hasNext) {
-        const nextPath = `#${baseLink}?skip=${nextSkip}&limit=${limit}`
+        const nextPath = `${baseLink}?skip=${nextSkip}&limit=${limit}`
         const nextLink = a("Next", nextPath, paginationLinkClassName)
         children.push(nextLink)
     }

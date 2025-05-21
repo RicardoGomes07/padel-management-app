@@ -109,9 +109,11 @@ class RentalWebApi(
 
     fun updateRental(request: Request): Response =
         request.handlerWithAuth(userService::validateUser) {
+            val courtId = request.path("crid")?.toUIntOrNull()
             val rentalId = request.path("rid")?.toUIntOrNull()
 
-            requireNotNull(rentalId)
+            requireNotNull(rentalId) { "Missing Rental Id" }
+            requireNotNull(courtId) { "Missing Court Id" }
 
             val input = Json.decodeFromString<RentalUpdateInput>(request.bodyString())
 
@@ -120,6 +122,7 @@ class RentalWebApi(
             rentalService
                 .updateDateAndRentTime(
                     rentalId,
+                    courtId,
                     input.date,
                     rentTime,
                 ).fold(

@@ -1,5 +1,6 @@
-    import Html from "../../dsl/htmlfuns.js";
+import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
+import uriManager from "../../managers/uriManager.js";
 
 const { div, a, ul, li, p } = Html;
 const { createPaginationLinks } = pagination
@@ -19,8 +20,7 @@ function renderUserRentalsView(contentHeader, content, rentals, username,  uid, 
         : p("No rentals found")
 
     const info = div(rentalList)
-    const baseLink = "users/" + uid + "/rentals"
-    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(uriManager.getUserRentals(uid), Number(skip), Number(limit), hasNext)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, info, navigation)

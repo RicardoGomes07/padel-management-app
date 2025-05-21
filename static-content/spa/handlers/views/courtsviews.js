@@ -45,8 +45,6 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
 }
 
 function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip, limit, hasNext) {
-    const baseLink = `clubs/${cid}/courts/${crid}/rentals`
-
     const currHeader = contentHeader.textContent
     const header = "Rentals"
 
@@ -60,7 +58,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip
         )
         : p("No rentals found")
 
-    const navigation = createPaginationLinks(baseLink, Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(uriManager.listCourtRentals(cid,crid), Number(skip), Number(limit), hasNext)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, rentalList, navigation)
@@ -70,9 +68,7 @@ function renderCreateClubForm(contentHeader, content, cid) {
     const header = "Create Court"
     const handleSubmit = function (e) {
         e.preventDefault()
-        const courtName = e.target
-
-            .querySelector("#courtName").value
+        const courtName = e.target.querySelector("#courtName").value
         window.location.hash = `#clubs/${cid}/courts/create?name=${courtName}`
     }
 

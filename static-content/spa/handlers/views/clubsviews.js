@@ -32,7 +32,7 @@ function renderClubsView(contentHeader, content, clubs, skip, limit, hasNext){
         )
         : p("No clubs found")
 
-    const navigation = createPaginationLinks("clubs", Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(uriManager.listClubs(), Number(skip), Number(limit), hasNext)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(info, navigation)

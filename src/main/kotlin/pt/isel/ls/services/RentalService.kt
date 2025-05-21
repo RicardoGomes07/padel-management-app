@@ -104,16 +104,36 @@ class RentalService(
 
     fun updateDateAndRentTime(
         rid: UInt,
+        crid: UInt,
         date: LocalDate,
         rentTime: TimeSlot,
     ): Result<Rental> =
         runCatching {
             trxManager.run {
-                rentalRepo.updateDateAndRentTime(
-                    rid,
-                    date,
-                    rentTime,
+                val availableHours = rentalRepo.findAvailableHoursForACourt(crid, date)
+                val rentalCurrState = rentalRepo.findByIdentifier(rid)
+                ensureOrThrow(
+                    rentalCurrState != null,
+                    RentalError.RentalNotFound(rid),
                 )
+
+                val newTimeRange = rentTime.start until rentTime.end
+
+                val isTimeAvailable =
+                    if (rentalCurrState!!.date == date) {
+                        val currentRange = rentalCurrState.rentTime.start until rentalCurrState.rentTime.end
+                        val mergedHours = (availableHours + currentRange).distinct()
+                        newTimeRange.all { it in mergedHours }
+                    } else {
+                        newTimeRange.all { it in availableHours }
+                    }
+
+                ensureOrThrow(
+                    isTimeAvailable,
+                    RentalError.OverlapInTimeSlot(date, rentTime),
+                )
+
+                rentalRepo.updateDateAndRentTime(rid, date, rentTime)
             }
         }
 }
