@@ -31,7 +31,7 @@ function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit
     content.replaceChildren(courtList, navigation, back)
 }
 
-function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid) {
+function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid, skip, limit) {
     const header = "Court Info"
     const info =
         ul(
@@ -39,7 +39,7 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
             li(a("Club", getClubDetailsUri(cid))),
             li(
                 span(
-                    a("Court Rentals", listCourtRentalsUri(cid, crid)),
+                    a("Court Rentals", listCourtRentalsUri(cid, crid, skip, limit)),
                     a("by date", searchCourtRentalsUri(cid, crid)),
                 )
             ),
@@ -59,7 +59,9 @@ function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip
     const rentalList = rentals.length > 0
         ? ul(
             ...rentals.map(rental =>
-                li(a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour} `, getRentalDetailsUri))
+                li(a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour} `,
+                    getRentalDetailsUri(cid, crid, rental.rid)
+            ))
             )
         )
         : p("No rentals found")
@@ -70,13 +72,8 @@ function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip
     content.replaceChildren(backLink, rentalList, navigation)
 }
 
-function renderCreateCourtForm(contentHeader, content, cid) {
+function renderCreateCourtForm(contentHeader, content, handleSubmit ,cid) {
     const header = "Create Court"
-    const handleSubmit = function (e) {
-        e.preventDefault()
-        const courtName = e.target.querySelector("#courtName").value
-        window.location.hash =  `#clubs/${cid}/courts/create?name=${courtName}`
-    }
 
     const fields = [
         { id: "courtName", label: "Name: ", type: "text", required: true, placeholder: "Enter Court Name" },

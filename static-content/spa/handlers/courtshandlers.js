@@ -49,11 +49,13 @@ async function getCourtsByClub(contentHeader, content) {
 async function getCourtDetails(contentHeader, content) {
     const crid = path("crid")
     const cid = path("cid")
+    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
+    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
     const result = await fetchCourtDetails(cid, crid)
 
     if (result.status !== 200) errorView(contentHeader, content, getClubDetailsUri(cid) ,result.data)
-    else renderCourtDetailsView(contentHeader, content, result.data, cid, crid)
+    else renderCourtDetailsView(contentHeader, content, result.data, cid, crid, skip, limit)
 }
 
 async function getCourtRentals(contentHeader, content) {
@@ -108,14 +110,13 @@ async function getCourtAvailableHours(contentHeader, content) {
     }
 }
 
-async function createCourt(contentHeader, content) {
+function createCourt(contentHeader, content) {
     const cid = path("cid")
-    const name = query("name")
 
-    if(name === null){
-        renderCreateCourtForm(contentHeader, content, cid)
-    }else{
-        const response = await courtsRequests.createCourt(cid, name)
+    const handleSubmit = async function (e) {
+        e.preventDefault()
+        const courtName = e.target.querySelector("#courtName").value
+        const response = await courtsRequests.createCourt(cid, courtName)
         if (response.status === 201){
             const crid = response.data.crid
             window.location.hash = getCourtDetailsUri(cid, crid)
@@ -123,6 +124,7 @@ async function createCourt(contentHeader, content) {
             errorView(contentHeader, content, getClubDetailsUri(cid), response.data)
         }
     }
+    renderCreateCourtForm(contentHeader, content, handleSubmit, cid)
 }
 
 

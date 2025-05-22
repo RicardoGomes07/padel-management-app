@@ -20,13 +20,8 @@ function renderRentalDetailsView(contentHeader, content, rental) {
     content.replaceChildren(info)
 }
 
-function renderCalendarToSearchRentals(contentHeader, content, date, cid, crid) {
+function renderCalendarToSearchRentals(contentHeader, content, handleSubmit, cid, crid) {
     const header = "Search Rentals"
-    const handleSubmit = function(e){
-        e.preventDefault()
-        const validDate = e.target.querySelector("#date").value
-        window.location.hash = searchCourtRentalsByDateUri(cid, crid, validDate)
-    }
 
     const fields = [
         { id: "date", label: "Select Date", type: "date", required: true },
@@ -44,15 +39,8 @@ function renderCalendarToSearchRentals(contentHeader, content, date, cid, crid) 
     content.replaceChildren(children, backLink)
 }
 
-function renderUpdateRentalView(contentHeader, content, rental) {
+function renderUpdateRentalView(contentHeader, content, rental, handleSubmit) {
     const header = "Update Rental"
-    const handleSubmit = function(e){
-        e.preventDefault()
-        const validDate = e.target.querySelector("#date").value
-        const startHour = e.target.querySelector("#startHour").value
-        const endHour = e.target.querySelector("#endHour").value
-        window.location.hash = updateRentalUri(rental.court.cid, rental.court.crid, rental.rid, validDate, startHour, endHour)
-    }
 
     const fields = [
         { id: "date", label: "Select Date", type: "date", required: true, value: rental.date },

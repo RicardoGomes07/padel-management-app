@@ -85,59 +85,59 @@ async function createRental(contentHeader, content) {
     renderRentalAvailableFinalHours(contentHeader, content, initialHour, finalRentalHours, cid, crid, date, startHour)
 }
 
-async function updateRental(contentHeader, content) {
+function updateRental(contentHeader, content) {
     const cid = Number(path("cid"))
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
-    const date = query("date")
-    const startHour = query("start")
-    const endHour = query("end")
 
-    if (date!== null && startHour !== null && endHour !== null) {
-        const response = await rentalsRequests.editRental(cid, crid, rid, date, startHour, endHour);
-
+    const handleSubmit = async function(e){
+        e.preventDefault()
+        const validDate = e.target.querySelector("#date").value
+        const startHour = e.target.querySelector("#startHour").value
+        const endHour = e.target.querySelector("#endHour").value
+        const response = await rentalsRequests.editRental(cid, crid, rid, validDate, startHour, endHour);
         if (response.status === 200) {
             window.location.hash = getRentalDetailsUri(cid, crid, rid);
         } else {
             errorView(contentHeader, content, getRentalDetailsUri(cid,crid,rid), response.data);
         }
-
-    } else {
-        const response = await rentalsRequests.fetchRentalDetails(cid, crid, rid);
-
-        if (response.status === 200) {
-            renderUpdateRentalView(contentHeader, content, response.data);
-        } else {
-            errorView(contentHeader, content, listCourtRentalsUri(cid, crid, DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT), response.data);
-        }
     }
+
+    const response = await rentalsRequests.fetchRentalDetails(cid, crid, rid);
+    if (response.status === 200) {
+        renderUpdateRentalView(contentHeader, content, response.data, handleSubmit);
+    } else {
+        errorView(contentHeader, content, listCourtRentalsUri(cid, crid, DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT), response.data);
+    }
+    
 }
 
 async function deleteRental(contentHeader, content) {
     const cid = Number(path("cid"))
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
+    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
+    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
     const result = await rentalsRequests.deleteRental(cid, crid, rid)
 
     if (result.status !== 200) {
         errorView(contentHeader, content, listCourtRentalsUri(cid,crid), result.data)
     } else {
-        window.location.hash = listCourtRentalsUri(cid, crid)
+        window.location.hash = listCourtRentalsUri(cid, crid,skip, limit)
     }
 }
 
-async function searchRentals(contentHeader, content) {
+function searchRentals(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")
-    const date = query("date")
     const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
     const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
 
-    if(date == null){
-        renderCalendarToSearchRentals(contentHeader, content, date, cid, crid)
-    }else{
-        const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, limit+1, date)
+    const handleSubmit = async function(e){
+        e.preventDefault()
+        const validDate = e.target.querySelector("#date").value
+        const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, limit+1, validDate)
         if (rsp.status !== 200){
             errorView(contentHeader, content, listCourtRentalsUri(cid,crid), rsp.data)
             return
@@ -156,6 +156,9 @@ async function searchRentals(contentHeader, content) {
         hasNext
     )
     }
+
+    renderCalendarToSearchRentals(contentHeader, content, handleSubmit, cid, crid)
+    
 }
 
 const rentalsHandlers= {

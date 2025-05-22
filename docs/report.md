@@ -170,6 +170,10 @@ The general implementation of each handlers follows these steps:
 
 To achieve the first step the handlers use functions defined in the router. For the second step they call the request fetcher from the 'requests' module, and for the third step, they use the 'views' module. In the case of a resource that has pagination, there is a significant design change where the information in step 2 is managed through the pagination managers where a request to the server is only made is the required information is not already cached.
 
+Special cases:
+When working with form elemtents, the structure of the function its different.
+We start by creating a function ( HandleSubmint ) where we make our request with the values extracted from the form Element in the view function, and then we call the view function passing the arguments needed and the created function. 
+
 ## Requests
 This module is responsible for making requests to the database. For each resource that requires database information, there is a corresponding fetcher in this module to retrieve the necessary information.
 
