@@ -3,6 +3,7 @@ package pt.isel.ls.services
 import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
+import pt.isel.ls.domain.toName
 import pt.isel.ls.repository.TransactionManager
 
 class ClubService(
@@ -15,10 +16,13 @@ class ClubService(
     fun getClubs(
         limit: Int,
         skip: Int,
+        name: Name? = null,
     ): Result<List<Club>> =
         runCatching {
             trxManager.run {
-                clubRepo.findAll(limit, skip)
+                name?.let {
+                    clubRepo.findClubsByName(name, limit, skip)
+                } ?: clubRepo.findAll(limit, skip)
             }
         }
 

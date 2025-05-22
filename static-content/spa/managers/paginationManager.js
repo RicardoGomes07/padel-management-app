@@ -53,12 +53,12 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
             return this
         },
 
-        filterBy(propName, propValue) {
+        resetCacheIfNeeded(propName, propValue) {
             if (currentFilterProp !== propName || currentFilterValue !== propValue) {
                 cache.length = 0 // reset cache se filtro mudou
+                currentFilterProp = propName
+                currentFilterValue = propValue
             }
-            currentFilterProp = propName
-            currentFilterValue = propValue
             return this
         },
 

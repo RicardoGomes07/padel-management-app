@@ -23,6 +23,12 @@ interface ClubRepository : Repository<Club> {
      */
     fun findClubByName(name: Name): Club?
 
+    fun findClubsByName(
+        name: Name,
+        limit: Int = 10,
+        offset: Int = 0,
+    ): List<Club>
+
     /**
      * Function that returns the number of clubs in the system.
      * @return the number of clubs in the system.

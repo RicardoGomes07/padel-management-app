@@ -161,4 +161,38 @@ class ClubWebApiTests {
             )
         assertEquals(Status.BAD_REQUEST, getAvailableHoursRequest.status)
     }
+
+    @Test
+    fun `get all clubs with complete name`() {
+        val token = createUser()
+        val club = createClub(token)
+        createClub(token)
+
+        val getAllClubsRequest =
+            clubsRoutes(
+                Request(GET, "clubs?name=${club.name}"),
+            )
+        val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
+        val clubs = body.clubs
+
+        assertEquals(1, clubs.size)
+        assertEquals(club.cid, clubs.first().cid)
+    }
+
+    @Test
+    fun `get all clubs with partial name`() {
+        val token = createUser()
+        val club = createClub(token)
+        val club2 = createClub(token)
+
+        val getAllClubsRequest =
+            clubsRoutes(
+                Request(GET, "clubs?name=lub"),
+            )
+        val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
+        val clubs = body.clubs
+        assertEquals(2, clubs.size)
+        assertEquals(1, clubs.filter { it.cid == club.cid }.size)
+        assertEquals(1, clubs.filter { it.cid == club2.cid }.size)
+    }
 }

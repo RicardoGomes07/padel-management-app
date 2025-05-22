@@ -100,4 +100,30 @@ class ClubRepositoryTests {
         val retrievedClub = clubRepoInMem.findClubByName(updatedClub.name)
         assertEquals("Updated Fly Club".toName(), retrievedClub?.name)
     }
+
+    @Test
+    fun `find all clubs by complete name`() {
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val club1 = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
+        clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
+
+        val allClubs = clubRepoInMem.findClubsByName("Force Club".toName())
+        assertEquals(1, allClubs.size)
+        assertEquals(allClubs.first(), club1)
+    }
+
+    @Test
+    fun `find all clubs by partial name`() {
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val club1 = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
+        clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
+
+        val allClubsWithName = clubRepoInMem.findClubsByName("Force".toName())
+        assertEquals(1, allClubsWithName.size)
+        assertEquals(allClubsWithName.first(), club1)
+
+        val allClubsWithName2 = clubRepoInMem.findClubsByName("ce Clu".toName())
+        assertEquals(1, allClubsWithName2.size)
+        assertEquals(allClubsWithName2.first(), club1)
+    }
 }

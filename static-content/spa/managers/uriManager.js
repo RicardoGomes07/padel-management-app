@@ -1,33 +1,35 @@
 export const API_BASE_URL = "http://localhost:9000/"
 
 const uriManager = {
-    home: () => `#home`,
-    getUserProfile: (uid) => `#users/${uid}`,
-    getUserRentals: (uid) => `#users/${uid}/rentals`,
+    homeUri: () => `#home`,
+    getUserProfileUri: (uid) => `#users/${uid}`,
+    getUserRentalsUri: (uid, skip, limit) => `#users/${uid}/rentals?skip=${skip}&limit=${limit}`,
 
-    listClubs: () =>`#clubs`,
-    getClubDetails: (cid) => `#clubs/${cid}`,
+    listClubsUri: (name, skip, limit) =>`#clubs?${name ? `name=${name}&` : ``}skip=${skip}&limit=${limit}`,
+    getClubDetailsUri: (cid) => `#clubs/${cid}`,
+    createClubUri: () => `#clubs/create`,
 
-    listClubCourts: (cid) => `#clubs/${cid}/courts`,
-    getCourtDetails: (cid, crid) => `#clubs/${cid}/courts/${crid}`,
-    createCourtForm: (cid) => `#clubs/${cid}/courts/create`,
+    listClubCourtsUri: (cid, skip, limit) => `#clubs/${cid}/courts?skip=${skip}&limit=${limit}`,
+    getCourtDetailsUri: (cid, crid) => `#clubs/${cid}/courts/${crid}`,
+    createCourtFromUri: (cid) => `#clubs/${cid}/courts/create`,
 
-    listCourtRentals: (cid, crid) => `#clubs/${cid}/courts/${crid}/rentals`,
-    searchCourtRentals: (cid, crid) => `#clubs/${cid}/courts/${crid}/rentals/search`,
-    getRentalDetails: (cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}`,
-    createRental: (cid, crid, date, startHour, endHour) =>
+    listCourtRentalsUri: (cid, crid, skip, limit) => `#clubs/${cid}/courts/${crid}/rentals?skip=${skip}&limit=${limit}`,
+    searchCourtRentalsUri: (cid, crid) => `#clubs/${cid}/courts/${crid}/rentals/search`,
+    getRentalDetailsUri: (cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}`,
+    createRentalUri: (cid, crid, date, startHour, endHour) =>
         `#clubs/${cid}/courts/${crid}/rentals/create?date=${date}&start=${startHour}&end=${endHour}`,
-    updateRental:(cid, crid, rid, date, startHour, endHour) =>
+    updateRentalIntentUri: (cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}/update`,
+    updateRentalUri:(cid, crid, rid, date, startHour, endHour) =>
         `#clubs/${cid}/courts/${crid}/rentals/${rid}/update?date=${date}&start=${startHour}&end=${endHour}`,
-    deleteRental:(cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}/delete`,
+    deleteRentalUri:(cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}/delete`,
 
-    searchCourtRentalsByDate: (cid, crid, date) =>
+    searchCourtRentalsByDateUri: (cid, crid, date) =>
         `#clubs/${cid}/courts/${crid}/rentals/search?date=${date}`,
-    getCourtAvailableHours: (cid, crid) =>
+    getCourtAvailableHoursUri: (cid, crid) =>
         `#clubs/${cid}/courts/${crid}/available_hours`,
-    getAvailableHoursByDate: (cid, crid, date) =>
+    getAvailableHoursByDateUri: (cid, crid, date) =>
         `#clubs/${cid}/courts/${crid}/available_hours?date=${date}`,
-    getAvailableHoursByDateAndStart: (cid, crid, date, hour) =>
+    getAvailableHoursByDateAndStartUri: (cid, crid, date, hour) =>
         `#clubs/${cid}/courts/${crid}/rentals/create?date=${date}&start=${hour}`,
 }
 

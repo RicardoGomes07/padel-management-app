@@ -1,6 +1,7 @@
 import {API_BASE_URL} from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js"
 import {userAuthManager} from "../usershandlers.js";
+
 const userToken = userAuthManager.getCurrToken()
 
 function fetchClubDetails(cid){
@@ -8,8 +9,9 @@ function fetchClubDetails(cid){
         .then(handleResponse)
 }
 
-function fetchClubs(skip, limit) {
-    return fetch(`${API_BASE_URL}clubs?skip=${skip}&limit=${limit}`)
+function fetchClubs(name, skip, limit) {
+    const url = `${API_BASE_URL}clubs?${name ? `name=${name}&` : ``}skip=${skip}&limit=${limit}`
+    return fetch(url)
         .then(handleResponse)
 }
 

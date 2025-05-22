@@ -9,6 +9,7 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.toName
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.*
 
@@ -37,11 +38,13 @@ class ClubWebApi(
 
     fun getAllClubs(request: Request): Response =
         request.handler {
+            val name = request.query("name")?.toName()
+
             val limit = request.query("limit")?.toIntOrNull() ?: LIMIT_VALUE_DEFAULT
             val skip = request.query("skip")?.toIntOrNull() ?: SKIP_VALUE_DEFAULT
 
             clubService
-                .getClubs(limit, skip)
+                .getClubs(limit, skip, name)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput())) },

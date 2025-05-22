@@ -83,7 +83,7 @@ describe('CourtsViews', function () {
 
     describe('renderCreateClubForm', function () {
         it("should render create court form and update hash on submit", function () {
-            courtsViews.renderCreateClubForm(contentHeader, content, 42);
+            courtsViews.renderCreateCourtForm(contentHeader, content, 42);
 
             assert.strictEqual(contentHeader.textContent, "Create Court");
 

@@ -42,6 +42,15 @@ object ClubRepositoryInMem : ClubRepository {
 
     override fun findClubByName(name: Name): Club? = clubs.firstOrNull { it.name == name }
 
+    override fun findClubsByName(
+        name: Name,
+        limit: Int,
+        offset: Int,
+    ): List<Club> =
+        clubs.filter { club ->
+            club.name.value.contains(name.value, ignoreCase = true)
+        }
+
     override fun save(element: Club) {
         clubs.removeIf { it.cid == element.cid }
         currId += 1u

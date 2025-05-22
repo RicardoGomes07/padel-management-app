@@ -67,4 +67,34 @@ class ClubServiceTests {
         val allClubs = clubService.getClubs(30, 0)
         assertEquals(2, allClubs.getOrNull()?.size)
     }
+
+    @Test
+    fun `find all clubs with complete name`() {
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail())
+        assertTrue(ownerResult.isSuccess)
+        val owner = ownerResult.getOrNull()!!
+        val club1 = clubService.createClub("Braga".toName(), owner)
+        assertTrue(club1.isSuccess)
+        val club2 = clubService.createClub("Boavista".toName(), owner)
+        assertTrue(club2.isSuccess)
+
+        val allClubs = clubService.getClubs(30, 0, "boavista".toName())
+        assertEquals(1, allClubs.getOrNull()?.size)
+        assertEquals(club2.getOrNull(), allClubs.getOrNull()?.first())
+    }
+
+    @Test
+    fun `find all clubs with partial name`() {
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail())
+        assertTrue(ownerResult.isSuccess)
+        val owner = ownerResult.getOrNull()!!
+        val club1 = clubService.createClub("Braga".toName(), owner)
+        assertTrue(club1.isSuccess)
+        val club2 = clubService.createClub("Boavista".toName(), owner)
+        assertTrue(club2.isSuccess)
+
+        val allClubs = clubService.getClubs(30, 0, "avis".toName())
+        assertEquals(1, allClubs.getOrNull()?.size)
+        assertEquals(club2.getOrNull(), allClubs.getOrNull()?.first())
+    }
 }

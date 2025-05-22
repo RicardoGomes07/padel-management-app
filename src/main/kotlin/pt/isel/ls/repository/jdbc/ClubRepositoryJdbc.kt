@@ -89,6 +89,35 @@ class ClubRepositoryJdbc(
             }
         }
 
+    override fun findClubsByName(
+        name: Name,
+        limit: Int,
+        offset: Int,
+    ): List<Club> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${clubSqlReturnFormat()}
+                WHERE c.name ILIKE ?
+                ORDER BY c.cid DESC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
+
+            connection.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setString(1, "%${name.value}%")
+                stmt.setInt(2, limit)
+                stmt.setInt(3, offset)
+
+                stmt.executeQuery().use { rs ->
+                    val clubs = mutableListOf<Club>()
+                    while (rs.next()) {
+                        clubs.add(rs.mapClub())
+                    }
+                    clubs
+                }
+            }
+        }
+
     /**
      * Function that creates a new club or updates, with the information given, if one with the cid already exists.
      * @param element club to be created or updated

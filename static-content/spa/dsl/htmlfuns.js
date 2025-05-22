@@ -116,6 +116,15 @@ function formRequest(fields, submitHandler, formProps = {}) {
     }, ...formElements)
 }
 
+function input(placeHolder = "", initValue = "", onChange = {}) {
+    return createElement("input", {
+        type: "text",
+        value: initValue,
+        placeholder: placeHolder,
+        className: "input",
+        oninput: (event) => onChange(event.target.value),
+    });
+}
 
 function span(...children) {
     return createElement("span", {}, ...children)
@@ -130,6 +139,7 @@ const Html = {
     h2,
     p,
     formRequest,
+    input,
     span,
 }
 

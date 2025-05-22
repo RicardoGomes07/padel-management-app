@@ -11,6 +11,7 @@ const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT } = pagination
 const { renderUserRentalsView, renderUserDetailsView } = usersViews
 const { fetchUserRentals, fetchUserDetails } = usersRequests
 const { errorView } = errorsViews
+const { homeUri } = uriManager
 
 export const userAuthManager = userAuthenticationManager()
                                 .setCurrToken("b734312a-94c6-492e-a243-5ebe17e023ca")
@@ -42,8 +43,8 @@ async function getUserDetails(contentHeader, content){
 
     const result = await fetchUserDetails(userId)
 
-    if (result.status !== 200) errorView(contentHeader, content, uriManager.home(),result.data)
-    else renderUserDetailsView(contentHeader, content, result.data)
+    if (result.status !== 200) errorView(contentHeader, content, homeUri(),result.data)
+    else renderUserDetailsView(contentHeader, content, result.data, DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT)
 }
 
 const userHandlers = {

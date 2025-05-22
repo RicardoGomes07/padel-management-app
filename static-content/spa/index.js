@@ -13,6 +13,7 @@ function loadHandler(){
     router.addRouteHandler("users/:uid", userHandlers.getUserDetails)
     router.addRouteHandler("users/:uid/rentals", userHandlers.getUserRentals)
     router.addRouteHandler("clubs", clubHandlers.getClubs)
+    router.addRouteHandler("clubs/create", clubHandlers.createClub)
     router.addRouteHandler("clubs/:cid", clubHandlers.getClubDetails)
     router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
     router.addRouteHandler("clubs/:cid/courts/create", courtHandlers.createCourt)
