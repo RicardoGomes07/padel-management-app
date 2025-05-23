@@ -1,7 +1,6 @@
 import usersViews from "../../spa/handlers/views/usersviews.js";
 import pagination from "../../spa/handlers/views/pagination.js";
 const assert = window.chai.assert
-const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 
 describe("UsersViews", function () {
     let contentHeader, content;
@@ -25,7 +24,7 @@ describe("UsersViews", function () {
 
                 const rentalLink = listItems[2].querySelector("a");
                 assert.strictEqual(rentalLink.textContent, "User Rentals ");
-                assert.strictEqual(rentalLink.getAttribute("href"), `#users/1/rentals?skip=${DEFAULT_VALUE_SKIP}&limit=${DEFAULT_VALUE_LIMIT}` );
+                assert.strictEqual(rentalLink.getAttribute("href"), `#users/1/rentals?page=1` );
             });
         });
     });
@@ -39,11 +38,8 @@ describe("UsersViews", function () {
                 ];
                 const username = "Ric";
                 const uid = 1;
-                const skip = 0;
-                const limit = 5;
-                const hasNext = true;
 
-                usersViews.renderUserRentalsView(contentHeader, content, rentals, username, uid, skip, limit, hasNext);
+                usersViews.renderUserRentalsView(contentHeader, content, rentals, 2 , username, uid, 1);
                 assert.strictEqual(contentHeader.textContent, "Rentals of Ric");
 
                 const links = content.querySelectorAll("ul li a");
@@ -64,11 +60,8 @@ describe("UsersViews", function () {
                 const rentals = [];
                 const username = "Ric";
                 const uid = 1;
-                const skip = 0;
-                const limit = 5;
-                const hasNext = false;
 
-                usersViews.renderUserRentalsView(contentHeader, content, rentals, username, uid, skip, limit, hasNext);
+                usersViews.renderUserRentalsView(contentHeader, content, rentals, 0 ,username, uid, 1);
                 assert.strictEqual(contentHeader.textContent, "Rentals of Ric");
 
                 const message = content.querySelector("p");

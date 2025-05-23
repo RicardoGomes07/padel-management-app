@@ -1,7 +1,3 @@
-import pagination from "../handlers/views/pagination.js";
-
-const { DEFAULT_VALUE_LIMIT, DEFAULT_VALUE_SKIP} = pagination
-
 export const API_BASE_URL = "http://localhost:9000/"
 
 const uriManager = {

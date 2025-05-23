@@ -28,7 +28,7 @@ describe('CourtsViews', function () {
             assert.strictEqual(clubLink.getAttribute("href"), "#clubs/10");
 
             assert.strictEqual(rentalsLink.textContent, "Court Rentals");
-            assert.strictEqual(rentalsLink.getAttribute("href"), `#clubs/10/courts/5/rentals?skip=${DEFAULT_VALUE_SKIP}&limit=${DEFAULT_VALUE_LIMIT}`);
+            assert.strictEqual(rentalsLink.getAttribute("href"), `#clubs/10/courts/5/rentals?page=1`);
 
             assert.strictEqual(byDateLink.textContent, "by date");
             assert.strictEqual(byDateLink.getAttribute("href"), "#clubs/10/courts/5/rentals/search");
@@ -37,7 +37,7 @@ describe('CourtsViews', function () {
             assert.strictEqual(hoursLink.getAttribute("href"), "#clubs/10/courts/5/available_hours");
 
             assert.strictEqual(rentCourt.textContent, "Rent Court");
-            assert.strictEqual(rentCourt.getAttribute("href"), "#clubs/10/courts/5/rentals/create?date=undefined&initialHour=undefined&finalHour=undefined");
+            assert.strictEqual(rentCourt.getAttribute("href"), "#clubs/10/courts/5/rentals/create");
         });
     });
 
@@ -45,7 +45,7 @@ describe('CourtsViews', function () {
         it("should render list of courts with correct links", function () {
             const courts = [{ crid: 1, name: "Court A" }, { crid: 2, name: "Court B" }];
 
-            courtsViews.renderCourtsByClubView(contentHeader, content, courts, 10, 0, 5, true);
+            courtsViews.renderCourtsByClubView(contentHeader, content, courts, 2, 10, 1);
 
             assert.strictEqual(contentHeader.textContent, "Courts");
 
@@ -67,7 +67,7 @@ describe('CourtsViews', function () {
                 { rid: 2, date: "2024-05-02", initialHour: "14", finalHour: "16" }
             ];
 
-            courtsViews.renderCourtRentalsView(contentHeader, content, rentals, 3, 9, 0, 2, true);
+            courtsViews.renderCourtRentalsView(contentHeader, content, rentals, 2, 3, 9, 2);
 
             assert.strictEqual(contentHeader.textContent, "Rentals");
 

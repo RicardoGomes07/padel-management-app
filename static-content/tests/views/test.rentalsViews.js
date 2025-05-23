@@ -58,12 +58,13 @@ describe("rentalsViews", function () {
     });
 
     describe("renderCalendarToSearchRentals", function () {
-        const date = "2023-10-01";
         const cid = 1;
         const crid = 1;
+        const handleSubmit = () => {}; 
+
 
         it("should render header and form", function () {
-            rentalsViews.renderCalendarToSearchRentals(contentHeader, content, date, cid, crid);
+            rentalsViews.renderCalendarToSearchRentals(contentHeader, content, cid, crid, handleSubmit);
 
             assert.strictEqual(contentHeader.innerHTML, "Search Rentals");
 
