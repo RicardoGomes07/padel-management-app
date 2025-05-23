@@ -13,7 +13,7 @@ const { renderClubDetailsView, renderClubsView } = clubViews
 const { errorView } = errorsViews
 const { path, query } = request
 const { DEFAULT_VALUE_LIMIT, DEFAULT_VALUE_SKIP} = pagination
-const { formRequest, a } = Html
+const { formElement, a } = Html
 const { listClubsUri, getClubDetailsUri } = uriManager
 
 const clubsPagination =
@@ -73,7 +73,7 @@ async function createClub(contentHeader, content) {
     const fields = [
         {id: "clubName", name: "clubName", label: "Name of the Club", type: "text", required: true }
     ]
-    const form = formRequest(fields, handleSubmit, {
+    const form = formElement(fields, handleSubmit, {
         className: "form",
         submitText: "Create Clubs"
     })

@@ -45,13 +45,25 @@ function getAvailableHours(cid, crid, date) {
     }).then(handleResponse)
 }
 
+function getAvailableCourtsByDateAndTimeSlot(cid, date, startHour, endHour) {
+    return fetch(`${API_BASE_URL}clubs/${cid}/courts/available`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `${userToken}`,
+        },
+        body: JSON.stringify({ date: date, initialHour: startHour, finalHour: endHour })
+    }).then(handleResponse)
+}
+
 const courtsRequests = {
     fetchCourtsByClub,
     fetchCourtDetails,
     fetchCourtRentals,
     getAvailableHours, 
     createCourt,
-    fetchCourtRentalsByDate
+    fetchCourtRentalsByDate,
+    getAvailableCourtsByDateAndTimeSlot
 }
 
 export default courtsRequests

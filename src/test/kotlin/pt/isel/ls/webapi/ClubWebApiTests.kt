@@ -34,7 +34,7 @@ val clubsRoutes =
         "clubs" bind POST to clubApi::createClub,
         "clubs" bind GET to clubApi::getAllClubs,
         "clubs/{cid}" bind GET to clubApi::getClubInfo,
-        "courts/{crid}/available" bind POST to clubApi::getAvailableHours,
+        "courts/{crid}/available" bind POST to rentalApi::getAvailableHours,
     )
 
 fun createClub(token: String): ClubDetailsOutput {

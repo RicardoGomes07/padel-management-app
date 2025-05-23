@@ -17,6 +17,7 @@ function loadHandler(){
     router.addRouteHandler("clubs/:cid", clubHandlers.getClubDetails)
     router.addRouteHandler("clubs/:cid/courts", courtHandlers.getCourtsByClub)
     router.addRouteHandler("clubs/:cid/courts/create", courtHandlers.createCourt)
+    router.addRouteHandler("clubs/:cid/courts/rent", courtHandlers.searchCourtsToRent)
     router.addRouteHandler("clubs/:cid/courts/:crid", courtHandlers.getCourtDetails)
     router.addRouteHandler("clubs/:cid/courts/:crid/rentals", courtHandlers.getCourtRentals)
     router.addRouteHandler("clubs/:cid/courts/:crid/available_hours", courtHandlers.getCourtAvailableHours)

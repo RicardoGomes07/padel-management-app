@@ -65,26 +65,4 @@ class ClubWebApi(
                     onSuccess = { Response(OK).body(Json.encodeToString(ClubDetailsOutput(it))) },
                 )
         }
-
-    fun getAvailableHours(request: Request): Response =
-        request.handler {
-            val courtId = request.path("crid")?.toUIntOrNull()
-
-            requireNotNull(courtId) { "Invalid court id" }
-
-            val date = Json.decodeFromString<AvailableHoursInput>(request.bodyString()).date
-
-            require(date >= currentDate()) { "Date must not be in the past" }
-            val currHour = currentHour()
-            rentalService
-                .getAvailableHours(courtId, date)
-                .fold(
-                    onFailure = { ex -> ex.toResponse() },
-                    onSuccess = {
-                        val hours = if (date == currentDate()) it.filter { hour -> hour > currHour.toUInt() } else it
-                        Response(OK)
-                            .body(Json.encodeToString(hours.toAvailableHours()))
-                    },
-                )
-        }
 }

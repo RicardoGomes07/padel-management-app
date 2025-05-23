@@ -34,6 +34,11 @@ class UserService(
             userRepo.findUserByToken(token)
         }
 
+    /**
+     * Function that returns a user by its identifier
+     * @param uid the user identifier
+     * @return the user if it exists, null otherwise
+     */
     fun findUserById(uid: UInt): User? =
         trxManager.run {
             userRepo.findByIdentifier(uid)

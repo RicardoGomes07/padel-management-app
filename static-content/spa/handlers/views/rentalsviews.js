@@ -1,9 +1,8 @@
 import Html from "../../dsl/htmlfuns.js";
 import uriManager from "../../managers/uriManager.js";
 
-const { a, ul, li, div, formRequest } = Html;
-const { searchCourtRentalsByDateUri, deleteRentalUri, getUserProfileUri, getCourtDetailsUri,
-    updateRentalUri, getRentalDetailsUri, updateRentalIntentUri } = uriManager;
+const { a, ul, li, div, formElement } = Html;
+const { deleteRentalUri, getUserProfileUri, getCourtDetailsUri, getRentalDetailsUri, updateRentalIntentUri } = uriManager;
 
 function renderRentalDetailsView(contentHeader, content, rental) {
     const header = "Rental Info"
@@ -20,7 +19,7 @@ function renderRentalDetailsView(contentHeader, content, rental) {
     content.replaceChildren(info)
 }
 
-function renderCalendarToSearchRentals(contentHeader, content, handleSubmit, cid, crid) {
+function renderCalendarToSearchRentals(contentHeader, content, date, cid, crid, handleSubmit) {
     const header = "Search Rentals"
 
     const fields = [
@@ -29,7 +28,7 @@ function renderCalendarToSearchRentals(contentHeader, content, handleSubmit, cid
 
     const backLink = div(a("Back", getCourtDetailsUri(cid, crid)))
     const children = li(
-        formRequest(fields, handleSubmit, {
+        formElement(fields, handleSubmit, {
             className: "form",
             submitText: "Search Rentals"
         })
@@ -44,11 +43,11 @@ function renderUpdateRentalView(contentHeader, content, rental, handleSubmit) {
 
     const fields = [
         { id: "date", label: "Select Date", type: "date", required: true, value: rental.date },
-        { id: "startHour", label: "Start Hour", type: "hour", required: true, value: String(rental.initialHour).padStart(2, "0") },
-        { id: "endHour", label: "End Hour", type: "hour", required: true, value: String(rental.finalHour).padStart(2, "0") },
+        { id: "startHour", label: "Start Hour", type: "hour", required: true, value: rental.initialHour },
+        { id: "endHour", label: "End Hour", type: "hour", required: true, value: rental.finalHour },
     ]
     const backButton =  a("Back", getRentalDetailsUri(rental.court.cid, rental.court.crid, rental.rid))
-    const form = formRequest(fields, handleSubmit, {
+    const form = formElement(fields, handleSubmit, {
                 className: "form",
                 submitText: "Update Rental"
             })
@@ -57,9 +56,29 @@ function renderUpdateRentalView(contentHeader, content, rental, handleSubmit) {
     content.replaceChildren(backButton, form)
 }
 
+function renderRentalCreationForm(contentHeader, content, cid, crid, rentalInfo, handleSubmit) {
+    const header = "Create Rental"
+
+    const fields = [
+        { id: "date", label: "Select Date", type: "date", required: true, value: rentalInfo.date },
+        { id: "startHour", label: "Start Hour", type: "hour", required: true, value: rentalInfo.startHour },
+        { id: "endHour", label: "End Hour", type: "hour", required: true, value: rentalInfo.endHour },
+    ]
+
+    const backLink = div(a("Back", getCourtDetailsUri(cid, crid)))
+    const form = formElement(fields, handleSubmit, {
+        className: "form",
+        submitText: "Create Rental"
+    })
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(backLink, form)
+}
+
 const rentalsViews = {
     renderRentalDetailsView,
     renderCalendarToSearchRentals,
-    renderUpdateRentalView
+    renderUpdateRentalView,
+    renderRentalCreationForm,
 }
 export default rentalsViews;

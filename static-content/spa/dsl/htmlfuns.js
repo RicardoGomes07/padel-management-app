@@ -29,7 +29,6 @@ function createElement(tag, props = {}, ...children) {
     return element
 }
 
-
 function div(...children) {
     return createElement("div", { className: centerDivClassName  },...children)
 }
@@ -58,54 +57,65 @@ function p(text, classname = textInfoClassName) {
     return createElement("p", {textContent:text, class: classname})
 }
 
-function formRequest(fields, submitHandler, formProps = {}) {
+function input(id, type = "text", placeHolder = "", initValue = "", required = false, onChange = () => {}) {
+    return createElement("input", {
+        id: id,
+        type: type,
+        value: initValue,
+        placeholder: placeHolder,
+        className: "input",
+        required: required,
+        step: type === "time" ? 3600 : undefined,
+        oninput: (event) => onChange(event.target.value),
+    })
+}
+
+function label(forId, text) {
+    return createElement("label", {
+        htmlFor: forId,
+        className: "form-label"
+    }, text)
+}
+
+function formElement(fields, submitHandler, formProps = {}) {
     const formElements = [];
 
     fields.forEach(field => {
-        const label = createElement("label", {
-            htmlFor: field.id,
-            className: "form-label"
-        }, field.label)
+        const fieldLabel = label(field.id, field.label);
 
-        let input
+        let inputField;
 
         if (field.type === "hour") {
-            // Cria um <select> com opções de 00 a 23
-            input = createElement("select", {
-                    id: field.id,
-                    name: field.name || field.id,
-                    className: "form-control",
-                    required: field.required
-                },
-                ...Array.from({ length: 25 }, (_, i) => {
-                    const hour = i.toString().padStart(2, "0")
-                    return createElement("option", {
-                        value: hour,
-                        textContent: hour,
-                        selected: field.value === hour
-                    })
-                })
+            inputField = hourSelect(
+                field.id,
+                field.value || "",
+                field.onChange || (() => {}),
+                "form-select",
+                field.required
             )
         } else {
-            input = createElement("input", {
-                type: field.type || "text",
-                id: field.id,
-                name: field.name || field.id,
-                className: "form-control",
-                required: field.required,
-                value: field.value || "",
-                placeholder: field.placeholder
-            })
+            inputField = input(
+                field.id,
+                field.type || "text",
+                field.placeholder || "",
+                field.value || "",
+                field.required,
+                field.onChange || (() => {})
+            )
         }
 
-        formElements.push(label, input)
+        formElements.push(fieldLabel, inputField);
     })
 
-    const submitButton = createElement("button", {
-        type: "submit",
-        className: "btn btn-primary mt-2",
-        textContent: formProps.submitText || "Submit"
-    })
+    const submitButton = button(
+        formProps.submitText || "Submit",
+        () => {}, // the form handles the submission
+        {
+            type: "submit",
+            className: "btn btn-primary mt-2",
+            id: "submit-button"
+        }
+    )
 
     formElements.push(submitButton)
 
@@ -116,18 +126,42 @@ function formRequest(fields, submitHandler, formProps = {}) {
     }, ...formElements)
 }
 
-function input(placeHolder = "", initValue = "", onChange = {}) {
-    return createElement("input", {
-        type: "text",
-        value: initValue,
-        placeholder: placeHolder,
-        className: "input",
-        oninput: (event) => onChange(event.target.value),
-    });
+function button(text, onClick = () => {}, options = {}) {
+    return createElement("button", {
+        type: options.type || "button",
+        className: options.className || "btn",
+        id: options.id,
+        disabled: options.disabled || false,
+        onclick: onClick,
+        textContent: text
+    })
 }
 
 function span(...children) {
     return createElement("span", {}, ...children)
+}
+
+
+function hourSelect(id, initialValue, onChange = () => {}, className = "form-select", required = false) {
+    const options = [];
+
+    for (let hour = 0; hour < 24; hour++) {
+        const value = hour.toString();
+        const option = createElement("option", {
+            value: value,
+            selected: value === initialValue.toString(),
+            textContent: hour.toString().padStart(2, "0")
+        })
+        options.push(option)
+    }
+
+    return createElement("select", {
+        id: id,
+        name: id,
+        className: className,
+        required: required ? true : undefined,
+        onchange: (event) => onChange(event.target.value)
+    }, ...options)
 }
 
 const Html = {
@@ -138,7 +172,7 @@ const Html = {
     h1,
     h2,
     p,
-    formRequest,
+    formElement,
     input,
     span,
 }

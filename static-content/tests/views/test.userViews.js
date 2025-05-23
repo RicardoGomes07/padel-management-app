@@ -1,5 +1,7 @@
 import usersViews from "../../spa/handlers/views/usersviews.js";
+import pagination from "../../spa/handlers/views/pagination.js";
 const assert = window.chai.assert
+const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 
 describe("UsersViews", function () {
     let contentHeader, content;
@@ -23,7 +25,7 @@ describe("UsersViews", function () {
 
                 const rentalLink = listItems[2].querySelector("a");
                 assert.strictEqual(rentalLink.textContent, "User Rentals ");
-                assert.strictEqual(rentalLink.getAttribute("href"), "#users/1/rentals");
+                assert.strictEqual(rentalLink.getAttribute("href"), `#users/1/rentals?skip=${DEFAULT_VALUE_SKIP}&limit=${DEFAULT_VALUE_LIMIT}` );
             });
         });
     });

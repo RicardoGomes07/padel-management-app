@@ -68,6 +68,13 @@ interface RentalRepository : Repository<Rental> {
      */
     fun numRentalsOfUser(renter: UInt): Int
 
+    /**
+     * Function that updates the date and rent time of a rental.
+     * @param rid the rental identifier
+     * @param date the new date
+     * @param rentTime the new rent time
+     * @return the updated rental
+     */
     fun updateDateAndRentTime(
         rid: UInt,
         date: LocalDate,

@@ -1,6 +1,7 @@
 package pt.isel.ls.services
 
 import kotlinx.datetime.LocalDate
+import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.repository.TransactionManager
@@ -95,6 +96,10 @@ class RentalService(
             }
         }
 
+    /**
+     * Function that deletes a rental by its identifier
+     * @param rid the rental identifier
+     */
     fun deleteRental(rid: UInt): Result<Unit> =
         runCatching {
             trxManager.run {
@@ -102,6 +107,14 @@ class RentalService(
             }
         }
 
+    /**
+     * Function that updates a rental by its identifier
+     * @param rid the rental identifier
+     * @param crid the court identifier
+     * @param date the rental date
+     * @param rentTime the rental time slot
+     * @return the updated rental
+     */
     fun updateDateAndRentTime(
         rid: UInt,
         crid: UInt,
@@ -134,6 +147,29 @@ class RentalService(
                 )
 
                 rentalRepo.updateDateAndRentTime(rid, date, rentTime)
+            }
+        }
+
+    /**
+     * Function that returns all available courts in a specific date and time slot
+     * @param clubId the club identifier
+     * @param date the date
+     * @param timeSlot the time slot
+     * @return the list of available courts
+     */
+    fun getAvailableCourtsByDateAndRentTime(
+        clubId: UInt,
+        date: LocalDate,
+        timeSlot: TimeSlot,
+    ): Result<List<Court>> =
+        runCatching {
+            trxManager.run {
+                val courts = courtRepo.findByClubIdentifier(clubId)
+                courts.filter { court ->
+                    (timeSlot.start until timeSlot.end).all {
+                        it in rentalRepo.findAvailableHoursForACourt(court.crid, date)
+                    }
+                }
             }
         }
 }

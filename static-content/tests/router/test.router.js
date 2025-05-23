@@ -71,22 +71,24 @@ describe("Router", function () {
     });
 
     it("should get the correct path arguments for a route", function () {
-        const route = "clubs/:cid/courts/:crid/rentals/:rid";
-        const routeHandler = router.getRouteHandler(route);
+        const routeTemplate = "clubs/:cid/courts/:crid/rentals/:rid";
+        const route = "clubs/123/courts/456/rentals/789";
+        const routeHandler = router.getRouteHandler(routeTemplate);
         const args = request.getRequestArgs(routeHandler, route);
         
-        assert.deepEqual(args.path, { cid: ":cid", crid: ":crid", rid: ":rid" });
+        assert.deepEqual(args.path, { cid: "123", crid: "456", rid: "789" });
         assert.deepEqual(args.query, {});
         request.cleanArgs();
     });
 
     it("should get the correct query arguments for a route", function () {
-        const route = "clubs/:cid/courts/:crid/rentals?skip=0&limit=10";
-        const routeHandler = router.getRouteHandler(route);
+        const routeTemplate = "clubs/:cid/courts/:crid/rentals";
+        const route = "clubs/123/courts/456/rentals?skip=0&limit=10";
+        const routeHandler = router.getRouteHandler(routeTemplate);
         const args = request.getRequestArgs(routeHandler, route);
         console.log(args);
         
-        assert.deepEqual(args.path, { cid: ":cid", crid: ":crid"});
+        assert.deepEqual(args.path, { cid: "123", crid: "456" });
         assert.deepEqual(args.query, { skip: "0", limit: "10" });
     });
 });

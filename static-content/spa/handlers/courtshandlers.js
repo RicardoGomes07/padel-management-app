@@ -11,10 +11,11 @@ const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
 const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView,
-    renderCourtAvailableHoursView, renderCalendarToSearchAvailableHours, renderCreateCourtForm} = courtsViews
+    renderCourtAvailableHoursView, renderCalendarToSearchAvailableHours, renderCreateCourtForm,
+    renderSearchForCourtsByDateAndTimeSlot, renderAvailableCourtsToRent} = courtsViews
 const { errorView } = errorsViews
-const { isValidDate } = auxiliaryFuns
-const { getClubDetailsUri, listCourtRentalsUri, getCourtAvailableHoursUri , getCourtDetailsUri} = uriManager
+const { isValidDate, parseHourFromString } = auxiliaryFuns
+const { getClubDetailsUri, listCourtRentalsUri, getCourtAvailableHoursUri , getCourtDetailsUri, getAvailableHoursByDateUri} = uriManager
 
 const courtsOfClubPagination =
     createPaginationManager(fetchCourtsByClub, "courts")
@@ -90,7 +91,12 @@ async function getCourtAvailableHours(contentHeader, content) {
     const date = query("date")
 
     if (date === null) {
-        renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid)
+        const handleSubmit = async function(e){
+            e.preventDefault()
+            const validDate = document.querySelector("#date").value
+            window.location.hash = getAvailableHoursByDateUri(cid,crid, validDate)
+        }
+        renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid, handleSubmit)
         return
     }
 
@@ -124,16 +130,31 @@ function createCourt(contentHeader, content) {
             errorView(contentHeader, content, getClubDetailsUri(cid), response.data)
         }
     }
-    renderCreateCourtForm(contentHeader, content, handleSubmit, cid)
+    renderCreateCourtForm(contentHeader, content, cid, handleSubmit)
 }
 
+function searchCourtsToRent(contentHeader, content) {
+    const cid = path("cid")
+
+    const submitHandler = async function(e){
+        e.preventDefault()
+        const date = e.target.querySelector("#date").value
+        const startHour = e.target.querySelector("#startHour").value
+        const endHour = e.target.querySelector("#endHour").value
+        const availableCourts = await courtsRequests.getAvailableCourtsByDateAndTimeSlot(cid, date, parseHourFromString(startHour), parseHourFromString(endHour))
+        if (availableCourts.status === 200) renderAvailableCourtsToRent(contentHeader, content, availableCourts.data, date, startHour, endHour)
+        else errorView(contentHeader, content, getClubDetailsUri(cid), availableCourts.data)
+    }
+    renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, submitHandler)
+}
 
 const courtHandlers = {
     getCourtsByClub,
     getCourtDetails,
     getCourtRentals,
     getCourtAvailableHours,
-    createCourt
+    createCourt,
+    searchCourtsToRent
 }
 
 export default courtHandlers

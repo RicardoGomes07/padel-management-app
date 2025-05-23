@@ -43,20 +43,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Token'
-        409:
+        400:
           description: User already exists
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /me:
+
+  /users/{uid}:
     get:
       security:
         - bearerAuth: []
       tags:
         - User
       summary: Returns user information
-      operationId: me
+      operationId: userInfo
+      parameters:
+        - in: path
+          name: uid
+          schema:
+            type: integer
+          required: true
+          description: User identifiers
       responses:
         200:
           description: A user was found with the given token
@@ -64,8 +72,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserInfoModel'
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
-  /users/rentals:
+  /users/{uid}/rentals:
     get:
       security:
         - bearerAuth: []
@@ -75,6 +89,12 @@ paths:
       description: Get all rentals associated with the authenticated user
       operationId: listUserRentals
       parameters:
+        - in: path
+          name: uid
+          schema:
+            type: integer
+          required: true
+          description: User identifier
         - in: query
           name: skip
           schema:
@@ -106,6 +126,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
   /clubs:
     post:
       security:
@@ -128,7 +155,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClubCreationOutputModel'
-        409:
+        400:
           description: Club already exists
           content:
             application/json:
@@ -162,6 +189,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClubsOutputModel'
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
   /clubs/{cid}:
     get:
       security:
@@ -191,7 +225,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /courts:
+
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /clubs/{cid}/courts:
     post:
       security:
         - bearerAuth: []
@@ -200,6 +242,13 @@ paths:
       summary: Create new court
       description: Create new court with the given details
       operationId: courtCreation
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club Identifier
       requestBody:
         description: Court creation info
         content:
@@ -219,7 +268,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /courts/clubs/{cid}:
     get:
       security:
         - bearerAuth: []
@@ -260,7 +308,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /courts/{crid}:
+
+  /clubs/{cid}/courts/{crid}:
     get:
       security:
         - bearerAuth: []
@@ -270,6 +319,12 @@ paths:
       description: Get the detais of a court
       operationId: courtDetails
       parameters:
+        - in : path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club identifier
         - in: path
           name: crid
           schema:
@@ -289,7 +344,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /rentals:
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /clubs/{cid}/courts/{crid}/rentals:
     post:
       security:
         - bearerAuth: []
@@ -298,6 +360,19 @@ paths:
       summary: Create a new rental
       description: Create a new rental with the given details
       operationId: rentalCreation
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club indentifier
+        - in: path
+          name: crid
+          schema:
+            type: integer
+          required: true
+          description: Court indentifier
       requestBody:
         description: Rental Creation Info
         content:
@@ -310,14 +385,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RentalCreationOutputModel'
-        409:
-          description: Rental with the given details already exists
+                $ref: '#/components/schemas/RentalDetailsOutputModel'
+        400:
+          description: Bad user input
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
-  /rentals/courts/{crid}:
     get:
       security:
         - bearerAuth: []
@@ -328,11 +402,17 @@ paths:
       operationId: listRentals
       parameters:
         - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club indentifier
+        - in: path
           name: crid
           schema:
             type: integer
           required: true
-          description: Court id to search the rental details
+          description: Court indentifier
         - in: query
           name: date
           schema:
@@ -359,8 +439,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RentalsOutputModel'
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 
-  /rentals/{rid}:
+  /clubs/{cid}/courts/{crid}/rentals/{rid}:
     get:
       security:
         - bearerAuth: []
@@ -370,6 +456,18 @@ paths:
       description: Get the detais of a rental
       operationId: rentalDetails
       parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club indentifier
+        - in: path
+          name: crid
+          schema:
+            type: integer
+          required: true
+          description: Court indentifier
         - in: path
           name: rid
           schema:
@@ -390,7 +488,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
 
-  /courts/{crid}/available:
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /clubs/{cid}/courts/{crid}/available:
     post:
       security:
         - bearerAuth: []
@@ -400,6 +505,12 @@ paths:
       description: Get a list with the available hours to rent a court of a club on a specific date
       operationId: listAvailableHours
       parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club id
         - in: path
           name: crid
           schema:
@@ -426,6 +537,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /clubs/{cid}/courts/available:
+    post:
+      tags:
+        - Rental
+      summary: Search courts
+      description: Get available courts to rent in a specifc date and time slot
+      operationId: searchCourts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: integer
+          required: true
+          description: Club id
+      requestBody:
+        description: Date to check availability and Time slot
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DateAndRentTimeInput'
+      responses:
+        200:
+          description: List of available Courts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourtsOutputModel'
+        404:
+          description: Club not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        400:
+          description: Bad user input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
 
 components:
   securitySchemes:
@@ -583,17 +741,26 @@ components:
           example: LocalTime
           description: Duration in hours
 
-    RentalCreationOutputModel:
+    DateAndRentTimeInput:
+      type: object
+      properties:
+        date:
+          type: object
+          description: Date
+          example: 2025-02-13
+        initialHour:
+          type: integer
+          example: 1
+        finalHour:
+          type: integer
+          example: 2
+
+    RentalDetailsOutputModel:
       type: object
       properties:
         rid:
           type: integer
           example: 1
-          description: Rental identifier
-
-    RentalDetailsOutputModel:
-      type: object
-      properties:
         club:
           $ref: '#/components/schemas/ClubDetailsOutputModel'
         court:
@@ -601,11 +768,16 @@ components:
         date:
           type: object
           example: LocalDate
-          description: Rental date with initial hour
-        duration:
-          type: object
-          example: LocalTime
-          description: Duration in hours
+          description: Rental date
+        initialHour:
+          type: integer
+          example: 0
+          description: Time in hours
+        finalHour:
+          type: integer
+          example: 2
+          description: Time in hours
+
     RentalsOutputModel:
       type: array
       items:

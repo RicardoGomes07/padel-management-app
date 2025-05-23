@@ -1,15 +1,11 @@
 import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js"
-import auxiliaryFuns from "../auxfuns.js"
 import uriManager from "../../managers/uriManager.js";
 
-const { splitIntoHourlySlots } = auxiliaryFuns
 const { createPaginationLinks } = pagination
-const { div, a, ul, li, p, formRequest, span } = Html
+const { div, a, ul, li, p, formElement, span } = Html
 const { getCourtDetailsUri, listClubCourtsUri, getClubDetailsUri, listCourtRentalsUri, searchCourtRentalsUri,
-    getCourtAvailableHoursUri, getRentalDetailsUri, createRentalUri, getAvailableHoursByDateAndStartUri,
-    getAvailableHoursByDateUri }
-    = uriManager
+    getCourtAvailableHoursUri, getRentalDetailsUri, getAvailableHoursByDateUri, createRentalUri } = uriManager
 
 function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit, hasNext) {
     const currHeader = contentHeader.textContent
@@ -43,7 +39,8 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
                     a("by date", searchCourtRentalsUri(cid, crid)),
                 )
             ),
-            li(a("Available Hours", getCourtAvailableHoursUri(cid, crid)))
+            li(a("Available Hours", getCourtAvailableHoursUri(cid, crid))),
+            li(a("Rent Court", createRentalUri(cid, crid))),
         )
 
     contentHeader.replaceChildren(header)
@@ -72,7 +69,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip
     content.replaceChildren(backLink, rentalList, navigation)
 }
 
-function renderCreateCourtForm(contentHeader, content, handleSubmit ,cid) {
+function renderCreateCourtForm(contentHeader, content, cid, handleSubmit) {
     const header = "Create Court"
 
     const fields = [
@@ -81,7 +78,7 @@ function renderCreateCourtForm(contentHeader, content, handleSubmit ,cid) {
 
     const backLink = div(a("Back", getClubDetailsUri(cid)))
     const children = li(
-        formRequest(fields, handleSubmit, {
+        formElement(fields, handleSubmit, {
             className: "form",
             submitText: "Create Court"
         })
@@ -94,66 +91,22 @@ function renderCreateCourtForm(contentHeader, content, handleSubmit ,cid) {
 function renderCourtAvailableHoursView(contentHeader, content, availableHours, cid, crid, selectedDate) {
     const backLink = div(a("Back", getCourtAvailableHoursUri(cid, crid)))
 
-    const individualSlots = availableHours.flatMap(interval =>
-        splitIntoHourlySlots(interval.start, interval.end)
-    )
-
-    const mid = Math.ceil(individualSlots.length / 2)
-    const [leftSlots, rightSlots] = [individualSlots.slice(0, mid), individualSlots.slice(mid)]
-
-    const renderSlot = hour =>
-        li(
-            `${hour} `,
-                 a("Rent", getAvailableHoursByDateAndStartUri(cid,crid,selectedDate,hour))
+    const hours = div(
+        ul(
+            ...availableHours.map(range =>
+                li(p(`${range.start} to ${range.end}`))
+            )
         )
-
-    const createSlotList = slots => ul(...slots.map(renderSlot))
-
-    const columns = div(
-        { className: "columns", style: "display: flex; gap: 20px;" },
-        createSlotList(leftSlots),
-        createSlotList(rightSlots)
     )
 
     const headerText = `Available Hours for ${selectedDate}`
 
     contentHeader.replaceChildren(headerText)
-    content.replaceChildren(backLink, columns)
+    content.replaceChildren(backLink, hours)
 }
 
-function renderRentalAvailableFinalHours(contentHeader, content, selectedInitialHour, availableRange, cid, crid, date, start) {
-    const backLink = div(a("Back", getAvailableHoursByDateUri(cid,crid, date)))
-    const headerText = `Available Hours for ${date} starting at ${selectedInitialHour}`
-
-    const individualSlots = splitIntoHourlySlots(availableRange.start, availableRange.end+1) // +1 to include the end hour
-    individualSlots.shift() // Removes the first hour, which is the selected hour
-
-
-    const mid = Math.ceil(individualSlots.length / 2)
-    const [leftSlots, rightSlots] = [individualSlots.slice(0, mid), individualSlots.slice(mid)]
-    const renderSlot = hour =>
-        li(
-            `${hour} `,
-            a("Rent", createRentalUri(cid, crid, date, start, hour))
-        )
-    const createSlotList = slots => ul(...slots.map(renderSlot))
-    const columns = div(
-        { className: "columns", style: "display: flex; gap: 20px;" },
-        createSlotList(leftSlots),
-        createSlotList(rightSlots)
-    )
-
-    contentHeader.replaceChildren(headerText)
-    content.replaceChildren( backLink, columns, p("Select the hour you want to rent"))
-}
-
-function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid) {
+function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid, handleSubmit) {
     const header = "Search Available Hours"
-    const handleSubmit = async function(e){
-        e.preventDefault()
-        const validDate = document.querySelector("#date").value
-        window.location.hash = getAvailableHoursByDateUri(cid,crid, validDate)
-    }
 
     const fields = [
         { id: "date", label: "Select Date", type: "date", required: true },
@@ -161,7 +114,7 @@ function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid)
 
     const children = div(
         a("Back", getCourtDetailsUri(cid, crid)),
-        formRequest(fields, handleSubmit, {
+        formElement(fields, handleSubmit, {
             className: "form",
             submitText: "Get Available Hours"
         })
@@ -171,6 +124,31 @@ function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid)
     content.replaceChildren(children)
 }
 
+function renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, submitHandler){
+    const backLink = div(a("Back", getClubDetailsUri(cid)))
+
+    const fields = [
+        { id: "date", label: "Select Date", type: "date", required: true },
+        {id: "startHour", label: "Start Hour", type: "hour", required: true},
+        { id: "endHour", label: "End Hour", type: "hour", required: true},
+    ]
+
+    const form = formElement(fields, submitHandler)
+    contentHeader.replaceChildren("Select a date and a time to search for courts availability")
+    content.replaceChildren(backLink,form)
+}
+
+function renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour){
+    const header = "Available Courts"
+    const courts = ul(
+        ...availableCourts.map(court =>
+            li(a(court.name, createRentalUri(court.cid, court.crid, date, startHour, endHour)))
+        )
+    )
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(courts)
+}
+
 const courtsViews = {
     renderCourtsByClubView,
     renderCourtDetailsView,
@@ -178,7 +156,8 @@ const courtsViews = {
     renderCreateCourtForm,
     renderCourtAvailableHoursView,
     renderCalendarToSearchAvailableHours,
-    renderRentalAvailableFinalHours
+    renderSearchForCourtsByDateAndTimeSlot,
+    renderAvailableCourtsToRent,
 }
 
 export default courtsViews

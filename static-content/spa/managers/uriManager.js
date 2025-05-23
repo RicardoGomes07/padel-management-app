@@ -13,6 +13,7 @@ const uriManager = {
     getCourtDetailsUri: (cid, crid) => `#clubs/${cid}/courts/${crid}`,
     createCourtFromUri: (cid) => `#clubs/${cid}/courts/create`,
 
+    searchCourtsToRentUri: (cid) => `#clubs/${cid}/courts/rent`,
     listCourtRentalsUri: (cid, crid, skip, limit) => `#clubs/${cid}/courts/${crid}/rentals?skip=${skip}&limit=${limit}`,
     searchCourtRentalsUri: (cid, crid) => `#clubs/${cid}/courts/${crid}/rentals/search`,
     getRentalDetailsUri: (cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}`,

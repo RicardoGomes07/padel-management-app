@@ -11,9 +11,13 @@ import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.services.*
+import pt.isel.ls.webapi.dto.AvailableHoursInput
+import pt.isel.ls.webapi.dto.CourtOutput
+import pt.isel.ls.webapi.dto.DateAndRentTimeInput
 import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
 import pt.isel.ls.webapi.dto.RentalUpdateInput
+import pt.isel.ls.webapi.dto.toAvailableHours
 import pt.isel.ls.webapi.dto.toRentalsOutput
 
 /**
@@ -27,7 +31,7 @@ class RentalWebApi(
         request.handlerWithAuth(userService::validateUser) {
             val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
 
-            val timeSlot = TimeSlot(input.initialHour.toUInt(), input.finalHour.toUInt())
+            val timeSlot = TimeSlot(input.initialHour, input.finalHour)
             val courtId = request.path("crid")?.toUIntOrNull()
             requireNotNull(courtId) { "Invalid court id" }
             val clubId = request.path("cid")?.toUIntOrNull()
@@ -90,6 +94,47 @@ class RentalWebApi(
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(OK).body(Json.encodeToString(RentalDetailsOutput(it))) },
+                )
+        }
+
+    fun getAvailableHours(request: Request): Response =
+        request.handler {
+            val courtId = request.path("crid")?.toUIntOrNull()
+
+            requireNotNull(courtId) { "Invalid court id" }
+
+            val date = Json.decodeFromString<AvailableHoursInput>(request.bodyString()).date
+
+            require(date >= currentDate()) { "Date must not be in the past" }
+            val currHour = currentHour()
+            rentalService
+                .getAvailableHours(courtId, date)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = {
+                        val hours = if (date == currentDate()) it.filter { hour -> hour > currHour.toUInt() } else it
+                        Response(OK)
+                            .body(Json.encodeToString(hours.toAvailableHours()))
+                    },
+                )
+        }
+
+    fun getAvailableCourtsByDateAndRentTime(request: Request): Response =
+        request.handler {
+            val clubId = request.path("cid")?.toUIntOrNull()
+            requireNotNull(clubId) { "Invalid club id" }
+
+            val input = Json.decodeFromString<DateAndRentTimeInput>(request.bodyString())
+
+            require(input.date >= currentDate()) { "Date must not be in the past" }
+
+            val timeSlot = TimeSlot(input.initialHour, input.finalHour)
+
+            rentalService
+                .getAvailableCourtsByDateAndRentTime(clubId, input.date, timeSlot)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(it.map { court -> CourtOutput(court) })) },
                 )
         }
 

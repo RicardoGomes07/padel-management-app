@@ -1,12 +1,13 @@
 import Html from "../../dsl/htmlfuns.js";
-import pagination  from "./pagination.js";
+import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import clubsrequests from "../requests/clubsrequests.js";
 
 const { fetchClubs } = clubsrequests;
 const { input, a, ul, li, p, span, div } = Html;
 const { createPaginationLinks } = pagination
-const { getUserProfileUri, listClubsUri, listClubCourtsUri, createCourtFromUri, getClubDetailsUri, createClubUri }
+const { getUserProfileUri, listClubsUri, listClubCourtsUri, createCourtFromUri, getClubDetailsUri,
+    createClubUri, searchCourtsToRentUri }
     = uriManager
 
 function renderClubDetailsView(contentHeader, content, club){
@@ -17,6 +18,7 @@ function renderClubDetailsView(contentHeader, content, club){
         li(
             a("Courts", listClubCourtsUri(club.cid)),
             a("Create Court", createCourtFromUri(club.cid)),
+            a("Rent", searchCourtsToRentUri(club.cid) )
         ),
         a("All Clubs", listClubsUri()),
     );
@@ -73,14 +75,11 @@ function clubSearchBar(skip, limit) {
 
     const anchor = a("Search Clubs",  listClubsUri(clubNameSearch, skip, limit));
 
-    const info =
-        ul(
-            input("Search", "", onChange),
-            anchor,
-            clubsContainer,
-        )
-
-    return info
+    return ul(
+        input("Search", "text", "", "", onChange),
+        anchor,
+        clubsContainer,
+    )
 }
 
 const clubViews ={

@@ -13,7 +13,7 @@ describe("rentalsViews", function () {
         finalHour: 12,
     };
 
-    before(function () {
+    beforeEach(function () {
         contentHeader = document.createElement("div");
         content = document.createElement("div");
     });
@@ -71,6 +71,7 @@ describe("rentalsViews", function () {
             assert.ok(form, "Form should exist");
 
             const input = form.querySelector("input#date");
+
             assert.ok(input, "Date input should exist");
             assert.strictEqual(input.getAttribute("type"), "date");
             assert.ok(input.hasAttribute("required"), "Date input should be required");
@@ -84,29 +85,25 @@ describe("rentalsViews", function () {
             assert.strictEqual(backLink.textContent, "Back");
         });
 
-        it("should update location hash on form submit", function () {
-            rentalsViews.renderCalendarToSearchRentals(contentHeader, content, date, cid, crid);
-
-            content.querySelector("#date").value = "2024-05-18";
-
-            const form = content.querySelector("form");
-
-            const event = new Event("submit", {
-                bubbles: true,
-                cancelable: true,
-            });
-            form.dispatchEvent(event);
-
-            assert.strictEqual(window.location.hash, "#clubs/1/courts/1/rentals/search?date=2024-05-18");
-        });
     });
 
     describe("renderUpdateRentalView", function () {
         it("should render the update form with pre-filled values", function () {
-            rentalsViews.renderUpdateRentalView(contentHeader, content, rental);
+            rentalsViews.renderUpdateRentalView(contentHeader, content, rental, () => {});
 
+            // Check header
             assert.strictEqual(contentHeader.innerHTML, "Update Rental");
 
+            // Check Back link
+            const backLink = content.querySelector("a");
+            assert.ok(backLink, "Back link should exist");
+            assert.strictEqual(backLink.textContent, "Back");
+            assert.strictEqual(
+                backLink.getAttribute("href"),
+                "#clubs/1/courts/1/rentals/1"
+            );
+
+            // Check form
             const form = content.querySelector("form");
             assert.ok(form, "Form should exist");
 
@@ -126,34 +123,49 @@ describe("rentalsViews", function () {
             assert.ok(submitBtn, "Submit button should exist");
             assert.strictEqual(submitBtn.textContent, "Update Rental");
         });
+    });
 
-        it("should navigate to correct hash on form submit", function () {
-            rentalsViews.renderUpdateRentalView(contentHeader, content, rental);
+    describe("renderRentalCreationForm", function () {
+        const cid = 1;
+        const crid = 2;
 
-            // Seleciona os inputs dentro do content, que é onde o formulário foi renderizado
-            content.querySelector("#date").value = "2024-05-20";
-            content.querySelector("#startHour").value = "10";
-            content.querySelector("#endHour").value = "12";
+        const rentalInfo = {
+            date: "2024-05-20",
+            startHour: 10,
+            endHour: 12,
+        };
 
-
-            // Dispara o submit do formulário
-            content.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-
-            // Verifica o hash
-            assert.strictEqual(
-                window.location.hash,
-                "#clubs/1/courts/1/rentals/1/update?date=2024-05-20&start=10&end=12"
+        beforeEach(function () {
+            rentalsViews.renderRentalCreationForm(
+                contentHeader,
+                content,
+                cid,
+                crid,
+                rentalInfo,
+                () => {}
             );
         });
 
+        it("should render header and form with pre-filled values", function () {
+            assert.strictEqual(contentHeader.innerHTML, "Create Rental");
+
+            const form = content.querySelector("form");
+            assert.ok(form, "Form should exist");
+
+            assert.strictEqual(form.querySelector("#date").value, "2024-05-20");
+            assert.strictEqual(form.querySelector("#startHour").value, "10");
+            assert.strictEqual(form.querySelector("#endHour").value, "12");
+
+            const submitBtn = form.querySelector("button[type='submit']");
+            assert.ok(submitBtn, "Submit button should exist");
+            assert.strictEqual(submitBtn.textContent, "Create Rental");
+        });
 
         it("should render a Back link with correct href", function () {
-            rentalsViews.renderUpdateRentalView(contentHeader, content, rental);
-
             const backLink = content.querySelector("a");
             assert.ok(backLink, "Back link should exist");
             assert.strictEqual(backLink.textContent, "Back");
-            assert.strictEqual(backLink.getAttribute("href"), "#clubs/1/courts/1/rentals/1");
+            assert.strictEqual(backLink.getAttribute("href"), "#clubs/1/courts/2");
         });
     });
 });

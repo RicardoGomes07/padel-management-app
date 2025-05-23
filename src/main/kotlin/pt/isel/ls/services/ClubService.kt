@@ -3,7 +3,6 @@ package pt.isel.ls.services
 import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.User
-import pt.isel.ls.domain.toName
 import pt.isel.ls.repository.TransactionManager
 
 class ClubService(
@@ -39,6 +38,12 @@ class ClubService(
             }
         }
 
+    /**
+     * Function that creates a new club
+     * @param name the name of the club
+     * @param owner the owner of the club
+     * @return either the created club or an error indicating that the club could not be created
+     */
     fun createClub(
         name: Name,
         owner: User,
