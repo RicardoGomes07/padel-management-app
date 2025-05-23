@@ -58,8 +58,9 @@ class ClubRepositoryTests {
         val club1 = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         val club2 = clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
-        val allClubs = clubRepoJdbc.findAll()
-        val numOfClubs = clubRepoJdbc.count()
+        val allClubsPageInfo = clubRepoJdbc.findAll()
+        val allClubs = allClubsPageInfo.items
+        val numOfClubs = allClubsPageInfo.count
         assertEquals(2, numOfClubs)
         assertTrue(allClubs.containsAll(listOf(club1, club2)))
     }
@@ -68,7 +69,7 @@ class ClubRepositoryTests {
     fun `delete club by identifier`() {
         val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail())
         val club = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
-        assertEquals(1, clubRepoJdbc.findAll().size)
+        assertEquals(1, clubRepoJdbc.findAll().count)
 
         clubRepoJdbc.deleteByIdentifier(club.cid)
         assertNull(clubRepoJdbc.findByIdentifier(club.cid))
@@ -83,7 +84,7 @@ class ClubRepositoryTests {
         clubRepoJdbc.save(updatedClub)
 
         val retrievedClub = clubRepoJdbc.findClubsByName(updatedClub.name)
-        assertEquals("Updated Fly Club".toName(), retrievedClub.first().name)
+        assertEquals("Updated Fly Club".toName(), retrievedClub.items.first().name)
     }
 
     @Test
@@ -92,8 +93,10 @@ class ClubRepositoryTests {
         val club1 = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
-        val allClubs = clubRepoJdbc.findClubsByName("Force Club".toName())
-        assertEquals(1, allClubs.size)
+        val allClubsPageInfo = clubRepoJdbc.findClubsByName("Force Club".toName())
+        val allClubs = allClubsPageInfo.items
+        val numOfClubs = allClubsPageInfo.count
+        assertEquals(1, numOfClubs)
         assertEquals(allClubs.first(), club1)
     }
 
@@ -103,12 +106,16 @@ class ClubRepositoryTests {
         val club1 = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
-        val allClubsWithName = clubRepoJdbc.findClubsByName("Force".toName())
-        assertEquals(1, allClubsWithName.size)
+        val allClubsWithNamePageInfo = clubRepoJdbc.findClubsByName("Force".toName())
+        val allClubsWithName = allClubsWithNamePageInfo.items
+        val numOfClubs = allClubsWithNamePageInfo.count
+        assertEquals(1, numOfClubs)
         assertEquals(allClubsWithName.first(), club1)
 
-        val allClubsWithName2 = clubRepoJdbc.findClubsByName("ce Clu".toName())
-        assertEquals(1, allClubsWithName2.size)
+        val allClubsWithName2PageInfo = clubRepoJdbc.findClubsByName("ce Clu".toName())
+        val allClubsWithName2 = allClubsWithName2PageInfo.items
+        val numOfClubsWithName2 = allClubsWithName2PageInfo.count
+        assertEquals(1, numOfClubsWithName2)
         assertEquals(allClubsWithName2.first(), club1)
     }
 }

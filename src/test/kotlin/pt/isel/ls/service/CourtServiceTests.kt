@@ -59,9 +59,9 @@ class CourtServiceTests {
         val foundCourtsResult = courtService.getCourts(club.cid, 30, 0)
         assertTrue(foundCourtsResult.isSuccess)
         val foundCourts = foundCourtsResult.getOrNull()!!
-        assertEquals(2, foundCourts.size)
+        assertEquals(2, foundCourts.count)
 
-        assertTrue(foundCourts.containsAll(listOf(court1, court2)))
+        assertTrue(foundCourts.items.containsAll(listOf(court1, court2)))
     }
 
     @Test
@@ -94,7 +94,7 @@ class CourtServiceTests {
         val allCourtsResult = courtService.getCourts(club.cid, 30, 0)
         assertTrue(allCourtsResult.isSuccess)
         val allCourts = allCourtsResult.getOrNull()!!
-        assertEquals(2, allCourts.size)
-        assertTrue(allCourts.containsAll(listOf(court1, court2)))
+        assertEquals(2, allCourts.count)
+        assertTrue(allCourts.items.containsAll(listOf(court1, court2)))
     }
 }

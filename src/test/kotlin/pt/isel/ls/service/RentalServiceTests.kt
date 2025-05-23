@@ -137,7 +137,7 @@ class RentalServiceTests {
                     availableCourts
                 }
 
-        assertEquals(0, availableCourts.size)
+        assertEquals(0, availableCourts.count)
 
         val availableCourts1 =
             rentalService
@@ -151,6 +151,6 @@ class RentalServiceTests {
                     availableCourts
                 }
 
-        assertEquals(1, availableCourts1.size)
+        assertEquals(1, availableCourts1.count)
     }
 }

@@ -178,6 +178,7 @@ class RentalRepositoryTests {
         val retrievedRental =
             rentalRepoInMem
                 .findAll()
+                .items
                 .firstOrNull {
                     it.date == updatedRental.date &&
                         it.rentTime == updatedRental.rentTime &&

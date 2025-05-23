@@ -65,7 +65,7 @@ class ClubServiceTests {
         val club2 = clubService.createClub("Boavista".toName(), owner)
         assertTrue(club2.isSuccess)
         val allClubs = clubService.getClubs(30, 0)
-        assertEquals(2, allClubs.getOrNull()?.size)
+        assertEquals(2, allClubs.getOrNull()?.count)
     }
 
     @Test
@@ -79,8 +79,8 @@ class ClubServiceTests {
         assertTrue(club2.isSuccess)
 
         val allClubs = clubService.getClubs(30, 0, "boavista".toName())
-        assertEquals(1, allClubs.getOrNull()?.size)
-        assertEquals(club2.getOrNull(), allClubs.getOrNull()?.first())
+        assertEquals(1, allClubs.getOrNull()?.count)
+        assertEquals(club2.getOrNull(), allClubs.getOrNull()?.items?.first())
     }
 
     @Test
@@ -94,7 +94,7 @@ class ClubServiceTests {
         assertTrue(club2.isSuccess)
 
         val allClubs = clubService.getClubs(30, 0, "avis".toName())
-        assertEquals(1, allClubs.getOrNull()?.size)
-        assertEquals(club2.getOrNull(), allClubs.getOrNull()?.first())
+        assertEquals(1, allClubs.getOrNull()?.count)
+        assertEquals(club2.getOrNull(), allClubs.getOrNull()?.items?.first())
     }
 }

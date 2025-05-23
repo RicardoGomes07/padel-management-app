@@ -96,10 +96,10 @@ class ClubRepositoryJdbc(
                     }
                 }
 
-            val sqlCount = "SELECT COUNT(*) FROM clubs WHERE name = ?"
+            val sqlCount = "SELECT COUNT(*) FROM clubs WHERE name ILIKE ?"
             val count =
                 connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.setString(1, name.value)
+                    stmt.setString(1, "%${name.value}%")
                     stmt.executeQuery().use { rs ->
                         if (rs.next()) rs.getInt(1) else 0
                     }

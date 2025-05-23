@@ -149,8 +149,8 @@ class RentalWebApiTests {
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals"),
             )
-        val rentals = Json.decodeFromString<RentalsOutput>(getAllRentalsRequest.bodyString())
-        assertTrue(rentals.rentals.any { it.date == rental.date })
+        val rentals = Json.decodeFromString<PaginationInfoOutput<RentalsOutput>>(getAllRentalsRequest.bodyString())
+        assertTrue(rentals.items.rentals.any { it.date == rental.date })
         assertEquals(Status.OK, getAllRentalsRequest.status)
     }
 
@@ -169,8 +169,8 @@ class RentalWebApiTests {
             rentalsRoutes(
                 Request(GET, "users/1/rentals"),
             )
-        val userRentals = Json.decodeFromString<RentalsOutput>(getUserRentalsRequest.bodyString())
-        assertTrue(userRentals.rentals.isEmpty())
+        val userRentals = Json.decodeFromString<PaginationInfoOutput<RentalsOutput>>(getUserRentalsRequest.bodyString())
+        assertTrue(userRentals.items.rentals.isEmpty())
         assertEquals(Status.OK, getUserRentalsRequest.status)
     }
 

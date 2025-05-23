@@ -29,7 +29,7 @@ class UserRepositoryTests {
         assertFailsWith<UserError.UserAlreadyExists> {
             userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
         }
-        assertEquals(1, userRepoInMem.findAll().size)
+        assertEquals(1, userRepoInMem.findAll().count)
     }
 
     @Test
@@ -55,17 +55,17 @@ class UserRepositoryTests {
         val user1 = userRepoInMem.createUser("user1".toName(), "user1@email.com".toEmail())
         val user2 = userRepoInMem.createUser("user2".toName(), "user2@email.com".toEmail())
         val allUsers = userRepoInMem.findAll()
-        assertEquals(2, allUsers.size)
-        assertTrue(allUsers.containsAll(listOf(user1, user2)))
+        assertEquals(2, allUsers.count)
+        assertTrue(allUsers.items.containsAll(listOf(user1, user2)))
     }
 
     @Test
     fun `delete user by identifier`() {
         val user = userRepoInMem.createUser("deleteUser".toName(), "delete@email.com".toEmail())
-        assertEquals(1, userRepoInMem.findAll().size)
+        assertEquals(1, userRepoInMem.findAll().count)
 
         userRepoInMem.deleteByIdentifier(user.uid)
-        assertEquals(0, userRepoInMem.findAll().size)
+        assertEquals(0, userRepoInMem.findAll().count)
     }
 
     @Test

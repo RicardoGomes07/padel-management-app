@@ -61,17 +61,17 @@ class ClubRepositoryTests {
         val allClubs = clubRepoInMem.findAll()
         val numOfClubs = clubRepoInMem.count()
         assertEquals(2, numOfClubs)
-        assertTrue(allClubs.containsAll(listOf(club1, club2)))
+        assertTrue(allClubs.items.containsAll(listOf(club1, club2)))
     }
 
     @Test
     fun `delete club by identifier`() {
         val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
         val club = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
-        assertEquals(1, clubRepoInMem.findAll().size)
+        assertEquals(1, clubRepoInMem.findAll().count)
 
         clubRepoInMem.deleteByIdentifier(club.cid)
-        assertEquals(0, clubRepoInMem.findAll().size)
+        assertEquals(0, clubRepoInMem.findAll().count)
     }
 
     @Test
@@ -83,7 +83,7 @@ class ClubRepositoryTests {
         clubRepoInMem.save(updatedClub)
 
         val retrievedClub = clubRepoInMem.findClubsByName(updatedClub.name)
-        assertEquals("Updated Fly Club".toName(), retrievedClub.first().name)
+        assertEquals("Updated Fly Club".toName(), retrievedClub.items.first().name)
     }
 
     @Test
@@ -93,8 +93,8 @@ class ClubRepositoryTests {
         clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
         val allClubs = clubRepoInMem.findClubsByName("Force Club".toName())
-        assertEquals(1, allClubs.size)
-        assertEquals(allClubs.first(), club1)
+        assertEquals(1, allClubs.count)
+        assertEquals(allClubs.items.first(), club1)
     }
 
     @Test
@@ -104,11 +104,11 @@ class ClubRepositoryTests {
         clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
         val allClubsWithName = clubRepoInMem.findClubsByName("Force".toName())
-        assertEquals(1, allClubsWithName.size)
-        assertEquals(allClubsWithName.first(), club1)
+        assertEquals(1, allClubsWithName.count)
+        assertEquals(allClubsWithName.items.first(), club1)
 
         val allClubsWithName2 = clubRepoInMem.findClubsByName("ce Clu".toName())
-        assertEquals(1, allClubsWithName2.size)
-        assertEquals(allClubsWithName2.first(), club1)
+        assertEquals(1, allClubsWithName2.count)
+        assertEquals(allClubsWithName2.items.first(), club1)
     }
 }

@@ -13,9 +13,11 @@ import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.CourtDetailsOutput
 import pt.isel.ls.webapi.dto.CourtOutput
 import pt.isel.ls.webapi.dto.CourtsOutput
+import pt.isel.ls.webapi.dto.PaginationInfoOutput
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 private val transactionManager = TransactionManagerInMem()
 
@@ -94,11 +96,13 @@ class CourtWebApiTests {
     fun `get all courts for a club`() {
         val token = createUser()
         val clubID = createClub(token).cid.toInt()
+        createCourt(token, clubID)
         val getAllCourtsRequest =
             courtsRoutes(
                 Request(GET, "clubs/$clubID/courts"),
             )
-        val getAllCourtsResponse = Json.decodeFromString<CourtsOutput>(getAllCourtsRequest.bodyString())
+        val getAllCourtsResponse = Json.decodeFromString<PaginationInfoOutput<CourtsOutput>>(getAllCourtsRequest.bodyString())
         assertEquals(Status.OK, getAllCourtsRequest.status)
+        assertTrue(getAllCourtsResponse.items.courts.isNotEmpty())
     }
 }
