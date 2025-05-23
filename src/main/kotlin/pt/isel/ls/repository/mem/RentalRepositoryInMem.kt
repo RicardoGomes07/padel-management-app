@@ -6,6 +6,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.repository.RentalRepository
@@ -118,16 +119,19 @@ object RentalRepositoryInMem : RentalRepository {
         date: LocalDate?,
         limit: Int,
         offset: Int,
-    ): List<Rental> {
+    ): PaginationInfo<Rental> {
         getOrThrow(RentalError.MissingCourt(crid)) {
             courts.firstOrNull { it.crid == crid }
         }
 
-        return rentals
-            .filter {
-                it.court.crid == crid && (date == null || it.date == date)
-            }.drop(offset)
-            .take(limit)
+        val filteredRentals =
+            rentals
+                .filter {
+                    it.court.crid == crid && (date == null || it.date == date)
+                }.drop(offset)
+                .take(limit)
+
+        return PaginationInfo(filteredRentals, filteredRentals.size)
     }
 
     override fun numRentalsOfCourt(
@@ -144,16 +148,19 @@ object RentalRepositoryInMem : RentalRepository {
         renter: UInt,
         limit: Int,
         offset: Int,
-    ): List<Rental> {
+    ): PaginationInfo<Rental> {
         getOrThrow(RentalError.RenterNotFound(renter)) {
             users.firstOrNull { it.uid == renter }
         }
 
-        return rentals
-            .filter {
-                it.renter.uid == renter
-            }.drop(offset)
-            .take(limit)
+        val filteredRentals =
+            rentals
+                .filter {
+                    it.renter.uid == renter
+                }.drop(offset)
+                .take(limit)
+
+        return PaginationInfo(filteredRentals, filteredRentals.size)
     }
 
     override fun numRentalsOfUser(renter: UInt): Int = rentals.count { it.renter.uid == renter }
@@ -169,7 +176,7 @@ object RentalRepositoryInMem : RentalRepository {
             rentals
                 .filter { rental -> rental.date == date }
                 .filterNot { rental -> rental.rid == rid }
-        print(rentalsInDay)
+
         require(
             rentalsInDay.none { rental ->
                 rental.rentTime.start <= rentTime.end && rental.rentTime.end >= rentTime.start
@@ -225,7 +232,10 @@ object RentalRepositoryInMem : RentalRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<Rental> = rentals.drop(offset).take(limit)
+    ): PaginationInfo<Rental> {
+        val filteredRentals = rentals.drop(offset).take(limit)
+        return PaginationInfo(filteredRentals, filteredRentals.size)
+    }
 
     /**
      * Deletes a rental by its identifier.

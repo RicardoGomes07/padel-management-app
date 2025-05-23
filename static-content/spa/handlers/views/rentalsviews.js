@@ -19,7 +19,7 @@ function renderRentalDetailsView(contentHeader, content, rental) {
     content.replaceChildren(info)
 }
 
-function renderCalendarToSearchRentals(contentHeader, content, date, cid, crid, handleSubmit) {
+function renderCalendarToSearchRentals(contentHeader, content, cid, crid, handleSubmit) {
     const header = "Search Rentals"
 
     const fields = [

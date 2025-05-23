@@ -10,14 +10,16 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
+import pt.isel.ls.domain.toToken
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.AvailableHoursInput
-import pt.isel.ls.webapi.dto.CourtOutput
 import pt.isel.ls.webapi.dto.DateAndRentTimeInput
 import pt.isel.ls.webapi.dto.RentalCreationInput
 import pt.isel.ls.webapi.dto.RentalDetailsOutput
 import pt.isel.ls.webapi.dto.RentalUpdateInput
 import pt.isel.ls.webapi.dto.toAvailableHours
+import pt.isel.ls.webapi.dto.toCourtsOutput
+import pt.isel.ls.webapi.dto.toPaginationOutput
 import pt.isel.ls.webapi.dto.toRentalsOutput
 
 /**
@@ -28,7 +30,7 @@ class RentalWebApi(
     private val userService: UserService,
 ) {
     fun createRental(request: Request): Response =
-        request.handlerWithAuth(userService::validateUser) {
+        request.handlerWithAuth(userService::validateUser) { user ->
             val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
 
             val timeSlot = TimeSlot(input.initialHour, input.finalHour)
@@ -41,7 +43,7 @@ class RentalWebApi(
                 .createRental(
                     input.date,
                     timeSlot,
-                    clubId,
+                    user.uid,
                     courtId,
                 ).fold(
                     onFailure = { ex -> ex.toResponse() },
@@ -63,7 +65,11 @@ class RentalWebApi(
                 .getRentals(courtId, date, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
+                    onSuccess = {
+                        Response(OK).body(
+                            Json.encodeToString(it.toPaginationOutput { toRentalsOutput() }),
+                        )
+                    },
                 )
         }
 
@@ -79,7 +85,11 @@ class RentalWebApi(
                 .getUserRentals(userId, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toRentalsOutput())) },
+                    onSuccess = {
+                        Response(OK).body(
+                            Json.encodeToString(it.toPaginationOutput { toRentalsOutput() }),
+                        )
+                    },
                 )
         }
 
@@ -134,7 +144,11 @@ class RentalWebApi(
                 .getAvailableCourtsByDateAndRentTime(clubId, input.date, timeSlot)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.map { court -> CourtOutput(court) })) },
+                    onSuccess = {
+                        Response(OK).body(
+                            Json.encodeToString(it.toPaginationOutput { toCourtsOutput() }),
+                        )
+                    },
                 )
         }
 

@@ -1,14 +1,15 @@
 import Html from "../../dsl/htmlfuns.js";
-import pagination from "./pagination.js";
+import pagination  from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import clubsrequests from "../requests/clubsrequests.js";
 
 const { fetchClubs } = clubsrequests;
-const { input, a, ul, li, p, span, div } = Html;
+const { input, a, ul, li, p, div, formElement } = Html;
 const { createPaginationLinks } = pagination
 const { getUserProfileUri, listClubsUri, listClubCourtsUri, createCourtFromUri, getClubDetailsUri,
-    createClubUri, searchCourtsToRentUri }
-    = uriManager
+    createClubUri, searchCourtsToRentUri } = uriManager
+
+const DEFAULT_SEARCH_LIMIT = 5
 
 function renderClubDetailsView(contentHeader, content, club){
     const header = "Club Info"
@@ -18,7 +19,7 @@ function renderClubDetailsView(contentHeader, content, club){
         li(
             a("Courts", listClubCourtsUri(club.cid)),
             a("Create Court", createCourtFromUri(club.cid)),
-            a("Rent", searchCourtsToRentUri(club.cid) )
+            a("Rent", searchCourtsToRentUri(club.cid)),
         ),
         a("All Clubs", listClubsUri()),
     );
@@ -37,20 +38,20 @@ function clubsList(clubs) {
         : p("No clubs found")
 }
 
-function renderClubsView(contentHeader, content, clubs, name, skip, limit, hasNext){
+function renderClubsView(contentHeader, content, clubs, count, name, page){
     const currHeader = contentHeader.textContent
     const header = `Clubs${name ? `: ${name}` : ``}`
     const info = clubsList(clubs)
 
     const createClubAnchor = a("Create a Club", createClubUri())
 
-    const navigation = createPaginationLinks(listClubsUri(name, skip, limit), Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(listClubsUri(name, page), count, page)
 
     if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(clubSearchBar(skip, limit), info, navigation, createClubAnchor)
+    content.replaceChildren(clubSearchBar(), info, navigation, createClubAnchor)
 }
 
-function clubSearchBar(skip, limit) {
+function clubSearchBar() {
     let clubNameSearch = ""
 
     const clubsContainer = div()
@@ -64,27 +65,46 @@ function clubSearchBar(skip, limit) {
     const onChange = (name) => {
         clubNameSearch = name
         if (clubNameSearch.length >= 3) {
-            fetchClubs(clubNameSearch).then(res => {
-                renderClubs(res.data.clubs)
+            fetchClubs(clubNameSearch, 0, DEFAULT_SEARCH_LIMIT).then(res => {
+                renderClubs(res.data.items.clubs)
             })
         } else {
             clubsContainer.replaceChildren()
         }
-        anchor.setAttribute("href", listClubsUri(clubNameSearch, skip, limit));
+        anchor.setAttribute("href", listClubsUri(clubNameSearch));
     }
 
-    const anchor = a("Search Clubs",  listClubsUri(clubNameSearch, skip, limit));
+    const anchor = a("Search Clubs",  listClubsUri(clubNameSearch));
 
     return ul(
-        input("Search", "text", "", "", onChange),
+        input("Search", "text", "", "", false, onChange),
         anchor,
         clubsContainer,
     )
+}
+
+function renderCreateClubView(contentHeader, content, handleSubmit) {
+    const header = "Create a Club"
+
+    const fields = [
+        {id: "clubName", name: "clubName", label: "Name of the Club", type: "text", required: true }
+    ]
+
+    const form = formElement(fields, handleSubmit, {
+        className: "form",
+        submitText: "Create Clubs"
+    })
+
+    const back = a("Back", listClubsUri())
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(form, back)
 }
 
 const clubViews ={
     renderClubDetailsView,
     renderClubsView,
     clubSearchBar,
+    renderCreateClubView,
 }
 export default clubViews

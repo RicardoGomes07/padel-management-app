@@ -1,13 +1,12 @@
 import { request } from "../router.js";
-import pagination from "./views/pagination.js";
 import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
 import {createPaginationManager} from "../managers/paginationManager.js";
 import auxiliaryFuns from "./auxfuns.js";
 import uriManager from "../managers/uriManager.js";
+import {ELEMS_PER_PAGE} from "./views/pagination.js";
 
-const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
 const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView,
@@ -22,66 +21,61 @@ const courtsOfClubPagination =
 
 async function getCourtsByClub(contentHeader, content) {
     const cid = path("cid")
-    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
-    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
+    const page = Number(query("page")) || 1
 
-    const courts = await courtsOfClubPagination
+    const [courts, count] = await courtsOfClubPagination
         .reqParams(Number(cid))
         .resetCacheIfNeeded("cid", Number(cid))
         .getPage(
-            skip,
-            limit,
+            page,
             (message) => { errorView(contentHeader, content, getClubDetailsUri(cid), message) }
         )
-
-    const hasNext = courtsOfClubPagination.hasNext()
 
     renderCourtsByClubView(
         contentHeader,
         content,
         courts,
+        count,
         cid,
-        skip,
-        limit,
-        hasNext
+        page,
     )
 }
 
 async function getCourtDetails(contentHeader, content) {
     const crid = path("crid")
     const cid = path("cid")
-    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
-    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
+    const page = Number(query("page")) || 1
 
     const result = await fetchCourtDetails(cid, crid)
 
     if (result.status !== 200) errorView(contentHeader, content, getClubDetailsUri(cid) ,result.data)
-    else renderCourtDetailsView(contentHeader, content, result.data, cid, crid, skip, limit)
+    else renderCourtDetailsView(contentHeader, content, result.data, cid, crid, page)
 }
 
 async function getCourtRentals(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")
-    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
-    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
+    const page = Number(query("page")) || 1
 
-    const rsp = await fetchCourtRentals(cid, crid, skip, limit+1)
+    const skip = (page - 1) * ELEMS_PER_PAGE
+
+    const rsp = await fetchCourtRentals(cid, crid, skip, ELEMS_PER_PAGE)
     if (rsp.status !== 200){
-        errorView(contentHeader, content, listCourtRentalsUri(cid, crid, skip, limit), rsp.data)
+        errorView(contentHeader, content, listCourtRentalsUri(cid, crid), rsp.data.items)
         return
     }
-    const rentals = rsp.data.rentals.slice(0, limit) ?? []
-    const hasNext = rsp.data.rentals.length > limit
+
+    const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
+    const count = rsp.data.count
 
     renderCourtRentalsView(
         contentHeader,
         content,
         rentals,
+        count,
         cid,
         crid,
-        skip,
-        limit,
-        hasNext
+        page,
     )
 }
 
@@ -141,9 +135,14 @@ function searchCourtsToRent(contentHeader, content) {
         const date = e.target.querySelector("#date").value
         const startHour = e.target.querySelector("#startHour").value
         const endHour = e.target.querySelector("#endHour").value
-        const availableCourts = await courtsRequests.getAvailableCourtsByDateAndTimeSlot(cid, date, parseHourFromString(startHour), parseHourFromString(endHour))
-        if (availableCourts.status === 200) renderAvailableCourtsToRent(contentHeader, content, availableCourts.data, date, startHour, endHour)
-        else errorView(contentHeader, content, getClubDetailsUri(cid), availableCourts.data)
+        const availableCourtsRsp =
+            await courtsRequests.getAvailableCourtsByDateAndTimeSlot(
+                cid, date, parseHourFromString(startHour), parseHourFromString(endHour)
+            )
+        const availableCourts = availableCourtsRsp.data.items.courts
+
+        if (availableCourtsRsp.status === 200) renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour)
+        else errorView(contentHeader, content, getClubDetailsUri(cid), availableCourts)
     }
     renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, submitHandler)
 }

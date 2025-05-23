@@ -2,6 +2,7 @@ package pt.isel.ls.repository.mem
 
 import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.repository.ClubRepository
 import pt.isel.ls.repository.mem.UserRepositoryInMem.users
 import pt.isel.ls.services.ClubError
@@ -40,16 +41,17 @@ object ClubRepositoryInMem : ClubRepository {
         return club
     }
 
-    override fun findClubByName(name: Name): Club? = clubs.firstOrNull { it.name == name }
-
     override fun findClubsByName(
         name: Name,
         limit: Int,
         offset: Int,
-    ): List<Club> =
-        clubs.filter { club ->
-            club.name.value.contains(name.value, ignoreCase = true)
-        }
+    ): PaginationInfo<Club> {
+        val filteredClubs =
+            clubs.filter { club ->
+                club.name.value.contains(name.value, ignoreCase = true)
+            }
+        return PaginationInfo(filteredClubs, filteredClubs.size)
+    }
 
     override fun save(element: Club) {
         clubs.removeIf { it.cid == element.cid }
@@ -68,7 +70,10 @@ object ClubRepositoryInMem : ClubRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<Club> = clubs.drop(offset).take(limit)
+    ): PaginationInfo<Club>{
+        val filteredClubs = clubs.drop(offset).take(limit)
+        return PaginationInfo(filteredClubs, filteredClubs.size)
+    }
 
     override fun deleteByIdentifier(id: UInt) {
         clubs.removeIf { it.cid == id }

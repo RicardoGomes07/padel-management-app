@@ -2,6 +2,7 @@ package pt.isel.ls.services
 
 import kotlinx.datetime.LocalDate
 import pt.isel.ls.domain.Court
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.repository.TransactionManager
@@ -22,7 +23,7 @@ class RentalService(
         date: LocalDate?,
         limit: Int,
         skip: Int,
-    ): Result<List<Rental>> =
+    ): Result<PaginationInfo<Rental>> =
         runCatching {
             trxManager.run {
                 rentalRepo.findByCridAndDate(crid, date, limit, skip)
@@ -89,7 +90,7 @@ class RentalService(
         uid: UInt,
         limit: Int,
         skip: Int,
-    ): Result<List<Rental>> =
+    ): Result<PaginationInfo<Rental>> =
         runCatching {
             trxManager.run {
                 rentalRepo.findAllRentalsByRenterId(uid, limit, skip)
@@ -161,15 +162,17 @@ class RentalService(
         clubId: UInt,
         date: LocalDate,
         timeSlot: TimeSlot,
-    ): Result<List<Court>> =
+    ): Result<PaginationInfo<Court>> =
         runCatching {
             trxManager.run {
-                val courts = courtRepo.findByClubIdentifier(clubId)
-                courts.filter { court ->
-                    (timeSlot.start until timeSlot.end).all {
-                        it in rentalRepo.findAvailableHoursForACourt(court.crid, date)
+                val courtsPageInfo = courtRepo.findByClubIdentifier(clubId)
+                val courts =
+                    courtsPageInfo.items.filter { court ->
+                        (timeSlot.start until timeSlot.end).all {
+                            it in rentalRepo.findAvailableHoursForACourt(court.crid, date)
+                        }
                     }
-                }
+                PaginationInfo(courts, courts.size)
             }
         }
 }

@@ -1,5 +1,10 @@
-export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) {
+import {ELEMS_PER_PAGE} from "../handlers/views/pagination.js";
+
+export const MAX_CACHE_SIZE = 100
+
+export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = MAX_CACHE_SIZE) {
     const cache = []
+    let count = 0
 
     let dynamicParams = []
     let currentFilterProp = null
@@ -8,7 +13,7 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
 
     const getElements = (skip, limit) => {
         hasNext = cache.length > (skip + limit)
-        return cache.slice(skip, skip + limit)
+        return [cache.slice(skip, skip + limit), count]
     }
 
     const updateCache = (items) => {
@@ -20,10 +25,12 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
         }
     }
 
-    const fetchAndCache = async (userSkip, limit, onError) => {
+    const fetchAndCache = async (page, onError) => {
         const cacheSize = cache.length
 
-        const needed = (userSkip + limit + 1) - cacheSize
+        const skip = (page - 1) * ELEMS_PER_PAGE
+
+        const needed = (page * ELEMS_PER_PAGE) - cacheSize
 
         if (needed > 0) {
             try {
@@ -35,7 +42,8 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
                     return []
                 }
 
-                const items = res.data[jsonProp] ?? []
+                const items = res.data.items[jsonProp] ?? []
+                count = res.data.count
 
                 updateCache(items)
             } catch (err) {
@@ -44,7 +52,7 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
             }
         }
 
-        return getElements(userSkip, limit)
+        return getElements(skip, ELEMS_PER_PAGE)
     }
 
     return {
@@ -62,13 +70,13 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = 100) 
             return this
         },
 
-        async getPage(skip, limit, onError) {
-            return await fetchAndCache(skip, limit, onError)
+        async getPage(page, onError) {
+            return await fetchAndCache(page, onError)
         },
 
         hasNext() {
             return hasNext
-        }
+        },
     }
 }
 

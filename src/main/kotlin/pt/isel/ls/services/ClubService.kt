@@ -2,6 +2,7 @@ package pt.isel.ls.services
 
 import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.domain.User
 import pt.isel.ls.repository.TransactionManager
 
@@ -16,7 +17,7 @@ class ClubService(
         limit: Int,
         skip: Int,
         name: Name? = null,
-    ): Result<List<Club>> =
+    ): Result<PaginationInfo<Club>> =
         runCatching {
             trxManager.run {
                 name?.let {

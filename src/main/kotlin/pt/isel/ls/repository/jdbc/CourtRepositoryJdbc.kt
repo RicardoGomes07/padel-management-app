@@ -8,6 +8,7 @@ import pt.isel.ls.services.CourtError
 import pt.isel.ls.services.ensureOrThrow
 import java.sql.Connection
 import java.sql.ResultSet
+import kotlin.io.use
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for courts related actions
@@ -80,29 +81,35 @@ class CourtRepositoryJdbc(
         cid: UInt,
         limit: Int,
         offset: Int,
-    ): List<Court> {
-        val sqlSelect =
-            """
-            ${courtSqlReturnFormat()}
-            WHERE cr.club_id = ?
-            ORDER BY cr.crid DESC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<Court> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${courtSqlReturnFormat()}
+                WHERE cr.club_id = ?
+                ORDER BY cr.crid DESC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, cid.toInt())
-            stmt.setInt(2, limit)
-            stmt.setInt(3, offset)
+            val courts =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, cid.toInt())
+                    stmt.setInt(2, limit)
+                    stmt.setInt(3, offset)
 
-            stmt.executeQuery().use { rs ->
-                val courts = mutableListOf<Court>()
-                while (rs.next()) {
-                    courts.add(rs.mapCourt())
+                    stmt.executeQuery().use { rs ->
+                        val courts = mutableListOf<Court>()
+                        while (rs.next()) {
+                            courts.add(rs.mapCourt())
+                        }
+                        courts
+                    }
                 }
-                courts
-            }
+
+            val count = count(cid)
+
+            return@executeMultipleQueries PaginationInfo(courts, count)
         }
-    }
 
     /**
      * Function that creates a new court or updates, with the information given, if one with the crid already exists.
@@ -157,27 +164,39 @@ class CourtRepositoryJdbc(
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<Court> {
-        val sqlSelect =
-            """
-            ${courtSqlReturnFormat()}
-            ORDER BY cr.crid DESC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<Court> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${courtSqlReturnFormat()}
+                ORDER BY cr.crid DESC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, limit)
-            stmt.setInt(2, offset)
+            val courts =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, limit)
+                    stmt.setInt(2, offset)
 
-            stmt.executeQuery().use { rs ->
-                val courts = mutableListOf<Court>()
-                while (rs.next()) {
-                    courts.add(rs.mapCourt())
+                    stmt.executeQuery().use { rs ->
+                        val courts = mutableListOf<Court>()
+                        while (rs.next()) {
+                            courts.add(rs.mapCourt())
+                        }
+                        courts
+                    }
                 }
-                courts
-            }
+
+            val sqlCount = "SELECT COUNT(*) FROM courts"
+            val count =
+                connection.prepareStatement(sqlCount).use { stmt ->
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(1) else 0
+                    }
+                }
+
+            return@executeMultipleQueries PaginationInfo(courts, count)
         }
-    }
 
     /**
      * Function that deletes a court if exists a tuple with the crid, if it doesn't exist, does nothing

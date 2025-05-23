@@ -67,33 +67,11 @@ class ClubRepositoryJdbc(
             }
         }
 
-    /**
-     * Function that finds a club by a given name.
-     * @param name The name to search respective club
-     * @return The respective Club if found, otherwise null
-     */
-    override fun findClubByName(name: Name): Club? =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${clubSqlReturnFormat()}
-                WHERE c.name = ?
-                """.trimIndent()
-
-            connection.prepareStatement(sqlSelect).use { stmt ->
-                stmt.setString(1, name.value)
-
-                stmt.executeQuery().use { rs ->
-                    if (rs.next()) rs.mapClub() else return@executeMultipleQueries null
-                }
-            }
-        }
-
     override fun findClubsByName(
         name: Name,
         limit: Int,
         offset: Int,
-    ): List<Club> =
+    ): PaginationInfo<Club> =
         connection.executeMultipleQueries {
             val sqlSelect =
                 """
@@ -103,19 +81,31 @@ class ClubRepositoryJdbc(
                 LIMIT ? OFFSET ?
                 """.trimIndent()
 
-            connection.prepareStatement(sqlSelect).use { stmt ->
-                stmt.setString(1, "%${name.value}%")
-                stmt.setInt(2, limit)
-                stmt.setInt(3, offset)
+            val clubs =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setString(1, "%${name.value}%")
+                    stmt.setInt(2, limit)
+                    stmt.setInt(3, offset)
 
-                stmt.executeQuery().use { rs ->
-                    val clubs = mutableListOf<Club>()
-                    while (rs.next()) {
-                        clubs.add(rs.mapClub())
+                    stmt.executeQuery().use { rs ->
+                        val clubs = mutableListOf<Club>()
+                        while (rs.next()) {
+                            clubs.add(rs.mapClub())
+                        }
+                        clubs
                     }
-                    clubs
                 }
-            }
+
+            val sqlCount = "SELECT COUNT(*) FROM clubs WHERE name = ?"
+            val count =
+                connection.prepareStatement(sqlCount).use { stmt ->
+                    stmt.setString(1, name.value)
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(1) else 0
+                    }
+                }
+
+            return@executeMultipleQueries PaginationInfo(clubs, count)
         }
 
     /**
@@ -172,27 +162,33 @@ class ClubRepositoryJdbc(
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<Club> {
-        val sqlSelect =
-            """
-            ${clubSqlReturnFormat()}
-            ORDER BY c.cid DESC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<Club> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${clubSqlReturnFormat()}
+                ORDER BY c.cid DESC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, limit)
-            stmt.setInt(2, offset)
+            val clubs =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, limit)
+                    stmt.setInt(2, offset)
 
-            stmt.executeQuery().use { rs ->
-                val clubs = mutableListOf<Club>()
-                while (rs.next()) {
-                    clubs.add(rs.mapClub())
+                    stmt.executeQuery().use { rs ->
+                        val clubs = mutableListOf<Club>()
+                        while (rs.next()) {
+                            clubs.add(rs.mapClub())
+                        }
+                        clubs
+                    }
                 }
-                clubs
-            }
+
+            val count = count()
+
+            return@executeMultipleQueries PaginationInfo(clubs, count)
         }
-    }
 
     /**
      * Function that deletes a club if exists a tuple with the cid, if it doesn't exist, does nothing

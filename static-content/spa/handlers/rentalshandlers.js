@@ -1,5 +1,5 @@
 import { request } from "../router.js"
-import pagination from "./views/pagination.js";
+import {ELEMS_PER_PAGE} from "./views/pagination.js";
 import rentalsViews from "./views/rentalsviews.js"
 import rentalsRequests from "./requests/rentalsrequests.js"
 import errorsViews from "./views/errorsview.js";
@@ -8,7 +8,6 @@ import courtsViews from "./views/courtsviews.js";
 import uriManager from "../managers/uriManager.js";
 import auxfuns from "../handlers/auxfuns.js";
 
-const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
 const { renderRentalDetailsView, renderCalendarToSearchRentals, renderUpdateRentalView, renderRentalCreationForm } = rentalsViews
 const { fetchRentalDetails} = rentalsRequests
 const { errorView } = errorsViews
@@ -26,7 +25,7 @@ async function getRentalDetails(contentHeader, content) {
     const result = await fetchRentalDetails(clubId, courtId, rentalId)
 
     if(result.status !== 200)
-        errorView(contentHeader, content, listCourtRentalsUri(courtId, courtId, DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT) ,result.data)
+        errorView(contentHeader, content, listCourtRentalsUri(courtId, courtId) ,result.data)
     else
         renderRentalDetailsView(contentHeader, content, result.data)
 }
@@ -86,7 +85,7 @@ async function updateRental(contentHeader, content) {
     if (response.status === 200) {
         renderUpdateRentalView(contentHeader, content, response.data, handleSubmit);
     } else {
-        errorView(contentHeader, content, listCourtRentalsUri(cid, crid, DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT), response.data);
+        errorView(contentHeader, content, listCourtRentalsUri(cid, crid), response.data);
     }
 
 }
@@ -95,15 +94,14 @@ async function deleteRental(contentHeader, content) {
     const cid = Number(path("cid"))
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
-    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
-    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
+    const page = Number(query("page")) || 1
 
     const result = await rentalsRequests.deleteRental(cid, crid, rid)
 
     if (result.status !== 200) {
         errorView(contentHeader, content, listCourtRentalsUri(cid,crid), result.data)
     } else {
-        window.location.hash = listCourtRentalsUri(cid, crid,skip, limit)
+        window.location.hash = listCourtRentalsUri(cid, crid, page)
     }
 }
 
@@ -111,34 +109,34 @@ function searchRentals(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")
 
-    const skip = Number(query("skip")) || DEFAULT_VALUE_SKIP
-    const limit = Number(query("limit")) || DEFAULT_VALUE_LIMIT
+    const page = Number(query("page")) || 1
+    const skip = (page - 1) * ELEMS_PER_PAGE
 
     const handleSubmit = async function(e){
         e.preventDefault()
         const validDate = e.target.querySelector("#date").value
-        const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, limit+1, validDate)
+
+        const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, ELEMS_PER_PAGE, validDate)
         if (rsp.status !== 200){
             errorView(contentHeader, content, listCourtRentalsUri(cid,crid), rsp.data)
             return
         }
-        const rentals = rsp.data.rentals.slice(0, limit) ?? []
-        const hasNext = rsp.data.rentals.length > limit
+
+        const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
+        const count = rsp.data.count
 
         renderCourtRentalsView(
             contentHeader,
             content,
             rentals,
+            count,
             cid,
             crid,
-            skip,
-            limit,
-            hasNext
+            page
         )
     }
 
-    renderCalendarToSearchRentals(contentHeader, content, handleSubmit, cid, crid)
-
+    renderCalendarToSearchRentals(contentHeader, content, cid, crid, handleSubmit)
 }
 
 const rentalsHandlers= {

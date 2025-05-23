@@ -54,7 +54,10 @@ object UserRepositoryInMem : UserRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<User> = users.drop(offset).take(limit)
+    ): PaginationInfo<User>{
+        val filteredUsers = users.drop(offset).take(limit)
+        return PaginationInfo(filteredUsers, filteredUsers.size)
+    }
 
     override fun deleteByIdentifier(id: UInt) {
         users.removeIf { it.uid == id }

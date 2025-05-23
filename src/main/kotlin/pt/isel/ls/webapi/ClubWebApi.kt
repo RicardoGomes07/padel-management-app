@@ -47,7 +47,13 @@ class ClubWebApi(
                 .getClubs(limit, skip, name)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toClubsOutput())) },
+                    onSuccess = {
+                        Response(OK).body(
+                            Json.encodeToString(
+                                it.toPaginationOutput { toClubsOutput() },
+                            ),
+                        )
+                    },
                 )
         }
 

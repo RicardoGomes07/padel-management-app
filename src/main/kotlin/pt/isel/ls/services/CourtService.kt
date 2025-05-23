@@ -2,6 +2,7 @@ package pt.isel.ls.services
 
 import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.repository.TransactionManager
 
 class CourtService(
@@ -18,7 +19,7 @@ class CourtService(
         cid: UInt,
         limit: Int,
         skip: Int,
-    ): Result<List<Court>> =
+    ): Result<PaginationInfo<Court>> =
         runCatching {
             trxManager.run {
                 courtRepo.findByClubIdentifier(cid, limit, skip)

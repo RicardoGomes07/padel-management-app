@@ -147,46 +147,61 @@ class RentalRepositoryJdbc(
         date: LocalDate?,
         limit: Int,
         offset: Int,
-    ): List<Rental> {
-        val sqlSelect =
-            """
-            ${rentalSqlReturnFormat()}
-            WHERE r.court_id = ?
-            ${(
-                if (date != null) {
-                    """
-                    AND r.date_ = ?
-                    """.trimIndent()
-                } else {
-                    ""
-                }
-            )}
-            ORDER BY r.date_ ASC, r.rd_start ASC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<Rental> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${rentalSqlReturnFormat()}
+                WHERE r.court_id = ?
+                ${(
+                    if (date != null) {
+                        """
+                        AND r.date_ = ?
+                        """.trimIndent()
+                    } else {
+                        ""
+                    }
+                )}
+                ORDER BY r.date_ ASC, r.rd_start ASC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, crid.toInt())
-            val paramPosition =
-                if (date != null) {
-                    stmt.setInt(2, date.toEpochDays())
-                    3
-                } else {
-                    2
+            val rentals =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, crid.toInt())
+                    val paramPosition =
+                        if (date != null) {
+                            stmt.setInt(2, date.toEpochDays())
+                            3
+                        } else {
+                            2
+                        }
+
+                    stmt.run {
+                        setInt(paramPosition, limit)
+                        setInt(paramPosition + 1, offset)
+                    }
+
+                    stmt.executeQuery().use { rs ->
+                        val rentals = mutableListOf<Rental>()
+                        while (rs.next()) {
+                            rentals.add(rs.mapRental())
+                        }
+                        rentals
+                    }
                 }
 
-            stmt.setInt(paramPosition, limit)
-            stmt.setInt(paramPosition + 1, offset)
-
-            stmt.executeQuery().use { rs ->
-                val rentals = mutableListOf<Rental>()
-                while (rs.next()) {
-                    rentals.add(rs.mapRental())
+            val sqlCount = "SELECT COUNT(*) FROM rentals WHERE court_id = ?"
+            val count =
+                connection.prepareStatement(sqlCount).use { stmt ->
+                    stmt.setInt(1, crid.toInt())
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(1) else 0
+                    }
                 }
-                rentals
-            }
+
+            return@executeMultipleQueries PaginationInfo(rentals, count)
         }
-    }
 
     override fun numRentalsOfCourt(
         crid: UInt,
@@ -222,29 +237,42 @@ class RentalRepositoryJdbc(
         renter: UInt,
         limit: Int,
         offset: Int,
-    ): List<Rental> {
-        val sqlSelect =
-            """
-            ${rentalSqlReturnFormat()}
-            WHERE r.renter_id = ?
-            ORDER BY r.date_ DESC, r.rd_start ASC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<Rental> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${rentalSqlReturnFormat()}
+                WHERE r.renter_id = ?
+                ORDER BY r.date_ DESC, r.rd_start ASC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, renter.toInt())
-            stmt.setInt(2, limit)
-            stmt.setInt(3, offset)
+            val rentals =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, renter.toInt())
+                    stmt.setInt(2, limit)
+                    stmt.setInt(3, offset)
 
-            stmt.executeQuery().use { rs ->
-                val rentals = mutableListOf<Rental>()
-                while (rs.next()) {
-                    rentals.add(rs.mapRental())
+                    stmt.executeQuery().use { rs ->
+                        val rentals = mutableListOf<Rental>()
+                        while (rs.next()) {
+                            rentals.add(rs.mapRental())
+                        }
+                        rentals
+                    }
                 }
-                rentals
-            }
+
+            val sqlCount = "SELECT COUNT(*) FROM rentals WHERE renter_id = ?"
+            val count =
+                connection.prepareStatement(sqlCount).use { stmt ->
+                    stmt.setInt(1, renter.toInt())
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(1) else 0
+                    }
+                }
+
+            return@executeMultipleQueries PaginationInfo(rentals, count)
         }
-    }
 
     override fun numRentalsOfUser(renter: UInt): Int {
         val sql = "SELECT COUNT(*) FROM rentals WHERE renter_id = ?"
@@ -397,27 +425,39 @@ class RentalRepositoryJdbc(
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<Rental> {
-        val sqlSelect =
-            """
-            ${rentalSqlReturnFormat()}
-            ORDER BY r.date_ DESC, r.rd_start ASC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<Rental> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                ${rentalSqlReturnFormat()}
+                ORDER BY r.date_ DESC, r.rd_start ASC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, limit)
-            stmt.setInt(2, offset)
+            val rentals =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, limit)
+                    stmt.setInt(2, offset)
 
-            stmt.executeQuery().use { rs ->
-                val rentals = mutableListOf<Rental>()
-                while (rs.next()) {
-                    rentals.add(rs.mapRental())
+                    stmt.executeQuery().use { rs ->
+                        val rentals = mutableListOf<Rental>()
+                        while (rs.next()) {
+                            rentals.add(rs.mapRental())
+                        }
+                        rentals
+                    }
                 }
-                rentals
-            }
+
+            val sqlCount = "SELECT COUNT(*) FROM rentals"
+            val count =
+                connection.prepareStatement(sqlCount).use { stmt ->
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(1) else 0
+                    }
+                }
+
+            return@executeMultipleQueries PaginationInfo(rentals, count)
         }
-    }
 
     /**
      * Function that deletes a rental if exists a tuple with the rid, if it doesn't exist, does nothing

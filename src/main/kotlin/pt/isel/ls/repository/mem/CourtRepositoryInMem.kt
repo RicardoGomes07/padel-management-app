@@ -2,6 +2,7 @@ package pt.isel.ls.repository.mem
 
 import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.repository.CourtRepository
 import pt.isel.ls.repository.mem.ClubRepositoryInMem.clubs
 import pt.isel.ls.services.CourtError
@@ -38,7 +39,10 @@ object CourtRepositoryInMem : CourtRepository {
         cid: UInt,
         limit: Int,
         offset: Int,
-    ): List<Court> = courts.filter { it.club.cid == cid }.drop(offset).take(limit)
+    ): PaginationInfo<Court>{
+        val filteredCourts = courts.filter { it.club.cid == cid }.drop(offset).take(limit)
+        return PaginationInfo(filteredCourts, filteredCourts.size)
+    }
 
     override fun save(element: Court) {
         courts.removeIf { it.crid == element.crid }
@@ -57,7 +61,10 @@ object CourtRepositoryInMem : CourtRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<Court> = courts.drop(offset).take(limit)
+    ): PaginationInfo<Court>{
+        val filteredCourts = courts.drop(offset).take(limit)
+        return PaginationInfo(filteredCourts, filteredCourts.size)
+    }
 
     override fun deleteByIdentifier(id: UInt) {
         courts.removeIf { it.crid == id }

@@ -119,27 +119,39 @@ class UserRepositoryJdbc(
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): List<User> {
-        val sqlSelect =
-            """
-            SELECT * FROM users
-            ORDER BY uid DESC
-            LIMIT ? OFFSET ?
-            """.trimIndent()
+    ): PaginationInfo<User> =
+        connection.executeMultipleQueries {
+            val sqlSelect =
+                """
+                SELECT * FROM users
+                ORDER BY uid DESC
+                LIMIT ? OFFSET ?
+                """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, limit)
-            stmt.setInt(2, offset)
+            val users =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, limit)
+                    stmt.setInt(2, offset)
 
-            stmt.executeQuery().use { rs ->
-                val users = mutableListOf<User>()
-                while (rs.next()) {
-                    users.add(rs.mapUser())
+                    stmt.executeQuery().use { rs ->
+                        val users = mutableListOf<User>()
+                        while (rs.next()) {
+                            users.add(rs.mapUser())
+                        }
+                        users
+                    }
                 }
-                users
-            }
+
+            val sqlCount = "SELECT COUNT(*) FROM users"
+            val count =
+                connection.prepareStatement(sqlCount).use { stmt ->
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.getInt(1) else 0
+                    }
+                }
+
+            return@executeMultipleQueries PaginationInfo(users, count)
         }
-    }
 
     /**
      * Function that deletes a User if exists a tuple with the uid, if it doesn't exist, does nothing

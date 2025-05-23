@@ -5,9 +5,9 @@ import uriManager from "../../managers/uriManager.js";
 const { createPaginationLinks } = pagination
 const { div, a, ul, li, p, formElement, span } = Html
 const { getCourtDetailsUri, listClubCourtsUri, getClubDetailsUri, listCourtRentalsUri, searchCourtRentalsUri,
-    getCourtAvailableHoursUri, getRentalDetailsUri, getAvailableHoursByDateUri, createRentalUri } = uriManager
+    getCourtAvailableHoursUri, getRentalDetailsUri, createRentalUri } = uriManager
 
-function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit, hasNext) {
+function renderCourtsByClubView(contentHeader, content, courts, count, cid, page) {
     const currHeader = contentHeader.textContent
     const header = "Courts"
 
@@ -21,13 +21,13 @@ function renderCourtsByClubView(contentHeader, content, courts, cid, skip, limit
 
     const back = a("Back", `#clubs/${cid}`)
 
-    const navigation = createPaginationLinks(listClubCourtsUri(cid), Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(listClubCourtsUri(cid, page), count, page)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(courtList, navigation, back)
 }
 
-function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid, skip, limit) {
+function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid, page) {
     const header = "Court Info"
     const info =
         ul(
@@ -35,7 +35,7 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
             li(a("Club", getClubDetailsUri(cid))),
             li(
                 span(
-                    a("Court Rentals", listCourtRentalsUri(cid, crid, skip, limit)),
+                    a("Court Rentals", listCourtRentalsUri(cid, crid, page)),
                     a("by date", searchCourtRentalsUri(cid, crid)),
                 )
             ),
@@ -47,7 +47,7 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
     content.replaceChildren(info)
 }
 
-function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip, limit, hasNext) {
+function renderCourtRentalsView(contentHeader, content, rentals, count, cid, crid, page) {
     const currHeader = contentHeader.textContent
     const header = "Rentals"
 
@@ -56,14 +56,16 @@ function renderCourtRentalsView(contentHeader, content, rentals, cid, crid, skip
     const rentalList = rentals.length > 0
         ? ul(
             ...rentals.map(rental =>
-                li(a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour} `,
-                    getRentalDetailsUri(cid, crid, rental.rid)
-            ))
+                li(
+                    a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour} `,
+                        getRentalDetailsUri(cid, crid, rental.rid)
+                    )
+                )
             )
         )
         : p("No rentals found")
 
-    const navigation = createPaginationLinks(listCourtRentalsUri(cid,crid), Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(listCourtRentalsUri(cid, crid, page), count, page)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, rentalList, navigation)
@@ -140,6 +142,7 @@ function renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, sub
 
 function renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour){
     const header = "Available Courts"
+    
     const courts = ul(
         ...availableCourts.map(court =>
             li(a(court.name, createRentalUri(court.cid, court.crid, date, startHour, endHour)))

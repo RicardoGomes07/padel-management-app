@@ -6,7 +6,7 @@ const { div, a, ul, li, p } = Html;
 const { createPaginationLinks } = pagination
 const { getUserRentalsUri, getUserProfileUri, getRentalDetailsUri } = uriManager
 
-function renderUserRentalsView(contentHeader, content, rentals, username,  uid, skip, limit, hasNext) {
+function renderUserRentalsView(contentHeader, content, rentals, count, username,  uid, page) {
     const currHeader = contentHeader.textContent
     const header = "Rentals of " + username
 
@@ -25,18 +25,18 @@ function renderUserRentalsView(contentHeader, content, rentals, username,  uid, 
         : p("No rentals found")
 
     const info = div(rentalList)
-    const navigation = createPaginationLinks(getUserRentalsUri(uid, skip, limit), Number(skip), Number(limit), hasNext)
+    const navigation = createPaginationLinks(getUserRentalsUri(uid, page), count, page)
 
     if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, info, navigation)
 }
 
-function renderUserDetailsView(contentHeader, content, user, skip, limit) {
+function renderUserDetailsView(contentHeader, content, user) {
     const header = "User Info"
     const info = ul(
         li("Name: " + user.name),
         li("Email: " + user.email),
-        li(a("User Rentals ", getUserRentalsUri(user.uid, skip, limit))),
+        li(a("User Rentals ", getUserRentalsUri(user.uid))),
     )
 
     contentHeader.replaceChildren(header)

@@ -2,6 +2,7 @@ package pt.isel.ls.repository
 
 import pt.isel.ls.domain.Club
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.PaginationInfo
 
 /**
  * Generic Interface for a Club repository that supports CRUD operations.
@@ -16,18 +17,11 @@ interface ClubRepository : Repository<Club> {
         ownerId: UInt,
     ): Club
 
-    /**
-     * Function that search for a Club by a given name.
-     * @param name the name of the Club to search for.
-     * @return the Club with the given name or null if it doesn't exist.
-     */
-    fun findClubByName(name: Name): Club?
-
     fun findClubsByName(
         name: Name,
         limit: Int = 10,
         offset: Int = 0,
-    ): List<Club>
+    ): PaginationInfo<Club>
 
     /**
      * Function that returns the number of clubs in the system.

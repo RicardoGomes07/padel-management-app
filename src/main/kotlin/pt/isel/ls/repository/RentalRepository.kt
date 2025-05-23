@@ -1,6 +1,7 @@
 package pt.isel.ls.repository
 
 import kotlinx.datetime.LocalDate
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.domain.Rental
 import pt.isel.ls.domain.TimeSlot
 
@@ -39,7 +40,7 @@ interface RentalRepository : Repository<Rental> {
         date: LocalDate?,
         limit: Int = 30,
         offset: Int = 0,
-    ): List<Rental>
+    ): PaginationInfo<Rental>
 
     /**
      * Function that returns the number of rentals in the system.
@@ -59,7 +60,7 @@ interface RentalRepository : Repository<Rental> {
         renter: UInt,
         limit: Int = 30,
         offset: Int = 0,
-    ): List<Rental>
+    ): PaginationInfo<Rental>
 
     /**
      * Function that returns the number of rentals in the system.

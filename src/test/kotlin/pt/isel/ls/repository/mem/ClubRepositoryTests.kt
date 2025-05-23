@@ -44,21 +44,6 @@ class ClubRepositoryTests {
     }
 
     @Test
-    fun `find club by name`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
-        val club = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
-
-        val foundClub = clubRepoInMem.findClubByName("Force Club".toName())
-        assertEquals(club, foundClub)
-    }
-
-    @Test
-    fun `find club by non-existent name should return null`() {
-        val foundClub = clubRepoInMem.findClubByName("Nonexistent Club".toName())
-        assertNull(foundClub)
-    }
-
-    @Test
     fun `find club by identifier`() {
         val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
         val club = clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
@@ -97,8 +82,8 @@ class ClubRepositoryTests {
         val updatedClub = club.copy(name = "Updated Fly Club".toName())
         clubRepoInMem.save(updatedClub)
 
-        val retrievedClub = clubRepoInMem.findClubByName(updatedClub.name)
-        assertEquals("Updated Fly Club".toName(), retrievedClub?.name)
+        val retrievedClub = clubRepoInMem.findClubsByName(updatedClub.name)
+        assertEquals("Updated Fly Club".toName(), retrievedClub.first().name)
     }
 
     @Test

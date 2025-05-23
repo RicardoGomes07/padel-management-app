@@ -14,6 +14,7 @@ import pt.isel.ls.webapi.dto.CourtCreationInput
 import pt.isel.ls.webapi.dto.CourtDetailsOutput
 import pt.isel.ls.webapi.dto.CourtOutput
 import pt.isel.ls.webapi.dto.toCourtsOutput
+import pt.isel.ls.webapi.dto.toPaginationOutput
 
 /**
  * This is the Court Management Api, where you can see details about a court or create one.
@@ -50,7 +51,13 @@ class CourtWebApi(
                 .getCourts(clubId, limit, skip)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
-                    onSuccess = { Response(OK).body(Json.encodeToString(it.toCourtsOutput())) },
+                    onSuccess = {
+                        Response(OK).body(
+                            Json.encodeToString(
+                                it.toPaginationOutput { toCourtsOutput() },
+                            ),
+                        )
+                    },
                 )
         }
 

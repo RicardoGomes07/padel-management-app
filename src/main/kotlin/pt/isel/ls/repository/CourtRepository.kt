@@ -2,6 +2,7 @@ package pt.isel.ls.repository
 
 import pt.isel.ls.domain.Court
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.PaginationInfo
 
 /**
  * Generic Interface for a Court repository that supports CRUD operations.
@@ -27,7 +28,7 @@ interface CourtRepository : Repository<Court> {
         cid: UInt,
         limit: Int = 30,
         offset: Int = 0,
-    ): List<Court>
+    ): PaginationInfo<Court>
 
     /**
      * Function that returns the number of courts in the system.

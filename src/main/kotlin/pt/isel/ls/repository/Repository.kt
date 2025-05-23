@@ -1,5 +1,7 @@
 package pt.isel.ls.repository
 
+import pt.isel.ls.domain.PaginationInfo
+
 /**
  * Generic Interface for a repository.
  */
@@ -22,7 +24,7 @@ interface Repository<T> {
     fun findAll(
         limit: Int = 10,
         offset: Int = 0,
-    ): List<T>
+    ): PaginationInfo<T>
 
     /**
      * Function that deletes an element.
