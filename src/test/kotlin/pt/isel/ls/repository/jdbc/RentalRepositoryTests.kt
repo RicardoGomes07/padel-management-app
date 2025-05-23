@@ -145,7 +145,7 @@ class RentalRepositoryTests {
             )
 
         val foundRentals = rentalRepoJdbc.findByCridAndDate(court.crid, null)
-        assertEquals(2, foundRentals.size)
+        assertEquals(2, foundRentals.count)
 
         val numOfTomorrowRentals = rentalRepoJdbc.numRentalsOfCourt(court.crid, tomorrowDate)
         assertEquals(1, numOfTomorrowRentals)
@@ -222,6 +222,7 @@ class RentalRepositoryTests {
         val retrievedRental =
             rentalRepoJdbc
                 .findAll()
+                .items
                 .firstOrNull {
                     it.date == updatedRental.date &&
                         it.rentTime == updatedRental.rentTime &&

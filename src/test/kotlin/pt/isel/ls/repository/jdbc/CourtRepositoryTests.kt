@@ -52,8 +52,9 @@ class CourtRepositoryTests {
         val court1 = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
         val court2 = courtRepoJdbc.createCourt("Court B".toName(), club.cid)
 
-        val foundCourts = courtRepoJdbc.findByClubIdentifier(club.cid)
-        val numOfCourts = courtRepoJdbc.count(club.cid)
+        val foundCourtsPageInfo = courtRepoJdbc.findByClubIdentifier(club.cid)
+        val foundCourts = foundCourtsPageInfo.items
+        val numOfCourts = foundCourtsPageInfo.count
         assertEquals(2, numOfCourts)
         assertTrue(foundCourts.containsAll(listOf(court1, court2)))
     }
@@ -61,7 +62,7 @@ class CourtRepositoryTests {
     @Test
     fun `find courts by non-existent club identifier should return empty list`() {
         val foundCourts = courtRepoJdbc.findByClubIdentifier(999u)
-        assertTrue(foundCourts.isEmpty())
+        assertTrue(foundCourts.items.isEmpty())
     }
 
     @Test
@@ -81,8 +82,9 @@ class CourtRepositoryTests {
         val court1 = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
         val court2 = courtRepoJdbc.createCourt("Court B".toName(), club.cid)
 
-        val allCourts = courtRepoJdbc.findAll()
-        assertEquals(2, allCourts.size)
+        val allCourtsPageInfo = courtRepoJdbc.findAll()
+        val allCourts = allCourtsPageInfo.items
+        assertEquals(2, allCourtsPageInfo.count)
         assertTrue(allCourts.containsAll(listOf(court1, court2)))
     }
 
@@ -91,7 +93,7 @@ class CourtRepositoryTests {
         val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), owner.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
-        assertEquals(1, courtRepoJdbc.findAll().size)
+        assertEquals(1, courtRepoJdbc.findAll().count)
 
         courtRepoJdbc.deleteByIdentifier(court.crid)
         assertNull(courtRepoJdbc.findByIdentifier(court.crid))
@@ -109,6 +111,7 @@ class CourtRepositoryTests {
         val retrievedCourt =
             courtRepoJdbc
                 .findByClubIdentifier(court.club.cid)
+                .items
                 .firstOrNull {
                     it.name == updatedCourt.name
                 }

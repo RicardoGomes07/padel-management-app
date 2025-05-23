@@ -46,13 +46,13 @@ class CourtRepositoryTests {
         val foundCourts = courtRepoInMem.findByClubIdentifier(club.cid)
         val numOfCourts = courtRepoInMem.count(club.cid)
         assertEquals(2, numOfCourts)
-        assertTrue(foundCourts.containsAll(listOf(court1, court2)))
+        assertTrue(foundCourts.items.containsAll(listOf(court1, court2)))
     }
 
     @Test
     fun `find courts by non-existent club identifier should return empty list`() {
         val foundCourts = courtRepoInMem.findByClubIdentifier(999u)
-        assertTrue(foundCourts.isEmpty())
+        assertTrue(foundCourts.items.isEmpty())
     }
 
     @Test
@@ -73,8 +73,8 @@ class CourtRepositoryTests {
         val court2 = courtRepoInMem.createCourt("Court B".toName(), club.cid)
 
         val allCourts = courtRepoInMem.findAll()
-        assertEquals(2, allCourts.size)
-        assertTrue(allCourts.containsAll(listOf(court1, court2)))
+        assertEquals(2, allCourts.count)
+        assertTrue(allCourts.items.containsAll(listOf(court1, court2)))
     }
 
     @Test
@@ -82,10 +82,10 @@ class CourtRepositoryTests {
         val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
-        assertEquals(1, courtRepoInMem.findAll().size)
+        assertEquals(1, courtRepoInMem.findAll().count)
 
         courtRepoInMem.deleteByIdentifier(court.crid)
-        assertEquals(0, courtRepoInMem.findAll().size)
+        assertEquals(0, courtRepoInMem.findAll().count)
     }
 
     @Test
@@ -100,6 +100,7 @@ class CourtRepositoryTests {
         val retrievedCourt =
             courtRepoInMem
                 .findByClubIdentifier(court.club.cid)
+                .items
                 .firstOrNull {
                     it.name == updatedCourt.name
                 }

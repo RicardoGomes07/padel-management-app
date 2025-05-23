@@ -10,6 +10,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.RentalService
@@ -106,8 +107,8 @@ class ClubWebApiTests {
             clubsRoutes(
                 Request(GET, "clubs"),
             )
-        val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
-        assertTrue(body.clubs.isNotEmpty())
+        val body = Json.decodeFromString<PaginationInfoOutput<ClubsOutput>>(getAllClubsRequest.bodyString())
+        assertTrue(body.items.clubs.isNotEmpty())
     }
 
     @Test
@@ -172,8 +173,8 @@ class ClubWebApiTests {
             clubsRoutes(
                 Request(GET, "clubs?name=${club.name}"),
             )
-        val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
-        val clubs = body.clubs
+        val body = Json.decodeFromString<PaginationInfoOutput<ClubsOutput>>(getAllClubsRequest.bodyString())
+        val clubs = body.items.clubs
 
         assertEquals(1, clubs.size)
         assertEquals(club.cid, clubs.first().cid)
@@ -189,8 +190,8 @@ class ClubWebApiTests {
             clubsRoutes(
                 Request(GET, "clubs?name=lub"),
             )
-        val body = Json.decodeFromString<ClubsOutput>(getAllClubsRequest.bodyString())
-        val clubs = body.clubs
+        val body = Json.decodeFromString<PaginationInfoOutput<ClubsOutput>>(getAllClubsRequest.bodyString())
+        val clubs = body.items.clubs
         assertEquals(2, clubs.size)
         assertEquals(1, clubs.filter { it.cid == club.cid }.size)
         assertEquals(1, clubs.filter { it.cid == club2.cid }.size)

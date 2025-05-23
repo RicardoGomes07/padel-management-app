@@ -34,7 +34,7 @@ class UserRepositoryTests {
         assertFailsWith<UserError.UserAlreadyExists> {
             userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail())
         }
-        assertEquals(1, userRepoJdbc.findAll().size)
+        assertEquals(1, userRepoJdbc.findAll().count)
     }
 
     @Test
@@ -60,17 +60,17 @@ class UserRepositoryTests {
         val user1 = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail())
         val user2 = userRepoJdbc.createUser("user2".toName(), "user2@email.com".toEmail())
         val allUsers = userRepoJdbc.findAll()
-        assertEquals(2, allUsers.size)
-        assertTrue(allUsers.containsAll(listOf(user1, user2)))
+        assertEquals(2, allUsers.count)
+        assertTrue(allUsers.items.containsAll(listOf(user1, user2)))
     }
 
     @Test
     fun `delete user by identifier`() {
         val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail())
-        assertEquals(1, userRepoJdbc.findAll().size)
+        assertEquals(1, userRepoJdbc.findAll().count)
 
         userRepoJdbc.deleteByIdentifier(user.uid)
-        assertEquals(0, userRepoJdbc.findAll().size)
+        assertEquals(0, userRepoJdbc.findAll().count)
     }
 
     @Test
@@ -103,7 +103,7 @@ class UserRepositoryTests {
     @Test
     fun deleteUserAndFailToFindItById() {
         val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail())
-        assertEquals(1, userRepoJdbc.findAll().size)
+        assertEquals(1, userRepoJdbc.findAll().count)
 
         userRepoJdbc.deleteByIdentifier(user.uid)
         assertNull(userRepoJdbc.findByIdentifier(user.uid))
