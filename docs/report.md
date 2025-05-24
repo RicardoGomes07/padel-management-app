@@ -131,7 +131,7 @@ We have the following implementations, for the test of the data access layer:
 * `RentalRepositoryJdbc`
 
 To simplify the SQL statements, a consistent design approach was adopted by using a generic `SELECT` format, where column aliases define a dictionary-like mapping for the returned values in a result set. This provides a uniform way of accessing query results, regardless of the specific query. This pattern is used throughout all JDBC repositories.
-
+In operations that return a list of elements, the results are wrapped in a `PaginationInfo` instance. The first property, `items`, contains the paginated list of elements, determined by skip and limit values, and the second property, `count`, has the total amount of elements in the database for the search criteria, regardless of pagination.
 For row insertions, SQL's `ON CONFLICT` clause is often used to handle foreign key constraints and unique value violations, ensuring data integrity.
 
 ### Error Handling/Processing
@@ -147,21 +147,13 @@ detailing what went wrong.
 * We use CustomError classes for each error type, which are converted into JSON objects
 in the API and returned to the client.
 
-
-## Critical Evaluation
-
-There are a couple of improvements to be made:
-
-- The first is increasing test coverage, specifically within Web API branches, and ensuring all possible cases are covered across packages.
-- The second is to increase the number of tests for the frontend, especially for the components that are more complex and have more logic.
-
 ## Route handling
 The module that contains the logic for handling requests to each respective path is the 'handlers' module. This module, along with the others that follow, maintain the previous design, where for each endpoint corresponds to a specific handler:
 - home
 - usershandlers
 - clubshandlers
 - courtshandlers
-- rentalhandlers
+- rentalshandlers
 
 The general implementation of each handlers follows these steps:
 - 1 - read information from the path and query string
@@ -171,7 +163,7 @@ The general implementation of each handlers follows these steps:
 To achieve the first step the handlers use functions defined in the router. For the second step they call the request fetcher from the 'requests' module, and for the third step, they use the 'views' module. In the case of a resource that has pagination, there is a significant design change where the information in step 2 is managed through the pagination managers where a request to the server is only made is the required information is not already cached.
 
 Special cases:
-When working with form elemtents, the structure of the function its different.
+When working with form elements, the structure of the function its different.
 We start by creating a function ( HandleSubmint ) where we make our request with the values extracted from the form Element in the view function, and then we call the view function passing the arguments needed and the created function. 
 
 ## Requests
@@ -180,21 +172,16 @@ This module is responsible for making requests to the database. For each resourc
 ## Views
 This module builds the content to show in the resource and replaces the previously displayed content. Updates the header to match the current resource, builds the pagination links, if necessary, with the use of the 'createPaginationLinks' from pagination.js, and the rest of the necessary information for the page and replaces the content with the combination of the later 2.
 
-
 ## Pagination Manager
 
-In order to avoid making unnecessary backend requests, we implemented a function that internally
-stores an array containing elements fetched from the backend. 
+In order to avoid making unnecessary backend requests, handlers request the information through a function of this module that provides the following functionaliities:
+* The elements to show
+* The total amount of elements encountered in the database for the search
 
-This function provides the following functionalities:
-* Extracts elements from the array
-* Indicates its current size
-
-The function automatically fetches new elements from the backend only when needed and only if more data is available, minimizing unnecessary requests.
-Finally, we also implemented a pagination manager for cases where the elements we fetch are
-associated with a resource on the server identified by an ID. In this manager, we store a map that links each
-resource ID to its corresponding pagination manager.
-
+The function checks if the elements to show are already cached, if they are, those will be returned, so it only automatically fetches new elements from the backend when the elements are not already cached and if more data is available, minimizing unnecessary requests.
+Only clubs and courts handlers use a pagination manager as we considered rentals to have the potential to be very volatile, making the use of cache a potential risk, as it could introduce a lack of synchronism between the cached data and the actual information in the database. This discrepancy may lead to inconsistent or outdated rental availability being presented to the user, which is would not be appropriate.
+A cache is shared between operations (if multiple) that require pagination, in the same handler, so parameters to the operations were introduced where, the operation provides the new parameter and resets the cache if either the name of the parameter or its value changed.
+Another important design decision was to use pages with a fixed number of elements per page, defined in the app. The pagination manager is then tasked to calculate the skip and limit value that it needs to make the request to the server, which uses these two parameters to fetch the necessary data from the database.
 
 ## Index and Router
 
