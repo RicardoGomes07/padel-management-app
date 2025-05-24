@@ -106,5 +106,6 @@ const clubViews ={
     renderClubsView,
     clubSearchBar,
     renderCreateClubView,
+    clubsList
 }
 export default clubViews
