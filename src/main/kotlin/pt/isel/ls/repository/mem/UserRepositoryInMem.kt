@@ -54,7 +54,7 @@ object UserRepositoryInMem : UserRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): PaginationInfo<User>{
+    ): PaginationInfo<User> {
         val filteredUsers = users.drop(offset).take(limit)
         return PaginationInfo(filteredUsers, filteredUsers.size)
     }

@@ -10,10 +10,8 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import org.http4k.routing.bind
 import org.http4k.routing.routes
-import pt.isel.ls.domain.PaginationInfo
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
-import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.*
 import kotlin.test.BeforeTest
@@ -27,7 +25,6 @@ val clubApi =
     ClubWebApi(
         ClubService(transactionManager),
         UserService(transactionManager),
-        RentalService(transactionManager),
     )
 
 val clubsRoutes =

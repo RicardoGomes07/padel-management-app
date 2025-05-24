@@ -15,7 +15,7 @@ data class RentalDetailsOutput(
 ) {
     init {
         require(initialHour in 0..23) { "Invalid initial hour" }
-        require(finalHour in 0..23) { "Invalid final hour" }
+        require(finalHour in 0..24) { "Invalid final hour" }
         require(initialHour < finalHour) { "Initial hour must be before final hour" }
     }
     constructor(rental: Rental) :

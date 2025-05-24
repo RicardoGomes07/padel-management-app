@@ -1,11 +1,13 @@
 import Html from "../../dsl/htmlfuns.js";
-import pagination from "./pagination.js"
+import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
+import errorViews from "./errorsview.js";
 
+const { errorView } = errorViews
 const { createPaginationLinks } = pagination
-const { div, a, ul, li, p, formElement, span } = Html
+const { div, a, ul, li, p, formElement, span, label, input } = Html
 const { getCourtDetailsUri, listClubCourtsUri, getClubDetailsUri, listCourtRentalsUri, searchCourtRentalsUri,
-    getCourtAvailableHoursUri, getRentalDetailsUri, createRentalUri } = uriManager
+    getCourtAvailableHoursUri, getRentalDetailsUri, createRentalUri, getAvailableHoursByDateAndRangeUri } = uriManager
 
 function renderCourtsByClubView(contentHeader, content, courts, count, cid, page) {
     const currHeader = contentHeader.textContent
@@ -57,7 +59,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, count, cid, cri
         ? ul(
             ...rentals.map(rental =>
                 li(
-                    a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour} `,
+                    a(`${rental.date.toString()} ${rental.initialHour} to ${rental.finalHour === 24 ? "23:59" : rental.finalHour } `,
                         getRentalDetailsUri(cid, crid, rental.rid)
                     )
                 )
@@ -90,22 +92,126 @@ function renderCreateCourtForm(contentHeader, content, cid, handleSubmit) {
     content.replaceChildren(children, backLink)
 }
 
-function renderCourtAvailableHoursView(contentHeader, content, availableHours, cid, crid, selectedDate) {
-    const backLink = div(a("Back", getCourtAvailableHoursUri(cid, crid)))
+function renderCourtAvailableHoursView(contentHeader, content, availableHours, cid, crid, selectedDate, selectedRangeId) {
+    const backLink = div(a("← Back", getCourtAvailableHoursUri(cid, crid)))
 
-    const hours = div(
-        ul(
-            ...availableHours.map(range =>
-                li(p(`${range.start} to ${range.end}`))
-            )
-        )
+    let createRentalAnchor = null
+    let selectedHoursDiv = null
+
+    if (selectedRangeId) {
+        const [startStr, endStr] = selectedRangeId.split("-")
+        const start = Number(startStr)
+        const end = Number(endStr)
+
+        if (!rangeIsValid(availableHours, start, end)) {
+            errorView(contentHeader, content, getCourtAvailableHoursUri(cid, crid), {
+                title: "Invalid Range",
+                description: "The selected range is not valid or does not exist."
+            })
+            return
+        }
+
+        const checkboxes = []
+
+        function onCheckboxChange() {
+            const allCheckboxes = selectedHoursDiv.querySelectorAll("input[type='checkbox']")
+            const checkedBoxes = Array.from(allCheckboxes).filter(cb => cb.checked)
+
+            if (checkedBoxes.length >= 2) {
+                allCheckboxes.forEach(cb => {
+                    if (!cb.checked) cb.disabled = true
+                })
+            } else {
+                allCheckboxes.forEach(cb => {
+                    cb.disabled = false
+                })
+            }
+
+            if (createRentalAnchor) {
+                createRentalAnchor.remove()
+                createRentalAnchor = null
+            }
+
+            if (checkedBoxes.length === 2) {
+                const selectedHours = checkedBoxes.map(cb => cb.id.split("-").pop())
+                createRentalAnchor = a(
+                    "Create Rental",
+                    createRentalUri(cid, crid, selectedDate, selectedHours[0], selectedHours[1] )
+                )
+                createRentalAnchor.style.cssText = `
+                    display: inline-block;
+                    margin-top: 0.5em;
+                    font-weight: bold;
+                    color: #007bff;
+                    cursor: pointer;
+                    text-decoration: underline;
+                `
+                selectedHoursDiv.appendChild(createRentalAnchor)
+            }
+        }
+
+        for (let hour = start; hour <= end; hour++) {
+            const checkboxId = `chk-${selectedRangeId}-${hour}`
+            const hourLabel = formatHour(hour)
+            const checkbox = input(checkboxId, "checkbox", "", "", false, () => onCheckboxChange())
+            const checkboxLabel = label(checkboxId, hourLabel)
+            const container = div(checkbox, checkboxLabel)
+            container.style.margin = "0.25em 0"
+            checkboxes.push(container)
+        }
+
+        selectedHoursDiv = div(...checkboxes)
+        selectedHoursDiv.style.cssText = `
+            border: 1px solid #ccc;
+            padding: 0.5em;
+            margin-bottom: 1em;
+        `
+    }
+
+    const intervalsList = ul(
+        ...availableHours.map(range => {
+            const rangeId = `${range.start}-${range.end}`
+            const isSelected = rangeId === selectedRangeId
+
+            const linkText = `${formatHour(range.start)} to ${formatHour(range.end)}`
+            const href = getAvailableHoursByDateAndRangeUri(cid, crid, selectedDate, rangeId)
+
+            const anchor = a(linkText, href)
+            if (isSelected) {
+                anchor.style.fontWeight = "bold"
+                anchor.style.textDecoration = "underline"
+            }
+
+            return li(anchor)
+        })
     )
 
     const headerText = `Available Hours for ${selectedDate}`
-
     contentHeader.replaceChildren(headerText)
-    content.replaceChildren(backLink, hours)
+    if (selectedHoursDiv) {
+        content.replaceChildren(backLink, selectedHoursDiv, intervalsList)
+    } else {
+        content.replaceChildren(backLink, intervalsList)
+    }
 }
+
+function rangeIsValid(availableHours, start, end) {
+    if (typeof start !== "number" || typeof end !== "number") return false;
+    if (isNaN(start) || isNaN(end)) return false;
+    if (start >= end) return false;
+
+    return availableHours.some(range => range.start === start && range.end === end);
+}
+
+// formata 8 → "08:00", 13 → "13:00"
+function formatHour(hour) {
+    if(hour === 24) {
+        return "23:59"
+    } else {
+        return `${hour.toString().padStart(2, "0")}:00`
+    }
+}
+
 
 function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid, handleSubmit) {
     const header = "Search Available Hours"

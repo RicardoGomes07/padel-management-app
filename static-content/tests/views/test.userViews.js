@@ -1,5 +1,4 @@
 import usersViews from "../../spa/handlers/views/usersviews.js";
-import pagination from "../../spa/handlers/views/pagination.js";
 const assert = window.chai.assert
 
 describe("UsersViews", function () {

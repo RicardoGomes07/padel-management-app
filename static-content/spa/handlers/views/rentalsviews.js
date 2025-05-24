@@ -6,11 +6,12 @@ const { deleteRentalUri, getUserProfileUri, getCourtDetailsUri, getRentalDetails
 
 function renderRentalDetailsView(contentHeader, content, rental) {
     const header = "Rental Info"
+
     const info = ul(
         li("Court: ", a(rental.court.name, getCourtDetailsUri(rental.court.cid, rental.court.crid) )),
         li("Renter: ", a(rental.renter.name, getUserProfileUri(rental.renter.uid))),
         li(`Date: ${rental.date.toString()}`),
-        li(`TimeSlot: ${rental.initialHour}h - ${rental.finalHour}h`),
+        li(`TimeSlot: ${rental.initialHour}h - ${rental.finalHour === 24 ? "23:59": rental.finalHour }h`),
         li(a("Update Rental", updateRentalIntentUri(rental.court.cid, rental.court.crid, rental.rid))),
         li(a("Delete Rental", deleteRentalUri(rental.court.cid, rental.court.crid, rental.rid)))
     )

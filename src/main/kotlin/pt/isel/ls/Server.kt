@@ -35,7 +35,6 @@ fun main() {
         ClubWebApi(
             ClubService(trxManagerJdbc),
             UserService(trxManagerJdbc),
-            RentalService(trxManagerJdbc),
         )
     val courtApi =
         CourtWebApi(

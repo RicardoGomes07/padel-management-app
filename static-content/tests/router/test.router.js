@@ -86,7 +86,6 @@ describe("Router", function () {
         const route = "clubs/123/courts/456/rentals?skip=0&limit=10";
         const routeHandler = router.getRouteHandler(routeTemplate);
         const args = request.getRequestArgs(routeHandler, route);
-        console.log(args);
         
         assert.deepEqual(args.path, { cid: "123", crid: "456" });
         assert.deepEqual(args.query, { skip: "0", limit: "10" });

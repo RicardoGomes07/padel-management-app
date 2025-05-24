@@ -10,7 +10,6 @@ import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.TimeSlot
-import pt.isel.ls.domain.toToken
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.AvailableHoursInput
 import pt.isel.ls.webapi.dto.DateAndRentTimeInput
@@ -32,7 +31,7 @@ class RentalWebApi(
     fun createRental(request: Request): Response =
         request.handlerWithAuth(userService::validateUser) { user ->
             val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
-
+            print("Entrei no createRental")
             val timeSlot = TimeSlot(input.initialHour, input.finalHour)
             val courtId = request.path("crid")?.toUIntOrNull()
             requireNotNull(courtId) { "Invalid court id" }

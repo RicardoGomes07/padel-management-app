@@ -1,8 +1,5 @@
 import courtsViews from "../../spa/handlers/views/courtsviews.js";
-import pagination  from "../../spa/handlers/views/pagination.js";
 const assert = window.chai.assert
-const { DEFAULT_VALUE_SKIP, DEFAULT_VALUE_LIMIT} = pagination
-
 
 describe('CourtsViews', function () {
     let contentHeader, content;
@@ -114,28 +111,31 @@ describe('CourtsViews', function () {
     });
 
     describe("renderCourtAvailableHoursView", function () {
+
         it("should render header, back link, and available hours", function () {
             const availableHours = [
                 { start: 10, end: 11 },
                 { start: 12, end: 13 }
-            ];
-            const cid = 1;
-            const crid = 2;
-            const selectedDate = "2025-05-22";
+            ]
+            const cid = 1
+            const crid = 2
+            const selectedDate = "2025-05-22"
 
-            courtsViews.renderCourtAvailableHoursView(contentHeader, content, availableHours, cid, crid, selectedDate);
+            courtsViews.renderCourtAvailableHoursView(contentHeader, content, availableHours, cid, crid, selectedDate, null);
 
-            assert.strictEqual(contentHeader.textContent, "Available Hours for 2025-05-22");
+
+            chai.assert.strictEqual(contentHeader.textContent, "Available Hours for 2025-05-22");
 
             const backLink = content.querySelector("a");
-            assert.ok(backLink, "Back link should exist");
-            assert.strictEqual(backLink.textContent, "Back");
-            assert.strictEqual(backLink.getAttribute("href"), "#clubs/1/courts/2/available_hours");
+            chai.assert.ok(backLink, "Back link should exist");
+            chai.assert.strictEqual(backLink.textContent.trim(), "← Back");
+            chai.assert.strictEqual(backLink.getAttribute("href"), "#clubs/1/courts/2/available_hours");
 
+            // Verifica lista de intervalos
             const listItems = content.querySelectorAll("ul li");
-            assert.strictEqual(listItems.length, 2, "Should display 2 time slots");
-            assert.strictEqual(listItems[0].textContent, "10 to 11");
-            assert.strictEqual(listItems[1].textContent, "12 to 13");
+            chai.assert.strictEqual(listItems.length, 2, "Deve renderizar 2 horários disponíveis");
+            chai.assert.strictEqual(listItems[0].textContent, "10:00 to 11:00");
+            chai.assert.strictEqual(listItems[1].textContent, "12:00 to 13:00");
         });
     });
 

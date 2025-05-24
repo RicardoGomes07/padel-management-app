@@ -83,6 +83,7 @@ async function getCourtAvailableHours(contentHeader, content) {
     const cid = path("cid")
     const crid = path("crid")
     const date = query("date")
+    const range = query("range")
 
     if (date === null) {
         const handleSubmit = async function(e){
@@ -104,7 +105,7 @@ async function getCourtAvailableHours(contentHeader, content) {
 
     const response = await courtsRequests.getAvailableHours(cid, crid, date)
     if (response.status === 200) {
-        renderCourtAvailableHoursView(contentHeader, content, response.data.hours, cid, crid, date)
+        renderCourtAvailableHoursView(contentHeader, content, response.data.hours, cid, crid, date, range)
     } else {
         errorView(contentHeader, content, getCourtAvailableHoursUri(cid,crid), response.data)
     }

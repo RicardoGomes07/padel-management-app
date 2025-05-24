@@ -50,6 +50,12 @@ async function createRental(contentHeader, content) {
         const date = e.target.querySelector("#date").value
         const startHour = e.target.querySelector("#startHour").value
         const endHour = e.target.querySelector("#endHour").value
+
+        if (Number(startHour) >= Number(endHour)) {
+            alert("Start hour must be earlier than end hour.")
+            return
+        }
+
         const response = await rentalsRequests.createRental(cid, crid, date, parseHourFromString(startHour), parseHourFromString(endHour))
 
         if (response.status === 201) {
@@ -68,16 +74,24 @@ async function updateRental(contentHeader, content) {
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
 
-    const handleSubmit = async function(e){
+    const handleSubmit = async function(e) {
         e.preventDefault()
+
         const validDate = e.target.querySelector("#date").value
         const startHour = e.target.querySelector("#startHour").value
         const endHour = e.target.querySelector("#endHour").value
-        const response = await rentalsRequests.editRental(cid, crid, rid, validDate, startHour, endHour);
+
+        if (Number(startHour) >= Number(endHour)) {
+            alert("Start hour must be earlier than end hour.")
+            return
+        }
+
+        const response = await rentalsRequests.editRental(cid, crid, rid, validDate, startHour, endHour)
+
         if (response.status === 200) {
-            window.location.hash = getRentalDetailsUri(cid, crid, rid);
+            window.location.hash = getRentalDetailsUri(cid, crid, rid)
         } else {
-            errorView(contentHeader, content, getRentalDetailsUri(cid,crid,rid), response.data);
+            errorView(contentHeader, content, getRentalDetailsUri(cid, crid, rid), response.data)
         }
     }
 

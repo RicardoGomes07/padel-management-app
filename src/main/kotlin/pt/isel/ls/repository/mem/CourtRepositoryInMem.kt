@@ -39,7 +39,7 @@ object CourtRepositoryInMem : CourtRepository {
         cid: UInt,
         limit: Int,
         offset: Int,
-    ): PaginationInfo<Court>{
+    ): PaginationInfo<Court> {
         val filteredCourts = courts.filter { it.club.cid == cid }.drop(offset).take(limit)
         return PaginationInfo(filteredCourts, filteredCourts.size)
     }
@@ -61,7 +61,7 @@ object CourtRepositoryInMem : CourtRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): PaginationInfo<Court>{
+    ): PaginationInfo<Court> {
         val filteredCourts = courts.drop(offset).take(limit)
         return PaginationInfo(filteredCourts, filteredCourts.size)
     }

@@ -24,18 +24,14 @@ const uriManager = {
     createRentalUri: (cid, crid, date, startHour, endHour) =>
         `#clubs/${cid}/courts/${crid}/rentals/create${date && startHour && endHour ? `?date=${date}&start=${startHour}&end=${endHour}` : ``}`,
     updateRentalIntentUri: (cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}/update`,
-    updateRentalUri:(cid, crid, rid, date, startHour, endHour) =>
-        `#clubs/${cid}/courts/${crid}/rentals/${rid}/update?date=${date}&start=${startHour}&end=${endHour}`,
     deleteRentalUri:(cid, crid, rid) => `#clubs/${cid}/courts/${crid}/rentals/${rid}/delete`,
 
-    searchCourtRentalsByDateUri: (cid, crid, date) =>
-        `#clubs/${cid}/courts/${crid}/rentals/search?date=${date}`,
     getCourtAvailableHoursUri: (cid, crid) =>
         `#clubs/${cid}/courts/${crid}/available_hours`,
     getAvailableHoursByDateUri: (cid, crid, date) =>
         `#clubs/${cid}/courts/${crid}/available_hours?date=${date}`,
-    getAvailableHoursByDateAndStartUri: (cid, crid, date, hour) =>
-        `#clubs/${cid}/courts/${crid}/rentals/create?date=${date}&start=${hour}`,
+    getAvailableHoursByDateAndRangeUri: (cid, crid, date, range) =>
+        `#clubs/${cid}/courts/${crid}/available_hours?date=${date}&range=${range}`,
 }
 
 export default uriManager

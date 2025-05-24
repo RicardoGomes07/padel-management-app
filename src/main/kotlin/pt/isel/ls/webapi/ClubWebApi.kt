@@ -19,7 +19,6 @@ import pt.isel.ls.webapi.dto.*
 class ClubWebApi(
     private val clubService: ClubService,
     private val userService: UserService,
-    private val rentalService: RentalService,
 ) {
     fun createClub(request: Request): Response =
         request.handlerWithAuth(userService::validateUser) { user ->

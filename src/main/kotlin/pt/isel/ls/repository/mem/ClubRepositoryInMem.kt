@@ -70,7 +70,7 @@ object ClubRepositoryInMem : ClubRepository {
     override fun findAll(
         limit: Int,
         offset: Int,
-    ): PaginationInfo<Club>{
+    ): PaginationInfo<Club> {
         val filteredClubs = clubs.drop(offset).take(limit)
         return PaginationInfo(filteredClubs, filteredClubs.size)
     }

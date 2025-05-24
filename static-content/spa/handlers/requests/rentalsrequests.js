@@ -39,6 +39,7 @@ function deleteRental(cid, crid, rid) {
         }
     }).then(handleResponse)
 }
+
 const rentalsRequests = {
     fetchRentalDetails,
     createRental,

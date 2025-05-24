@@ -65,7 +65,6 @@ function input(id, type = "text", placeHolder = "", initValue = "", required = f
         placeholder: placeHolder,
         className: "input",
         required: required,
-        step: type === "time" ? 3600 : undefined,
         oninput: (event) => onChange(event.target.value),
     })
 }
@@ -141,16 +140,15 @@ function span(...children) {
     return createElement("span", {}, ...children)
 }
 
-
 function hourSelect(id, initialValue, onChange = () => {}, className = "form-select", required = false) {
     const options = [];
 
-    for (let hour = 0; hour < 24; hour++) {
+    for (let hour = 0; hour <= 24; hour++) {
         const value = hour.toString();
         const option = createElement("option", {
             value: value,
             selected: value === initialValue.toString(),
-            textContent: hour.toString().padStart(2, "0")
+            textContent: hour === 24 ? "23:59" : hour.toString().padStart(2, "0")
         })
         options.push(option)
     }
@@ -175,6 +173,7 @@ const Html = {
     formElement,
     input,
     span,
+    label,
 }
 
 export default Html;
