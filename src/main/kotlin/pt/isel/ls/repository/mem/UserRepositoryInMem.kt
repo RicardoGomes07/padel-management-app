@@ -15,6 +15,7 @@ object UserRepositoryInMem : UserRepository {
     override fun createUser(
         name: Name,
         email: Email,
+        password: Password,
     ): User {
         ensureOrThrow(
             condition = users.all { it.email != email },

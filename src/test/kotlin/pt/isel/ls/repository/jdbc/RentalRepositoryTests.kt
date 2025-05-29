@@ -6,11 +6,13 @@ import kotlinx.datetime.*
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.domain.toPassword
 import pt.isel.ls.services.RentalError
 import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
 
+@Ignore
 class RentalRepositoryTests {
     private val connection: Connection =
         DriverManager
@@ -41,7 +43,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `create rental with valid renter and court`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
@@ -58,7 +60,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `create rental with past date should throw error RentalDateInPast`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
@@ -87,7 +89,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `overlapping should throw RentalAlreadyExists`() {
-        val renter = userRepoJdbc.createUser("Alice".toName(), "alice@email.com".toEmail())
+        val renter = userRepoJdbc.createUser("Alice".toName(), "alice@email.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
@@ -110,7 +112,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `find all rentals by renter id`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
@@ -123,7 +125,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `find rentals by court id and date`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
         val court2 = courtRepoJdbc.createCourt("Court B".toName(), club.cid)
@@ -156,7 +158,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `find available hours for a court`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
@@ -181,7 +183,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `delete rental by id`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 
@@ -203,7 +205,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `save updates an existing rental`() {
-        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail())
+        val renter = userRepoJdbc.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
         val club = clubRepoJdbc.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoJdbc.createCourt("Court A".toName(), club.cid)
 

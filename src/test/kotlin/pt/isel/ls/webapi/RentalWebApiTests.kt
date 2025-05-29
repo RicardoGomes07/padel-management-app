@@ -33,35 +33,17 @@ val rentalsRoutes =
         "users/{uid}/rentals" bind GET to rentalApi::getUserRentals,
         "clubs/{cid}/courts/{crid}/rentals/{rid}" bind DELETE to rentalApi::deleteRental,
         "clubs/{cid}/courts/{crid}/rentals/{rid}" bind PUT to rentalApi::updateRental,
+        "clubs/{cid}/courts/available" bind POST to rentalApi::getAvailableCourtsByDateAndRentTime,
     )
 
 fun createRental(
     token: String,
+    club: ClubDetailsOutput,
+    court: CourtDetailsOutput,
     date: LocalDate,
     start: UInt,
     end: UInt,
 ): RentalDetailsOutput {
-    val clubName = "Club-${randomString(10)}"
-    val clubResponse =
-        clubsRoutes(
-            Request(POST, "clubs")
-                .header("Content-Type", "application/json")
-                .header("Authorization", token)
-                .body(Json.encodeToString<ClubCreationInput>(ClubCreationInput(clubName))),
-        )
-    assertEquals(Status.CREATED, clubResponse.status)
-    val club = Json.decodeFromString<ClubDetailsOutput>(clubResponse.bodyString())
-    val name = "Court-${randomString(10)}"
-    val courtResponse =
-        courtsRoutes(
-            Request(POST, "clubs/${club.cid}/courts")
-                .header("Content-Type", "application/json")
-                .header("Authorization", token)
-                .body(Json.encodeToString(CourtCreationInput(name))),
-        )
-    assertEquals(Status.CREATED, courtResponse.status)
-    val court = Json.decodeFromString<CourtDetailsOutput>(courtResponse.bodyString())
-
     val rental =
         rentalsRoutes(
             Request(POST, "clubs/${club.cid}/courts/${court.crid}/rentals")
@@ -123,7 +105,9 @@ class RentalWebApiTests {
     @Test
     fun `get rental info with valid rental id`() {
         val token = createUser()
-        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val club = createClub(token)
+        val court = createCourt(token, club.cid.toInt())
+        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
         val getRentalInfoRequest =
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1"),
@@ -144,7 +128,9 @@ class RentalWebApiTests {
     @Test
     fun `get all rentals for a court`() {
         val token = createUser()
-        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val club = createClub(token)
+        val court = createCourt(token, club.cid.toInt())
+        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
         val getAllRentalsRequest =
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals"),
@@ -161,7 +147,7 @@ class RentalWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body("""{"name":"Ric", "email":"$name@gmail.com"}"""),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", "password"))),
             )
         assertEquals(Status.CREATED, userResponse.status)
 
@@ -177,7 +163,9 @@ class RentalWebApiTests {
     @Test
     fun `update the date and rentTime of a rental`() {
         val token = createUser()
-        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val club = createClub(token)
+        val court = createCourt(token, club.cid.toInt())
+        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
 
         val updateRequest =
             rentalsRoutes(
@@ -205,10 +193,12 @@ class RentalWebApiTests {
     @Test
     fun `update a rental time slot that overlaps other rental should throw an error`() {
         val token = createUser()
+        val club = createClub(token)
+        val court = createCourt(token, club.cid.toInt())
 
-        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
         val token2 = createUser()
-        val rental2 = createRental(token2, LocalDate.parse("2025-06-15"), 12u, 14u)
+        val rental2 = createRental(token2, club, court, LocalDate.parse("2025-06-15"), 12u, 14u)
         assertNotNull(rental)
         assertNotNull(rental2)
 
@@ -232,7 +222,9 @@ class RentalWebApiTests {
     @Test
     fun `delete a rental`() {
         val token = createUser()
-        val rental = createRental(token, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val club = createClub(token)
+        val court = createCourt(token, club.cid.toInt())
+        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
         assertNotNull(rental)
 
         val deleteRequest =
@@ -248,5 +240,33 @@ class RentalWebApiTests {
                     .header("Authorization", token),
             )
         assertEquals(Status.NOT_FOUND, getRentalInfoRequest.status)
+    }
+
+    @Test
+    fun `get available courts by date and rent time`() {
+        val token = createUser()
+        val club = createClub(token)
+        val court = createCourt(token, club.cid.toInt())
+        val date = LocalDate.parse("2025-06-15")
+        val start = 10u
+        val end = 12u
+
+        createRental(token, club, court, date, start, end)
+
+        val availableCourtsRequest =
+            rentalsRoutes(
+                Request(POST, "clubs/${club.cid}/courts/available")
+                    .header("Content-Type", "application/json")
+                    .header("Authorization", token)
+                    .body(
+                        Json.encodeToString<DateAndRentTimeInput>(
+                            DateAndRentTimeInput(date, start, end),
+                        ),
+                    ),
+            )
+        assertEquals(Status.OK, availableCourtsRequest.status)
+        val availableCourts =
+            Json.decodeFromString<PaginationInfoOutput<CourtsOutput>>(availableCourtsRequest.bodyString())
+        assertTrue(availableCourts.items.courts.isEmpty())
     }
 }

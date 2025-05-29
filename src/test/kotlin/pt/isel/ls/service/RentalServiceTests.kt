@@ -11,6 +11,7 @@ import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.TimeSlot
 import pt.isel.ls.domain.toName
+import pt.isel.ls.domain.toPassword
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.currentDate
@@ -40,7 +41,7 @@ class RentalServiceTests {
 
     @Test
     fun `create rental with valid renter and court`() {
-        val renterResult = userService.createUser(Name("John Doe"), Email("john@example.com"))
+        val renterResult = userService.createUser(Name("John Doe"), Email("john@example.com"), "password".toPassword())
         assertTrue(renterResult.isSuccess)
         val renter = renterResult.getOrNull()!!
         val club = clubService.createClub("Sports Club".toName(), renter)
@@ -73,6 +74,7 @@ class RentalServiceTests {
                 .createUser(
                     Name("John Doe"),
                     Email("jonh@doe.email.com"),
+                    "password".toPassword(),
                 ).let {
                     val user = it.getOrNull()
                     assertTrue(user != null)

@@ -2,6 +2,7 @@ package pt.isel.ls.repository
 
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.Password
 import pt.isel.ls.domain.Token
 import pt.isel.ls.domain.User
 
@@ -16,6 +17,7 @@ interface UserRepository : Repository<User> {
     fun createUser(
         name: Name,
         email: Email,
+        password: Password,
     ): User
 
     /**

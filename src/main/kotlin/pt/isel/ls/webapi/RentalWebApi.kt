@@ -31,10 +31,12 @@ class RentalWebApi(
     fun createRental(request: Request): Response =
         request.handlerWithAuth(userService::validateUser) { user ->
             val input = Json.decodeFromString<RentalCreationInput>(request.bodyString())
-            print("Entrei no createRental")
+            require(input.date >= currentDate()) { "Date must not be in the past" }
             val timeSlot = TimeSlot(input.initialHour, input.finalHour)
+
             val courtId = request.path("crid")?.toUIntOrNull()
             requireNotNull(courtId) { "Invalid court id" }
+
             val clubId = request.path("cid")?.toUIntOrNull()
             requireNotNull(clubId) { "Invalid club id" }
 

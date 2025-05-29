@@ -50,6 +50,8 @@ fun main() {
     val userRoutes =
         routes(
             "/" bind POST to userApi::createUser,
+            "/login" bind POST to userApi::login,
+            "/logout" bind POST to userApi::logout,
             "/{uid}" bind GET to userApi::getUserInfo,
             "/{uid}/rentals" bind GET to rentalApi::getUserRentals,
         )

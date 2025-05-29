@@ -4,6 +4,7 @@ package pt.isel.ls.repository.mem
 
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.domain.toPassword
 import pt.isel.ls.services.ClubError
 import kotlin.test.*
 
@@ -19,7 +20,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `create club with valid name and existing owner`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club = clubRepoInMem.createClub("Parker Club".toName(), owner.uid)
 
         assertEquals("Parker Club".toName(), club.name)
@@ -28,7 +29,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `create club with duplicate name should fail`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         clubRepoInMem.createClub("The King of Padel".toName(), owner.uid)
 
         assertFailsWith<ClubError.ClubAlreadyExists> {
@@ -45,7 +46,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find club by identifier`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club = clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
         val foundClub = clubRepoInMem.findByIdentifier(club.cid)
@@ -54,7 +55,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find all clubs`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club1 = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
         val club2 = clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
@@ -66,7 +67,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `delete club by identifier`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
         assertEquals(1, clubRepoInMem.findAll().count)
 
@@ -76,7 +77,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `save updates existing club`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club = clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
         val updatedClub = club.copy(name = "Updated Fly Club".toName())
@@ -88,7 +89,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find all clubs by complete name`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club1 = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
         clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 
@@ -99,7 +100,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find all clubs by partial name`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
         val club1 = clubRepoInMem.createClub("Force Club".toName(), owner.uid)
         clubRepoInMem.createClub("Fly Club".toName(), owner.uid)
 

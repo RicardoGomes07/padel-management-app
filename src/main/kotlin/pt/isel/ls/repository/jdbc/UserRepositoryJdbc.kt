@@ -26,6 +26,7 @@ class UserRepositoryJdbc(
     override fun createUser(
         name: Name,
         email: Email,
+        password: Password,
     ): User {
         val token = generateToken()
 

@@ -18,23 +18,23 @@ class UserRepositoryTests {
 
     @Test
     fun `user creation with valid Name and Email`() {
-        val user = userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
+        val user = userRepoInMem.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
         assertEquals("user".toName(), user.name)
         assertEquals("user@email.com".toEmail(), user.email)
     }
 
     @Test
     fun `user creation with invalid Email`() {
-        userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
+        userRepoInMem.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
         assertFailsWith<UserError.UserAlreadyExists> {
-            userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
+            userRepoInMem.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
         }
         assertEquals(1, userRepoInMem.findAll().count)
     }
 
     @Test
     fun `retrieve user with user token`() {
-        val user1 = userRepoInMem.createUser("user".toName(), "user@email.com".toEmail())
+        val user1 = userRepoInMem.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
         val user = userRepoInMem.findUserByToken(user1.token)
         assertEquals(user1, user)
 
@@ -45,15 +45,15 @@ class UserRepositoryTests {
 
     @Test
     fun `find user by identifier`() {
-        val user = userRepoInMem.createUser("testUser".toName(), "test@email.com".toEmail())
+        val user = userRepoInMem.createUser("testUser".toName(), "test@email.com".toEmail(), "password".toPassword())
         val retrievedUser = userRepoInMem.findByIdentifier(user.uid)
         assertEquals(user, retrievedUser)
     }
 
     @Test
     fun `find all users`() {
-        val user1 = userRepoInMem.createUser("user1".toName(), "user1@email.com".toEmail())
-        val user2 = userRepoInMem.createUser("user2".toName(), "user2@email.com".toEmail())
+        val user1 = userRepoInMem.createUser("user1".toName(), "user1@email.com".toEmail(), "password1".toPassword())
+        val user2 = userRepoInMem.createUser("user2".toName(), "user2@email.com".toEmail(), "password2".toPassword())
         val allUsers = userRepoInMem.findAll()
         assertEquals(2, allUsers.count)
         assertTrue(allUsers.items.containsAll(listOf(user1, user2)))
@@ -61,7 +61,7 @@ class UserRepositoryTests {
 
     @Test
     fun `delete user by identifier`() {
-        val user = userRepoInMem.createUser("deleteUser".toName(), "delete@email.com".toEmail())
+        val user = userRepoInMem.createUser("deleteUser".toName(), "delete@email.com".toEmail(), "password".toPassword())
         assertEquals(1, userRepoInMem.findAll().count)
 
         userRepoInMem.deleteByIdentifier(user.uid)
@@ -70,7 +70,7 @@ class UserRepositoryTests {
 
     @Test
     fun `save updates existing user`() {
-        val user = userRepoInMem.createUser("updateUser".toName(), "update@email.com".toEmail())
+        val user = userRepoInMem.createUser("updateUser".toName(), "update@email.com".toEmail(), "password".toPassword())
         val updatedUser = user.copy(name = "updatedUser".toName())
         userRepoInMem.save(updatedUser)
 

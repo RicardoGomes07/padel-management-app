@@ -10,6 +10,8 @@ import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.toEmail
+import pt.isel.ls.domain.toPassword
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.*
 
@@ -21,11 +23,12 @@ class UserWebApi(
 ) {
     fun createUser(request: Request): Response =
         request.handler {
-            val input = Json.decodeFromString<UserInput>(request.bodyString())
+            val input = Json.decodeFromString<UserCreationInput>(request.bodyString())
             val userName = Name(input.name)
             val email = Email(input.email)
+            val pwd = input.password.toPassword()
             userService
-                .createUser(userName, email)
+                .createUser(userName, email, pwd)
                 .fold(
                     onFailure = { ex -> ex.toResponse() },
                     onSuccess = { Response(CREATED).body(Json.encodeToString(UserOutput(it))) },
@@ -41,5 +44,28 @@ class UserWebApi(
             requireNotNull(user)
 
             Response(OK).body(Json.encodeToString(UserDetails(user)))
+        }
+
+    fun login(request: Request): Response =
+        request.handler {
+            val input = Json.decodeFromString<LoginInput>(request.bodyString())
+            val email = input.email.toEmail()
+            val pwd = input.password.toPassword()
+            userService
+                .login(email, pwd)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK).body(Json.encodeToString(AuthUser(it))) },
+                )
+        }
+
+    fun logout(request: Request): Response =
+        request.handlerWithAuth(userService::validateUser) { user ->
+            userService
+                .logout(user)
+                .fold(
+                    onFailure = { ex -> ex.toResponse() },
+                    onSuccess = { Response(OK) },
+                )
         }
 }

@@ -34,6 +34,7 @@ tasks.register<JavaExec>("run") {
 }
 
 tasks.register<Exec>("BuildDataBase") {
+    psql ?: error("psql not found. Unable to run database commands.")
     environment("PGPASSWORD", "postgres")
     commandLine(
         psql,
@@ -45,6 +46,7 @@ tasks.register<Exec>("BuildDataBase") {
 }
 
 tasks.register<Exec>("InsertValuesIntoDb") {
+    psql ?: error("psql not found. Unable to run database commands.")
     environment("PGPASSWORD", "postgres")
     commandLine(
         psql,
@@ -61,7 +63,6 @@ val psql =
         .split(";")
         .find { it.contains("PostgreSQL") }
         ?.let { "$it\\psql.exe" }
-        ?: throw Exception("Missing PostgreSQL environment variable")
 
 val createTablesScript =
     project
@@ -80,17 +81,21 @@ val insertValuesScript =
         .file("addData.sql")
         .toString()
 
-task<Exec>("createTestsDb") {
-    environment("PGPASSWORD", postgresPswd) // Needed for psql authentication
-    commandLine(
-        psql,
-        "-U",
-        "postgres",
-        "-c",
-        "CREATE DATABASE tests_db;",
-    )
+task<Exec>("dropTestsDb") {
+    psql ?: error("psql not found. Unable to run database commands.")
+    environment("PGPASSWORD", postgresPswd)
+    commandLine(psql, "-U", "postgres", "-c", "DROP DATABASE IF EXISTS tests_db;")
 }
+
+task<Exec>("createTestsDb") {
+    psql ?: error("psql not found. Unable to run database commands.")
+    dependsOn("dropTestsDb")
+    environment("PGPASSWORD", postgresPswd)
+    commandLine(psql, "-U", "postgres", "-c", "CREATE DATABASE tests_db;")
+}
+
 task<Exec>("createTablesTestsDb") {
+    psql ?: error("psql not found. Unable to run database commands.")
     environment("PGPASSWORD", postgresPswd) // Needed for psql authentication
     dependsOn("createTestsDb")
     commandLine(
@@ -105,6 +110,7 @@ task<Exec>("createTablesTestsDb") {
 }
 
 task<Exec>("deleteTestsDb") {
+    psql ?: error("psql not found. Unable to run database commands.")
     environment("PGPASSWORD", postgresPswd) // Needed for psql authentication
     commandLine(
         psql,
@@ -116,7 +122,9 @@ task<Exec>("deleteTestsDb") {
 }
 
 tasks.named<Test>("test") {
-    environment("DB_URL", "jdbc:postgresql://localhost:5432/tests_db?user=postgres&password=postgres")
-    dependsOn("createTablesTestsDb")
-    finalizedBy("deleteTestsDb")
+    if (psql != null) {
+        environment("DB_URL", "jdbc:postgresql://localhost:5432/tests_db?user=postgres&password=postgres")
+        dependsOn("createTablesTestsDb")
+        finalizedBy("deleteTestsDb")
+    }
 }

@@ -9,7 +9,7 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserService
-import pt.isel.ls.webapi.dto.UserInput
+import pt.isel.ls.webapi.dto.UserCreationInput
 import pt.isel.ls.webapi.dto.UserOutput
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -41,7 +41,7 @@ fun createUser(): String {
         userRoutes(
             Request(POST, "users")
                 .header("Content-Type", "application/json")
-                .body("""{"name":"Ric", "email":"$name@gmail.com"}"""),
+                .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", "password"))),
         )
     val user = Json.decodeFromString<UserOutput>(userResponse.bodyString())
     return user.token
@@ -61,7 +61,7 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body("""{"name":"Ric", "email":"ric@gmail.com"}"""),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "ric@email.com", "password"))),
             )
         assertEquals(Status.CREATED, response.status)
         val user = Json.decodeFromString<UserOutput>(response.bodyString())
@@ -74,7 +74,7 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserInput>(UserInput("Riczao", "riczao@gmail.com"))),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Riczao", "riczao@gmail.com", "password"))),
             )
         assertEquals(Status.CREATED, response.status)
 
@@ -82,7 +82,7 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserInput>(UserInput("Riczao", "riczao@gmail.com"))),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Riczao", "riczao@gmail.com", "password"))),
             )
         assertEquals(Status.BAD_REQUEST, response1.status)
     }
@@ -94,7 +94,7 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body("""{"name":"Ric", "email":"$name@gmail.com"}"""),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", "password"))),
             )
 
         assertEquals(Status.CREATED, userResponse.status)

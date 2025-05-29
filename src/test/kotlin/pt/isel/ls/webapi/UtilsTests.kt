@@ -6,6 +6,7 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
+import pt.isel.ls.domain.toPassword
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserError
 import pt.isel.ls.services.UserService
@@ -58,7 +59,7 @@ class UtilsTests {
                 .handlerWithAuth(userService::validateUser) { _ -> Response(Status.OK) }
         assertEquals(401, responseWithUnauthUser.status.code)
 
-        val user = userService.createUser("Rocky".toName(), "rocky@balboa.com".toEmail())
+        val user = userService.createUser("Rocky".toName(), "rocky@balboa.com".toEmail(), "password".toPassword())
         val requestWithAuth =
             request
                 .header("Authorization", user.getOrThrow().token.toString())
