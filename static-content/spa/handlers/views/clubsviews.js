@@ -4,7 +4,7 @@ import uriManager from "../../managers/uriManager.js";
 import clubsrequests from "../requests/clubsrequests.js";
 
 const { fetchClubs } = clubsrequests;
-const { input, a, ul, li, p, div, formElement } = Html;
+const { input, a, ul, li, p, div, formElement, logoutButton } = Html;
 const { createPaginationLinks } = pagination
 const { getUserProfileUri, listClubsUri, listClubCourtsUri, createCourtFromUri, getClubDetailsUri,
     createClubUri, searchCourtsToRentUri } = uriManager
@@ -24,7 +24,7 @@ function renderClubDetailsView(contentHeader, content, club){
         a("All Clubs", listClubsUri()),
     );
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(info)
 }
 
@@ -47,8 +47,8 @@ function renderClubsView(contentHeader, content, clubs, count, name, page){
 
     const navigation = createPaginationLinks(listClubsUri(name, page), count, page)
 
-    if(currHeader !== header) contentHeader.replaceChildren(header)
-    content.replaceChildren(clubSearchBar(), info, navigation, createClubAnchor)
+    if(currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
+    content.replaceChildren(clubSearchBar(), info, navigation, createClubAnchor, logoutButton())
 }
 
 function clubSearchBar() {
@@ -97,7 +97,7 @@ function renderCreateClubView(contentHeader, content, handleSubmit) {
 
     const back = a("Back", listClubsUri())
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(form, back)
 }
 

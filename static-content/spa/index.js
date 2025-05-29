@@ -10,6 +10,8 @@ window.addEventListener('hashchange', hashChangeHandler)
 
 function loadHandler(){
     router.addRouteHandler("home", homeHandlers.getHome)
+    router.addRouteHandler("users/create", userHandlers.signUp)
+    router.addRouteHandler("users/login", userHandlers.login)
     router.addRouteHandler("users/:uid", userHandlers.getUserDetails)
     router.addRouteHandler("users/:uid/rentals", userHandlers.getUserRentals)
     router.addRouteHandler("clubs", clubHandlers.getClubs)

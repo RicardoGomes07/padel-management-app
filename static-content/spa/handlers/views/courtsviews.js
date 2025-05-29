@@ -5,13 +5,13 @@ import errorViews from "./errorsview.js";
 
 const { errorView } = errorViews
 const { createPaginationLinks } = pagination
-const { div, a, ul, li, p, formElement, span, label, input } = Html
+const { div, a, ul, li, p, formElement, span, label, input, logoutButton } = Html
 const { getCourtDetailsUri, listClubCourtsUri, getClubDetailsUri, listCourtRentalsUri, searchCourtRentalsUri,
     getCourtAvailableHoursUri, getRentalDetailsUri, createRentalUri, getAvailableHoursByDateAndRangeUri } = uriManager
 
 function renderCourtsByClubView(contentHeader, content, courts, count, cid, page) {
     const currHeader = contentHeader.textContent
-    const header = "Courts"
+    const header = "Courts" 
 
     const courtList = courts.length > 0
         ? ul(
@@ -25,7 +25,7 @@ function renderCourtsByClubView(contentHeader, content, courts, count, cid, page
 
     const navigation = createPaginationLinks(listClubCourtsUri(cid, page), count, page)
 
-    if (currHeader !== header) contentHeader.replaceChildren(header)
+    if (currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(courtList, navigation, back)
 }
 
@@ -45,7 +45,7 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
             li(a("Rent Court", createRentalUri(cid, crid))),
         )
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(info)
 }
 
@@ -69,7 +69,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, count, cid, cri
 
     const navigation = createPaginationLinks(listCourtRentalsUri(cid, crid, page), count, page)
 
-    if (currHeader !== header) contentHeader.replaceChildren(header)
+    if (currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(backLink, rentalList, navigation)
 }
 
@@ -88,7 +88,7 @@ function renderCreateCourtForm(contentHeader, content, cid, handleSubmit) {
         })
     )
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(children, backLink)
 }
 
@@ -187,7 +187,7 @@ function renderCourtAvailableHoursView(contentHeader, content, availableHours, c
     )
 
     const headerText = `Available Hours for ${selectedDate}`
-    contentHeader.replaceChildren(headerText)
+    contentHeader.replaceChildren(headerText, logoutButton())
     if (selectedHoursDiv) {
         content.replaceChildren(backLink, selectedHoursDiv, intervalsList)
     } else {
@@ -228,7 +228,7 @@ function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid,
         })
     )
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(children)
 }
 
@@ -242,7 +242,7 @@ function renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, sub
     ]
 
     const form = formElement(fields, submitHandler)
-    contentHeader.replaceChildren("Select a date and a time to search for courts availability")
+    contentHeader.replaceChildren("Select a date and a time to search for courts availability", logoutButton())
     content.replaceChildren(backLink,form)
 }
 
@@ -254,7 +254,7 @@ function renderAvailableCourtsToRent(contentHeader, content, availableCourts, da
             li(a(court.name, createRentalUri(court.cid, court.crid, date, startHour, endHour)))
         )
     )
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(courts)
 }
 

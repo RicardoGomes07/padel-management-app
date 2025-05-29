@@ -7,8 +7,8 @@ import userAuthenticationManager from "../managers/userAuthenticationManager.js"
 import uriManager from "../managers/uriManager.js";
 
 const { path, query } = request
-const { renderUserRentalsView, renderUserDetailsView } = usersViews
-const { fetchUserRentals, fetchUserDetails } = usersRequests
+const { renderUserRentalsView, renderUserDetailsView, renderSignUpView, renderLoginView } = usersViews
+const { fetchUserRentals, fetchUserDetails, createUser, loginUser, logoutUser } = usersRequests
 const { errorView } = errorsViews
 const { homeUri } = uriManager
 
@@ -46,9 +46,58 @@ async function getUserDetails(contentHeader, content){
     else renderUserDetailsView(contentHeader, content, result.data)
 }
 
+function signUp(contentHeader, content){
+    const handleSubmit = async function(e) {
+        e.preventDefault()
+        const name = e.target.querySelector("#name").value
+        const email = e.target.querySelector("#email").value
+        const password = e.target.querySelector("#password").value
+
+        const result = await createUser(name, email, password)
+
+        if (result.status !== 201) {
+            errorView(contentHeader, content, homeUri(), result.data)
+        } else {
+            const login = await loginUser(email, password)
+            if (login.status !== 200) {
+                errorView(contentHeader, content, homeUri(), login.data)
+                return
+            }else{
+                console.log("User logged in successfully, data:", login.data)
+                userAuthManager.setCurrToken(login.data.token)
+                console.log("Current token set to:", userAuthManager.getCurrToken())
+                window.location.hash = homeUri()
+            }
+        }
+    }
+
+    renderSignUpView(contentHeader, content, handleSubmit)
+}
+
+function login(contentHeader, content) {
+    const handleSubmit = async function(e) {
+        e.preventDefault()
+        const email = e.target.querySelector("#email").value
+        const password = e.target.querySelector("#password").value
+
+        const result = await loginUser(email, password)
+
+        if (result.status !== 200) {
+            errorView(contentHeader, content, homeUri(), result.data)
+        } else {
+            userAuthManager.setCurrToken(result.data.token)
+            window.location.hash = homeUri()
+        }
+    }
+
+    renderLoginView(contentHeader, content, handleSubmit)
+}
+
 const userHandlers = {
     getUserDetails,
     getUserRentals,
+    signUp,
+    login,
 }
 
 export default userHandlers

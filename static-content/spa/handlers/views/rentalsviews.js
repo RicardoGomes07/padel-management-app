@@ -1,7 +1,7 @@
 import Html from "../../dsl/htmlfuns.js";
 import uriManager from "../../managers/uriManager.js";
 
-const { a, ul, li, div, formElement } = Html;
+const { a, ul, li, div, formElement, logoutButton } = Html;
 const { deleteRentalUri, getUserProfileUri, getCourtDetailsUri, getRentalDetailsUri, updateRentalIntentUri } = uriManager;
 
 function renderRentalDetailsView(contentHeader, content, rental) {
@@ -16,7 +16,7 @@ function renderRentalDetailsView(contentHeader, content, rental) {
         li(a("Delete Rental", deleteRentalUri(rental.court.cid, rental.court.crid, rental.rid)))
     )
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(info)
 }
 
@@ -28,15 +28,15 @@ function renderCalendarToSearchRentals(contentHeader, content, cid, crid, handle
     ]
 
     const backLink = div(a("Back", getCourtDetailsUri(cid, crid)))
-    const children = li(
+    const form = li(
         formElement(fields, handleSubmit, {
             className: "form",
             submitText: "Search Rentals"
         })
     )
 
-    contentHeader.replaceChildren(header)
-    content.replaceChildren(children, backLink)
+    contentHeader.replaceChildren(header, logoutButton())
+    content.replaceChildren(form, backLink)
 }
 
 function renderUpdateRentalView(contentHeader, content, rental, handleSubmit) {
@@ -53,7 +53,7 @@ function renderUpdateRentalView(contentHeader, content, rental, handleSubmit) {
                 submitText: "Update Rental"
             })
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(backButton, form)
 }
 
@@ -72,7 +72,7 @@ function renderRentalCreationForm(contentHeader, content, cid, crid, rentalInfo,
         submitText: "Create Rental"
     })
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(backLink, form)
 }
 

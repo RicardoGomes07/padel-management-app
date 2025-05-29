@@ -2,9 +2,9 @@ import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 
-const { div, a, ul, li, p } = Html;
+const { div, a, ul, li, p, formElement, logoutButton } = Html;
 const { createPaginationLinks } = pagination
-const { getUserRentalsUri, getUserProfileUri, getRentalDetailsUri } = uriManager
+const { getUserRentalsUri, getUserProfileUri, getRentalDetailsUri, loginUri, signUpUri } = uriManager
 
 function renderUserRentalsView(contentHeader, content, rentals, count, username,  uid, page) {
     const currHeader = contentHeader.textContent
@@ -27,7 +27,7 @@ function renderUserRentalsView(contentHeader, content, rentals, count, username,
     const info = div(rentalList)
     const navigation = createPaginationLinks(getUserRentalsUri(uid, page), count, page)
 
-    if (currHeader !== header) contentHeader.replaceChildren(header)
+    if (currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(backLink, info, navigation)
 }
 
@@ -39,13 +39,66 @@ function renderUserDetailsView(contentHeader, content, user) {
         li(a("User Rentals ", getUserRentalsUri(user.uid))),
     )
 
-    contentHeader.replaceChildren(header)
+    contentHeader.replaceChildren(header, logoutButton())
     content.replaceChildren(info)
+}
+
+function renderSignUpView(contentHeader, content, handleSubmit) {
+    const header = "Sign Up"
+    const info = p("Please sign up to access our website.")
+
+    const fields = [
+        { id: "name", label: "Name", type: "text", required: true },
+        { id: "email", label: "Email", type: "email", required: true },
+        { id: "password", label: "Password", type: "password", required: true },
+    ]
+
+    const form = li(
+        formElement(fields, handleSubmit, {
+            className: "form",
+            submitText: "Sign Up"
+        })
+    )
+
+    const loginRedirect = li(
+        p("Already have an account?"),
+        a("Login", loginUri())
+    );
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(info, form, loginRedirect)
+}
+
+function renderLoginView(contentHeader, content, handleSubmit) {
+    const header = "Login"
+    const info = p("Please login to access our website.")
+
+    const fields = [
+        { id: "email", label: "Email", type: "email", required: true },
+        { id: "password", label: "Password", type: "password", required: true },
+    ]
+
+    const form = li(
+        formElement(fields, handleSubmit, {
+            className: "organized-form",
+            submitText: "Login"
+        })
+    )
+
+    const createRedirect = li(
+        p("Don't have an account?"),
+        a("Sign Up", signUpUri())
+    );
+
+    contentHeader.replaceChildren(header)
+    content.replaceChildren(info, form, createRedirect)
 }
 
 const usersViews = {
     renderUserRentalsView,
     renderUserDetailsView,
+    renderSignUpView,
+    renderLoginView
 }
 
 export default usersViews;
