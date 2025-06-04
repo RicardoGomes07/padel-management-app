@@ -3,17 +3,15 @@ import {ELEMS_PER_PAGE} from "./views/pagination.js"
 import usersViews from "./views/usersviews.js"
 import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";
-import userAuthenticationManager from "../managers/userAuthenticationManager.js";
+import { setUserInfo } from "../managers/userAuthenticationContext.js";
 import uriManager from "../managers/uriManager.js";
 
 const { path, query } = request
 const { renderUserRentalsView, renderUserDetailsView, renderSignUpView, renderLoginView } = usersViews
-const { fetchUserRentals, fetchUserDetails, createUser, loginUser, logoutUser } = usersRequests
+const { fetchUserRentals, fetchUserDetails, createUser, loginUser} = usersRequests
 const { errorView } = errorsViews
 const { homeUri } = uriManager
 
-export const userAuthManager = userAuthenticationManager()
-                                .setCurrToken("b734312a-94c6-492e-a243-5ebe17e023ca")
 
 async function getUserRentals(contentHeader, content) {
     const uid = path("uid")
@@ -61,12 +59,10 @@ function signUp(contentHeader, content){
             const login = await loginUser(email, password)
             if (login.status !== 200) {
                 errorView(contentHeader, content, homeUri(), login.data)
-                return
             }else{
                 console.log("User logged in successfully, data:", login.data)
-                userAuthManager.setCurrToken(login.data.token)
-                console.log("Current token set to:", userAuthManager.getCurrToken())
-                window.location.hash = homeUri()
+                setUserInfo(login.data)
+                window.history.back() // Redirect to the previous page
             }
         }
     }
@@ -85,8 +81,8 @@ function login(contentHeader, content) {
         if (result.status !== 200) {
             errorView(contentHeader, content, homeUri(), result.data)
         } else {
-            userAuthManager.setCurrToken(result.data.token)
-            window.location.hash = homeUri()
+            setUserInfo(result.data)
+            window.history.back() // Redirect to the previous page
         }
     }
 

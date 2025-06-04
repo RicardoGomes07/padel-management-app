@@ -6,7 +6,8 @@ import errorsViews from "./views/errorsview.js";
 import courtsRequests from "./requests/courtsrequests.js";
 import courtsViews from "./views/courtsviews.js";
 import uriManager from "../managers/uriManager.js";
-import auxfuns from "../handlers/auxfuns.js";
+import auxfuns from "./auxFuns.js";
+import {authenticated} from "../managers/userAuthenticationContext.js";
 
 const { renderRentalDetailsView, renderCalendarToSearchRentals, renderUpdateRentalView, renderRentalCreationForm } = rentalsViews
 const { fetchRentalDetails} = rentalsRequests
@@ -33,6 +34,13 @@ async function getRentalDetails(contentHeader, content) {
 async function createRental(contentHeader, content) {
     const cid = Number(path("cid"))
     const crid = Number(path("crid"))
+
+    if(!authenticated()){
+        errorView(contentHeader, content, getCourtDetailsUri(cid, crid),
+            { title: "Unauthorized", message: "You must have an account to create a rental." }
+        )
+        return
+    }
 
     const date = query("date")
     const startHour = query("start")
@@ -74,6 +82,13 @@ async function updateRental(contentHeader, content) {
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
 
+    if(!authenticated()){
+        errorView(contentHeader, content, getRentalDetailsUri(cid, crid, rid),
+            { title: "Unauthorized", message: "You must have an account to update a rental." }
+        )
+        return
+    }
+
     const handleSubmit = async function(e) {
         e.preventDefault()
 
@@ -109,6 +124,13 @@ async function deleteRental(contentHeader, content) {
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
     const page = Number(query("page")) || 1
+
+    if(!authenticated()){
+        errorView(contentHeader, content, listCourtRentalsUri(cid, crid),
+            { title: "Unauthorized", message: "You must have an account to delete a rental." }
+        )
+        return
+    }
 
     const result = await rentalsRequests.deleteRental(cid, crid, rid)
 

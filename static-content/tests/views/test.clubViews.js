@@ -1,20 +1,25 @@
 import clubViews from "../../spa/handlers/views/clubsviews.js";
 import {ELEMS_PER_PAGE} from "../../spa/handlers/views/pagination.js";
+import {setAuthStatusContent, setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
 
 const assert = window.chai.assert
 
 describe('ClubViews', function () {
-    let contentHeader, content;
+    let contentHeader, content, authContent;
+
+    const mockUser = { uid: 1, token: "mockToken"}
 
     beforeEach(function () {
         contentHeader = document.createElement('div');
         content = document.createElement('div');
+        authContent = document.createElement('div');
+        setAuthStatusContent(authContent)
     });
 
     describe('renderClubDetailsView', function () {
-        it("should render club details with related links and hrefs", function () {
+        it("should render club details with related links and hrefs when autenticated", function () {
             const club = {cid: 1, name: "Benfica", owner: {uid: 1, name: "Leonel"}};
-
+            setUserInfo(mockUser)
             clubViews.renderClubDetailsView(contentHeader, content, club);
 
             assert.strictEqual(contentHeader.textContent, "Club Info");
@@ -37,7 +42,29 @@ describe('ClubViews', function () {
 
             assert.strictEqual(allClubsLink.textContent, "All Clubs");
             assert.strictEqual(allClubsLink.getAttribute("href"), "#clubs?page=1");
+            setUserInfo(null);
         });
+
+        it("should render club details with related links and hrefs when unauthenticated", function () {
+            const club = {cid: 1, name: "Benfica", owner: {uid: 1, name: "Leonel"}};
+            clubViews.renderClubDetailsView(contentHeader, content, club);
+
+            assert.strictEqual(contentHeader.textContent, "Club Info");
+
+            const links = content.querySelectorAll("a");
+            const [ownerLink, courtsLink, allClubsLink] = links;
+
+            assert.strictEqual(links.length, 3);
+            assert.strictEqual(ownerLink.textContent, "Leonel");
+            assert.strictEqual(ownerLink.getAttribute("href"), `#users/1`);
+
+            assert.strictEqual(courtsLink.textContent, "Courts");
+            assert.strictEqual(courtsLink.getAttribute("href"), `#clubs/1/courts?page=1`);
+
+            assert.strictEqual(allClubsLink.textContent, "All Clubs");
+            assert.strictEqual(allClubsLink.getAttribute("href"), "#clubs?page=1");
+        });
+
     });
 
     describe('clubsList with valid list', function () {
@@ -71,7 +98,7 @@ describe('ClubViews', function () {
     })
 
     describe('renderClubsView without name', function () {
-        it("should render list of clubs with correct links", function () {
+        it("should render list of clubs with correct links, should not have create club when unauthenticated", function () {
             const clubs = [{cid: 1, name: "Benfica"}, {cid: 2, name: "Porto"}];
 
             clubViews.renderClubsView(contentHeader, content, clubs, 2, "", 1);
@@ -79,10 +106,10 @@ describe('ClubViews', function () {
             assert.strictEqual(contentHeader.textContent, "Clubs");
 
             const links = content.querySelectorAll("a");
-            const [searchBarLink, benficaLink, portoLink, currLink, createClubLink] = links;
+            const [searchBarLink, benficaLink, portoLink, currLink] = links;
 
-            // 2 from clubsList, 1 from createClub, 1 from searchBar and 1 from pagination with elemsPerPage as 2
-            assert.strictEqual(links.length, clubs.length + 2 + Math.ceil(clubs.length / ELEMS_PER_PAGE));
+            // 2 from clubsList, 1 from searchBar and 1 from pagination with elemsPerPage as 2
+            assert.strictEqual(links.length, clubs.length + 1+ Math.ceil(clubs.length / ELEMS_PER_PAGE));
 
             assert.strictEqual(searchBarLink.textContent, "Search Clubs");
             assert.strictEqual(searchBarLink.getAttribute("href"), "#clubs?page=1");
@@ -93,17 +120,15 @@ describe('ClubViews', function () {
             assert.strictEqual(portoLink.textContent, "Porto");
             assert.strictEqual(portoLink.getAttribute("href"), "#clubs/2");
 
-            assert.strictEqual(createClubLink.textContent, "Create a Club")
-            assert.strictEqual(createClubLink.getAttribute("href"), "#clubs/create")
-
             assert.strictEqual(currLink.textContent, "Curr")
             assert.strictEqual(currLink.getAttribute("href"), "#clubs?page=1")
         });
     });
 
     describe('renderClubsView with name', function () {
-        it("renderClubsView with name", function () {
+        it("renderClubsView with name, should have create club when user is authenticated", function () {
             const clubs = [{cid: 1, name: "Benfica"}];
+            setUserInfo(mockUser)
 
             clubViews.renderClubsView(contentHeader, content, clubs, 1, "Ben", 1);
 
@@ -125,6 +150,7 @@ describe('ClubViews', function () {
 
             assert.strictEqual(currLink.textContent, "Curr")
             assert.strictEqual(currLink.getAttribute("href"), "#clubs?name=Ben&page=1")
+            setUserInfo(null)
         });
     })
 

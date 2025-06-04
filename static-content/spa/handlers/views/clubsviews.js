@@ -2,12 +2,14 @@ import Html from "../../dsl/htmlfuns.js";
 import pagination  from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import clubsrequests from "../requests/clubsrequests.js";
+import {authenticated} from "../../managers/userAuthenticationContext.js";
 
 const { fetchClubs } = clubsrequests;
-const { input, a, ul, li, p, div, formElement, logoutButton } = Html;
+const { input, a, ul, li, p, div, formElement } = Html;
 const { createPaginationLinks } = pagination
 const { getUserProfileUri, listClubsUri, listClubCourtsUri, createCourtFromUri, getClubDetailsUri,
     createClubUri, searchCourtsToRentUri } = uriManager
+
 
 const DEFAULT_SEARCH_LIMIT = 5
 
@@ -18,13 +20,13 @@ function renderClubDetailsView(contentHeader, content, club){
         li("Owner: ", a(club.owner.name, getUserProfileUri(club.owner.uid))),
         li(
             a("Courts", listClubCourtsUri(club.cid)),
-            a("Create Court", createCourtFromUri(club.cid)),
-            a("Rent", searchCourtsToRentUri(club.cid)),
+            authenticated() ? a("Create Court", createCourtFromUri(club.cid)) : "",
+            authenticated() ? a("Rent", searchCourtsToRentUri(club.cid)) : "",
         ),
         a("All Clubs", listClubsUri()),
     );
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(info)
 }
 
@@ -43,12 +45,12 @@ function renderClubsView(contentHeader, content, clubs, count, name, page){
     const header = `Clubs${name ? `: ${name}` : ``}`
     const info = clubsList(clubs)
 
-    const createClubAnchor = a("Create a Club", createClubUri())
+    const createClubAnchor = authenticated() ? a("Create a Club", createClubUri()) : ""
 
     const navigation = createPaginationLinks(listClubsUri(name, page), count, page)
 
-    if(currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
-    content.replaceChildren(clubSearchBar(), info, navigation, createClubAnchor, logoutButton())
+    if(currHeader !== header) contentHeader.replaceChildren(header)
+    content.replaceChildren(clubSearchBar(), info, navigation, createClubAnchor)
 }
 
 function clubSearchBar() {
@@ -97,7 +99,7 @@ function renderCreateClubView(contentHeader, content, handleSubmit) {
 
     const back = a("Back", listClubsUri())
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(form, back)
 }
 

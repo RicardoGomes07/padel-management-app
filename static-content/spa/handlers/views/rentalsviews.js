@@ -1,7 +1,9 @@
 import Html from "../../dsl/htmlfuns.js";
 import uriManager from "../../managers/uriManager.js";
+import {authenticated} from "../../managers/userAuthenticationContext.js";
 
-const { a, ul, li, div, formElement, logoutButton } = Html;
+
+const { a, ul, li, div, formElement} = Html;
 const { deleteRentalUri, getUserProfileUri, getCourtDetailsUri, getRentalDetailsUri, updateRentalIntentUri } = uriManager;
 
 function renderRentalDetailsView(contentHeader, content, rental) {
@@ -12,11 +14,11 @@ function renderRentalDetailsView(contentHeader, content, rental) {
         li("Renter: ", a(rental.renter.name, getUserProfileUri(rental.renter.uid))),
         li(`Date: ${rental.date.toString()}`),
         li(`TimeSlot: ${rental.initialHour}h - ${rental.finalHour === 24 ? "23:59": rental.finalHour }h`),
-        li(a("Update Rental", updateRentalIntentUri(rental.court.cid, rental.court.crid, rental.rid))),
-        li(a("Delete Rental", deleteRentalUri(rental.court.cid, rental.court.crid, rental.rid)))
+        authenticated() ? li(a("Update Rental", updateRentalIntentUri(rental.court.cid, rental.court.crid, rental.rid))): "",
+        authenticated() ? li(a("Delete Rental", deleteRentalUri(rental.court.cid, rental.court.crid, rental.rid))) : ""
     )
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(info)
 }
 
@@ -35,7 +37,7 @@ function renderCalendarToSearchRentals(contentHeader, content, cid, crid, handle
         })
     )
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(form, backLink)
 }
 
@@ -53,7 +55,7 @@ function renderUpdateRentalView(contentHeader, content, rental, handleSubmit) {
                 submitText: "Update Rental"
             })
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(backButton, form)
 }
 
@@ -72,7 +74,7 @@ function renderRentalCreationForm(contentHeader, content, cid, crid, rentalInfo,
         submitText: "Create Rental"
     })
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, form)
 }
 

@@ -1,7 +1,8 @@
 import {API_BASE_URL} from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js"
-import {userAuthManager} from "../usershandlers.js";
-const userToken = userAuthManager.getCurrToken()
+import { getCurrToken } from "../../managers/userAuthenticationContext.js";
+
+const userToken = getCurrToken()
 
 function fetchCourtsByClub(cid, skip, limit) {
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/?skip=${skip}&limit=${limit}`)
@@ -39,7 +40,6 @@ function getAvailableHours(cid, crid, date) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `${userToken}`,
         },
         body: JSON.stringify({ date: date })
     }).then(handleResponse)
@@ -50,7 +50,6 @@ function getAvailableCourtsByDateAndTimeSlot(cid, date, startHour, endHour) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `${userToken}`,
         },
         body: JSON.stringify({ date: date, initialHour: startHour, finalHour: endHour })
     }).then(handleResponse)

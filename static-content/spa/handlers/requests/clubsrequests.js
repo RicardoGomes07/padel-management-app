@@ -1,8 +1,8 @@
 import {API_BASE_URL} from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js"
-import {userAuthManager} from "../usershandlers.js";
+import { getCurrToken } from "../../managers/userAuthenticationContext.js";
 
-const userToken = userAuthManager.getCurrToken()
+const userToken = getCurrToken()
 
 function fetchClubDetails(cid){
     return fetch(`${API_BASE_URL}clubs/${cid}`)

@@ -1,18 +1,47 @@
 import courtsViews from "../../spa/handlers/views/courtsviews.js";
+import {setAuthStatusContent, setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
 const assert = window.chai.assert
 
 describe('CourtsViews', function () {
-    let contentHeader, content;
+    let contentHeader, content, authContent;
+
+    const mockUser = { uid: 1, token: "mockToken" };
 
     beforeEach(function () {
         contentHeader = document.createElement('div');
         content = document.createElement('div');
+        authContent = document.createElement('div');
+        setAuthStatusContent(authContent)
     });
 
     describe('renderCourtDetailsView', function () {
-        it("should render court details with related links and hrefs", function () {
+        it("should render court details with related links and hrefs, without rent court when unauthorized", function () {
             const court = { name: "Court X" };
 
+            courtsViews.renderCourtDetailsView(contentHeader, content, court, 10, 5);
+
+            assert.strictEqual(contentHeader.textContent, "Court Info");
+
+            const links = content.querySelectorAll("a");
+            const [clubLink, rentalsLink, byDateLink, hoursLink] = links;
+
+            assert.strictEqual(links.length, 4);
+            assert.strictEqual(clubLink.textContent, "Club");
+            assert.strictEqual(clubLink.getAttribute("href"), "#clubs/10");
+
+            assert.strictEqual(rentalsLink.textContent, "Court Rentals");
+            assert.strictEqual(rentalsLink.getAttribute("href"), `#clubs/10/courts/5/rentals?page=1`);
+
+            assert.strictEqual(byDateLink.textContent, "by date");
+            assert.strictEqual(byDateLink.getAttribute("href"), "#clubs/10/courts/5/rentals/search");
+
+            assert.strictEqual(hoursLink.textContent, "Available Hours");
+            assert.strictEqual(hoursLink.getAttribute("href"), "#clubs/10/courts/5/available_hours");
+
+        });
+        it("should render court details with related links and hrefs, when authenticaded", function () {
+            const court = { name: "Court X" };
+            setUserInfo(mockUser)
             courtsViews.renderCourtDetailsView(contentHeader, content, court, 10, 5);
 
             assert.strictEqual(contentHeader.textContent, "Court Info");
@@ -35,6 +64,7 @@ describe('CourtsViews', function () {
 
             assert.strictEqual(rentCourt.textContent, "Rent Court");
             assert.strictEqual(rentCourt.getAttribute("href"), "#clubs/10/courts/5/rentals/create");
+            setUserInfo(null)
         });
     });
 

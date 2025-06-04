@@ -3,8 +3,6 @@ const { listClassName, listElemClassName, linksClassName,
     textInfoClassName, centerDivClassName, h1ClassName,
     h2ClassName} = classnames
 
-import usersRequests from "../handlers/requests/usersrequests.js";
-const { logoutUser } = usersRequests;
 
 function createElement(tag, props = {}, ...children) {
     const element = document.createElement(tag)
@@ -172,29 +170,6 @@ function hourSelect(id, initialValue, onChange = () => {}, className = "form-sel
     }, ...options)
 }
 
-function logoutButton() {
-    return button("Logout", async () => {
-        const result = await logoutUser();
-        if (result.status === 200) {
-            userAuthManager.setCurrToken(null);
-            console.log("User logged out successfully, token cleared.");
-            window.location.hash = homeUri();
-        } else {
-            // Handle logout error
-        }
-    }, {
-        className: "btn btn-danger mt-2",
-        id: "logout-button",
-        style: {
-            position: "fixed",
-            top: "20px",
-            right: "20px",
-            zIndex: "1000"
-        }
-    });
-}
-
-
 const Html = {
     div,
     a,
@@ -207,7 +182,6 @@ const Html = {
     input,
     span,
     label,
-    logoutButton,
     button,
 }
 

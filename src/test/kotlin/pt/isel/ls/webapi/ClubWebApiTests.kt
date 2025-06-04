@@ -111,7 +111,7 @@ class ClubWebApiTests {
     @Test
     fun `get available hours with invalid court`() {
         val courtId = 999
-        val date = LocalDate.parse("2025-06-01")
+        val date = LocalDate.parse("2026-06-01")
         val token = createUser()
         val getAvailableHoursRequest =
             clubsRoutes(
@@ -127,7 +127,7 @@ class ClubWebApiTests {
         val token = createUser()
         val clubId = createClub(token).cid
         val courtId = createCourt(token, clubId.toInt())
-        val date = LocalDate.parse("2025-06-01")
+        val date = LocalDate.parse("2026-06-01")
 
         val getAvailableHoursRequest =
             clubsRoutes(

@@ -3,9 +3,10 @@ import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
 import {createPaginationManager} from "../managers/paginationManager.js";
-import auxiliaryFuns from "./auxfuns.js";
+import auxiliaryFuns from "./auxFuns.js";
 import uriManager from "../managers/uriManager.js";
-import {ELEMS_PER_PAGE} from "./views/pagination.js";
+import { ELEMS_PER_PAGE } from "./views/pagination.js";
+import { authenticated } from "../managers/userAuthenticationContext.js";
 
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
@@ -14,7 +15,8 @@ const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView,
     renderSearchForCourtsByDateAndTimeSlot, renderAvailableCourtsToRent} = courtsViews
 const { errorView } = errorsViews
 const { isValidDate, parseHourFromString } = auxiliaryFuns
-const { getClubDetailsUri, listCourtRentalsUri, getCourtAvailableHoursUri , getCourtDetailsUri, getAvailableHoursByDateUri} = uriManager
+const { getClubDetailsUri, listCourtRentalsUri, getCourtAvailableHoursUri , getCourtDetailsUri,
+    getAvailableHoursByDateUri, listClubCourtsUri } = uriManager
 
 const courtsOfClubPagination =
     createPaginationManager(fetchCourtsByClub, "courts")
@@ -113,6 +115,13 @@ async function getCourtAvailableHours(contentHeader, content) {
 
 function createCourt(contentHeader, content) {
     const cid = path("cid")
+    if (!authenticated()){
+        errorView(contentHeader, content, listClubCourtsUri(cid),
+            { title: "Unauthorized", message: "You must have an account to create a court." }
+        )
+        return
+    }
+
 
     const handleSubmit = async function (e) {
         e.preventDefault()

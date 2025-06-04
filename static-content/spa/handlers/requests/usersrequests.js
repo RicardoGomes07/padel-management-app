@@ -1,6 +1,6 @@
 import {API_BASE_URL} from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js";
-import {userAuthManager} from "../usershandlers.js";
+import { getCurrToken } from "../../managers/userAuthenticationContext.js";
 
 
 
@@ -39,7 +39,7 @@ function logoutUser() {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": userAuthManager.getCurrToken(),
+            "Authorization": getCurrToken(),
         }
     }).then(handleResponse)
 }

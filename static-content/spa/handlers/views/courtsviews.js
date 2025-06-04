@@ -2,10 +2,11 @@ import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import errorViews from "./errorsview.js";
+import {authenticated} from "../../managers/userAuthenticationContext.js";
 
 const { errorView } = errorViews
 const { createPaginationLinks } = pagination
-const { div, a, ul, li, p, formElement, span, label, input, logoutButton } = Html
+const { div, a, ul, li, p, formElement, span, label, input} = Html
 const { getCourtDetailsUri, listClubCourtsUri, getClubDetailsUri, listCourtRentalsUri, searchCourtRentalsUri,
     getCourtAvailableHoursUri, getRentalDetailsUri, createRentalUri, getAvailableHoursByDateAndRangeUri } = uriManager
 
@@ -25,7 +26,7 @@ function renderCourtsByClubView(contentHeader, content, courts, count, cid, page
 
     const navigation = createPaginationLinks(listClubCourtsUri(cid, page), count, page)
 
-    if (currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
+    if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(courtList, navigation, back)
 }
 
@@ -42,10 +43,10 @@ function renderCourtDetailsView(contentHeader, content, courtResponse, cid, crid
                 )
             ),
             li(a("Available Hours", getCourtAvailableHoursUri(cid, crid))),
-            li(a("Rent Court", createRentalUri(cid, crid))),
+            authenticated() ? li(a("Rent Court", createRentalUri(cid, crid))) : "",
         )
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(info)
 }
 
@@ -69,7 +70,7 @@ function renderCourtRentalsView(contentHeader, content, rentals, count, cid, cri
 
     const navigation = createPaginationLinks(listCourtRentalsUri(cid, crid, page), count, page)
 
-    if (currHeader !== header) contentHeader.replaceChildren(header, logoutButton())
+    if (currHeader !== header) contentHeader.replaceChildren(header)
     content.replaceChildren(backLink, rentalList, navigation)
 }
 
@@ -88,7 +89,7 @@ function renderCreateCourtForm(contentHeader, content, cid, handleSubmit) {
         })
     )
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(children, backLink)
 }
 
@@ -132,7 +133,7 @@ function renderCourtAvailableHoursView(contentHeader, content, availableHours, c
                 createRentalAnchor = null
             }
 
-            if (checkedBoxes.length === 2) {
+            if (checkedBoxes.length === 2 && authenticated()) {
                 const selectedHours = checkedBoxes.map(cb => cb.id.split("-").pop())
                 createRentalAnchor = a(
                     "Create Rental",
@@ -187,7 +188,7 @@ function renderCourtAvailableHoursView(contentHeader, content, availableHours, c
     )
 
     const headerText = `Available Hours for ${selectedDate}`
-    contentHeader.replaceChildren(headerText, logoutButton())
+    contentHeader.replaceChildren(headerText)
     if (selectedHoursDiv) {
         content.replaceChildren(backLink, selectedHoursDiv, intervalsList)
     } else {
@@ -212,7 +213,6 @@ function formatHour(hour) {
     }
 }
 
-
 function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid, handleSubmit) {
     const header = "Search Available Hours"
 
@@ -228,7 +228,7 @@ function renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid,
         })
     )
 
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(children)
 }
 
@@ -242,7 +242,7 @@ function renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, sub
     ]
 
     const form = formElement(fields, submitHandler)
-    contentHeader.replaceChildren("Select a date and a time to search for courts availability", logoutButton())
+    contentHeader.replaceChildren("Select a date and a time to search for courts availability")
     content.replaceChildren(backLink,form)
 }
 
@@ -254,7 +254,7 @@ function renderAvailableCourtsToRent(contentHeader, content, availableCourts, da
             li(a(court.name, createRentalUri(court.cid, court.crid, date, startHour, endHour)))
         )
     )
-    contentHeader.replaceChildren(header, logoutButton())
+    contentHeader.replaceChildren(header)
     content.replaceChildren(courts)
 }
 

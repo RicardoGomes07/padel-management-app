@@ -4,12 +4,14 @@ import clubViews from "./views/clubsviews.js"
 import errorsViews from "./views/errorsview.js"
 import uriManager from "../managers/uriManager.js";
 import { createPaginationManager } from "../managers/paginationManager.js"
+import { authenticated } from "../managers/userAuthenticationContext.js";
 
 const { fetchClubDetails, fetchClubs } = clubsRequests
 const { renderClubDetailsView, renderClubsView, renderCreateClubView } = clubViews
 const { errorView } = errorsViews
 const { path, query } = request
 const { listClubsUri, getClubDetailsUri } = uriManager
+
 
 const clubsPagination =
     createPaginationManager(fetchClubs, "clubs")
@@ -45,7 +47,13 @@ async function getClubDetails(contentHeader, content) {
     else renderClubDetailsView(contentHeader, content, result.data)
 }
 
-async function createClub(contentHeader, content) {
+function createClub(contentHeader, content) {
+    if (!authenticated()) {
+        errorView(contentHeader, content, listClubsUri(),
+            { title: "Unauthorized", message: "You must have an account to create a club." }
+        )
+        return
+    }
     const handleSubmit = async function(e){
         e.preventDefault()
         const clubName = document.querySelector("#clubName").value
@@ -58,11 +66,7 @@ async function createClub(contentHeader, content) {
         }
     }
 
-    renderCreateClubView(
-        contentHeader,
-        content,
-        handleSubmit,
-    )
+    renderCreateClubView(contentHeader, content, handleSubmit)
 }
 
 const clubHandlers= {

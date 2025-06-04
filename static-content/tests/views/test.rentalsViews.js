@@ -1,9 +1,14 @@
 import rentalsViews from "../../spa/handlers/views/rentalsviews.js";
+import {setAuthStatusContent, setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
 const assert = window.chai.assert
 
 describe("rentalsViews", function () {
-    let contentHeader, content;
+    let contentHeader, content, authContent;
 
+    // Mock user authentication info
+    const mockUser = {uid: 1, token: "test-token"}
+
+    // Mock rental data
     const rental = {
         rid: "1",
         court: { crid: 1, name: "Court1", cid: 1 },
@@ -16,6 +21,8 @@ describe("rentalsViews", function () {
     beforeEach(function () {
         contentHeader = document.createElement("div");
         content = document.createElement("div");
+        authContent = document.createElement("div");
+        setAuthStatusContent(authContent)
     });
 
     describe("renderRentalDetailsView", function () {
@@ -24,7 +31,7 @@ describe("rentalsViews", function () {
             assert.strictEqual(contentHeader.innerHTML, "Rental Info");
         });
 
-        it("should display rental info", function () {
+        it("should not render update and delete text when user unauthenticated", function () {
             rentalsViews.renderRentalDetailsView(contentHeader, content, rental);
 
             assert.include(content.innerHTML, "Court: ");
@@ -33,13 +40,37 @@ describe("rentalsViews", function () {
             assert.include(content.innerHTML, "John Doe");
             assert.include(content.innerHTML, "Date: 2023-10-01");
             assert.include(content.innerHTML, "TimeSlot: 10h - 12h");
-            assert.include(content.innerHTML, "Update Rental");
-            assert.include(content.innerHTML, "Delete Rental");
         });
 
-        it("should render correct hrefs for links", function () {
+        it("should not render update and delete links when user unauthenticated", function () {
             rentalsViews.renderRentalDetailsView(contentHeader, content, rental);
+            const links = content.querySelectorAll("a");
+            assert.strictEqual(links.length, 2, "There should be exactly 2 links");
 
+            assert.strictEqual(links[0].textContent, "Court1");
+            assert.strictEqual(links[0].getAttribute("href"), "#clubs/1/courts/1");
+
+            assert.strictEqual(links[1].textContent, "John Doe");
+            assert.strictEqual(links[1].getAttribute("href"), "#users/1");
+        });
+
+        it("should render update and delete text when user is authenticated", function () {
+            setUserInfo(mockUser);
+            rentalsViews.renderRentalDetailsView(contentHeader, content, rental);
+            assert.include(content.innerHTML, "Court: ");
+            assert.include(content.innerHTML, "Court1");
+            assert.include(content.innerHTML, "Renter: ");
+            assert.include(content.innerHTML, "John Doe");
+            assert.include(content.innerHTML, "Date: 2023-10-01");
+            assert.include(content.innerHTML, "TimeSlot: 10h - 12h");
+            assert.include(content.innerHTML, "Update Rental");
+            assert.include(content.innerHTML, "Delete Rental");
+            setUserInfo(null);
+        });
+
+        it("should render correct hrefs for links when user authenticated", function () {
+            setUserInfo(mockUser);
+            rentalsViews.renderRentalDetailsView(contentHeader, content, rental);
             const links = content.querySelectorAll("a");
             assert.strictEqual(links.length, 4, "There should be exactly 4 links");
 
@@ -54,6 +85,7 @@ describe("rentalsViews", function () {
 
             assert.strictEqual(links[3].textContent, "Delete Rental");
             assert.strictEqual(links[3].getAttribute("href"), "#clubs/1/courts/1/rentals/1/delete");
+            setUserInfo(null);
         });
     });
 

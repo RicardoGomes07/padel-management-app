@@ -1,7 +1,8 @@
 import {API_BASE_URL} from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js";
-import {userAuthManager} from "../usershandlers.js";
-const userToken = userAuthManager.getCurrToken()
+import { getCurrToken } from "../../managers/userAuthenticationContext.js";
+
+const userToken = getCurrToken()
 
 function fetchRentalDetails(cid, crid, rid) {
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals/${rid}`)
