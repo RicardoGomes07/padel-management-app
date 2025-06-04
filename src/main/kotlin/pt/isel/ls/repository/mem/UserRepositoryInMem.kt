@@ -22,17 +22,48 @@ object UserRepositoryInMem : UserRepository {
             exception = UserError.UserAlreadyExists(email.value),
         )
         currId += 1u
-        val token = generateToken()
         val user =
             User(
                 uid = currId,
                 name = name,
                 email = email,
-                token = token,
+                password = password,
+                token = null,
             )
 
         users.add(user)
-        return user
+
+        return users.first { it.uid == currId }
+    }
+
+    override fun login(
+        email: Email,
+        password: Password,
+    ): User {
+        val user = users.firstOrNull { it.email == email }
+        requireNotNull(user)
+
+        users.replaceAll { user ->
+            if (user.email == email) {
+                user.copy(token = generateToken())
+            } else {
+                user
+            }
+        }
+
+        val loggedUser = users.firstOrNull { it.email == email }
+        requireNotNull(loggedUser)
+        return loggedUser
+    }
+
+    override fun logout(email: Email) {
+        users.replaceAll { user ->
+            if (user.email == email) {
+                user.copy(token = null)
+            } else {
+                user
+            }
+        }
     }
 
     override fun findUserByToken(token: Token): User? = users.firstOrNull { it.token == token }
@@ -45,6 +76,7 @@ object UserRepositoryInMem : UserRepository {
                 currId,
                 element.name,
                 element.email,
+                element.password,
                 element.token,
             ),
         )

@@ -15,6 +15,7 @@ private fun CustomError.toResponse(): Response {
         when (this) {
             // User Errors
             is UserError.UserAlreadyExists -> BAD_REQUEST
+            is UserError.UserFailedLogin -> BAD_REQUEST
 
             // Club Errors
             is ClubError.ClubAlreadyExists -> BAD_REQUEST

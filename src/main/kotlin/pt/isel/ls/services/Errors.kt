@@ -16,6 +16,8 @@ sealed class UserError(
     class UserAlreadyExists(
         email: String,
     ) : UserError("User with email $email already exists")
+
+    class UserFailedLogin : UserError("Email or password wrong.")
 }
 
 sealed class ClubError(

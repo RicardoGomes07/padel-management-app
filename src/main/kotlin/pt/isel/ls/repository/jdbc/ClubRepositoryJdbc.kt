@@ -231,7 +231,7 @@ class ClubRepositoryJdbc(
 fun clubSqlReturnFormat() =
     """
     SELECT c.cid as club_id, c.name as club_name, c.owner as owner_id,
-        u.name as owner_name, u.email as owner_email, u.token as owner_token
+        u.name as owner_name, u.email as owner_email, u.password as owner_password, u.token as owner_token
     FROM clubs c
     LEFT JOIN users u ON u.uid = c.owner
     """.trimIndent()
@@ -250,7 +250,8 @@ fun ResultSet.mapClub() =
                 uid = getInt("owner_id").toUInt(),
                 name = Name(getString("owner_name")),
                 email = Email(getString("owner_email")),
-                token = getString("owner_token").toToken(),
+                password = getString("owner_password").toPassword(),
+                token = getString("owner_token")?.toToken(),
             ),
     )
 

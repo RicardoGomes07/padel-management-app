@@ -59,15 +59,20 @@ class UtilsTests {
                 .handlerWithAuth(userService::validateUser) { _ -> Response(Status.OK) }
         assertEquals(401, responseWithUnauthUser.status.code)
 
-        val user = userService.createUser("Rocky".toName(), "rocky@balboa.com".toEmail(), "password".toPassword())
+        val userResult = userService.createUser("Rocky".toName(), "rocky@balboa.com".toEmail(), "password".toPassword())
+        assertTrue(userResult.isSuccess)
+        val user = userResult.getOrNull()!!
+        val loggedInResult = userService.login(user.email, user.password)
+        assertTrue(loggedInResult.isSuccess)
+        val loggedIn = loggedInResult.getOrNull()!!
         val requestWithAuth =
             request
-                .header("Authorization", user.getOrThrow().token.toString())
+                .header("Authorization", loggedIn.token.toString())
                 .handlerWithAuth(userService::validateUser) { usr ->
-                    Response(Status.OK).body(usr.toString())
+                    Response(Status.OK).body(loggedIn.toString())
                 }
-        assertEquals(requestWithAuth.status.code, 200)
-        assertTrue(requestWithAuth.bodyString().contains(user.getOrThrow().toString()))
+        assertEquals(200, requestWithAuth.status.code)
+        assertTrue(requestWithAuth.bodyString().contains(loggedIn.toString()))
     }
 
     @Test

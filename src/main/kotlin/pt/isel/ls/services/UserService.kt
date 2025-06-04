@@ -48,7 +48,7 @@ class UserService(
     ): Result<User> =
         runCatching {
             trxManager.run {
-                TODO()
+                userRepo.login(email, password)
             }
         }
 
@@ -60,7 +60,7 @@ class UserService(
     fun logout(user: User): Result<Unit> =
         runCatching {
             trxManager.run {
-                TODO()
+                userRepo.logout(user.email)
             }
         }
 

@@ -9,6 +9,8 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserService
+import pt.isel.ls.webapi.dto.AuthUser
+import pt.isel.ls.webapi.dto.LoginInput
 import pt.isel.ls.webapi.dto.UserCreationInput
 import pt.isel.ls.webapi.dto.UserOutput
 import kotlin.test.BeforeTest
@@ -24,6 +26,8 @@ val userApi =
 val userRoutes =
     routes(
         "users" bind POST to userApi::createUser,
+        "users/login" bind POST to userApi::login,
+        "users/logout" bind POST to userApi::logout,
         "users/{uid}" bind GET to userApi::getUserInfo,
     )
 
@@ -37,14 +41,24 @@ fun randomString(
 
 fun createUser(): String {
     val name = randomString(10)
-    val userResponse =
+    val email = "$name@email.com"
+    val password = "password"
+    userRoutes(
+        Request(POST, "users")
+            .header("Content-Type", "application/json")
+            .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", email, password))),
+    )
+
+    val loginResponse =
         userRoutes(
-            Request(POST, "users")
+            Request(POST, "users/login")
                 .header("Content-Type", "application/json")
-                .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", "password"))),
+                .body(Json.encodeToString<LoginInput>(LoginInput(email, password))),
         )
-    val user = Json.decodeFromString<UserOutput>(userResponse.bodyString())
-    return user.token
+
+    val loggedIn = Json.decodeFromString<AuthUser>(loginResponse.bodyString())
+
+    return loggedIn.token
 }
 
 class UserWebApiTests {
@@ -98,5 +112,56 @@ class UserWebApiTests {
             )
 
         assertEquals(Status.CREATED, userResponse.status)
+    }
+
+    @Test
+    fun `login a user`() {
+        val email = "ric@email.com"
+        val password = "password"
+        val createResponse =
+            userRoutes(
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", email, password))),
+            )
+        assertEquals(Status.CREATED, createResponse.status)
+
+        val loginResponse =
+            userRoutes(
+                Request(POST, "users/login")
+                    .header("Content-Type", "application/json")
+                    .body(Json.encodeToString<LoginInput>(LoginInput(email, password))),
+            )
+        assertEquals(Status.OK, loginResponse.status)
+    }
+
+    @Test
+    fun `login and logout a user`() {
+        val email = "ric@email.com"
+        val password = "password"
+        val createResponse =
+            userRoutes(
+                Request(POST, "users")
+                    .header("Content-Type", "application/json")
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", email, password))),
+            )
+        assertEquals(Status.CREATED, createResponse.status)
+
+        val loginResponse =
+            userRoutes(
+                Request(POST, "users/login")
+                    .header("Content-Type", "application/json")
+                    .body(Json.encodeToString<LoginInput>(LoginInput(email, password))),
+            )
+        assertEquals(Status.OK, loginResponse.status)
+
+        val loggedIn = Json.decodeFromString<AuthUser>(loginResponse.body.toString())
+
+        val logoutResponse =
+            userRoutes(
+                Request(POST, "users/logout")
+                    .header("Authorization", loggedIn.token),
+            )
+        assertEquals(Status.OK, logoutResponse.status)
     }
 }

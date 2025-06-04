@@ -6,8 +6,8 @@ value class Password(
 ) {
     init {
         require(value.isNotBlank()) { "Password cannot be blank" }
-        require(value.length >= 8) { "Password must be at least 8 characters long" }
-        require(value.length <= 32) { "Password must not exceed 32 characters" }
+        require(value.length >= 6) { "Password must be at least 6 characters long" }
+        require(value.length <= 64) { "Password must not exceed 64 characters" }
     }
 
     override fun toString(): String = value

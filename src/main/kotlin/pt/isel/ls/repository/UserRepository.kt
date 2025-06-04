@@ -20,6 +20,13 @@ interface UserRepository : Repository<User> {
         password: Password,
     ): User
 
+    fun login(
+        email: Email,
+        password: Password,
+    ): User
+
+    fun logout(email: Email)
+
     /**
      * Function that finds a User by its token.
      * @param token the token of the User to find.

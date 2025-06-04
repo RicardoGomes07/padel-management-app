@@ -35,8 +35,8 @@ class UserRepositoryTests {
     @Test
     fun `retrieve user with user token`() {
         val user1 = userRepoInMem.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
-        val user = userRepoInMem.findUserByToken(user1.token)
-        assertEquals(user1, user)
+        val users = userRepoInMem.findAll()
+        assertTrue(users.items.contains(user1))
 
         val fakeToken = generateToken()
         val invalidUser = userRepoInMem.findUserByToken(fakeToken)
@@ -70,12 +70,14 @@ class UserRepositoryTests {
 
     @Test
     fun `save updates existing user`() {
-        val user = userRepoInMem.createUser("updateUser".toName(), "update@email.com".toEmail(), "password".toPassword())
+        val user = userRepoInMem.createUser("oldUser".toName(), "update@email.com".toEmail(), "password".toPassword())
         val updatedUser = user.copy(name = "updatedUser".toName())
         userRepoInMem.save(updatedUser)
 
-        val retrievedUser = userRepoInMem.findUserByToken(user.token)
-        assertEquals("updatedUser".toName(), retrievedUser?.name)
+        val users = userRepoInMem.findAll()
+        val found = users.items.firstOrNull { it.email == updatedUser.email }
+        assertNotNull(found)
+        assertEquals(updatedUser.name, found.name)
     }
 
     @Test
@@ -85,13 +87,41 @@ class UserRepositoryTests {
                 uid = 99u,
                 name = "newUser".toName(),
                 email = "new@email.com".toEmail(),
+                password = "password".toPassword(),
                 token = generateToken(),
             )
         userRepoInMem.save(newUser)
 
-        val retrievedUser = userRepoInMem.findUserByToken(newUser.token)
-        assertEquals(newUser.name, retrievedUser?.name)
-        assertEquals(newUser.email, retrievedUser?.email)
-        assertEquals(newUser.token, retrievedUser?.token)
+        val retrievedUser = userRepoInMem.findAll().items.firstOrNull { it.email == newUser.email }
+        assertNotNull(retrievedUser)
+        assertEquals(newUser.name, retrievedUser.name)
+        assertEquals(newUser.email, retrievedUser.email)
+        assertEquals(newUser.token, retrievedUser.token)
+    }
+
+    @Test
+    fun login() {
+        val user = userRepoInMem.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
+        val loggedIn = userRepoInMem.login(user.email, user.password)
+        assertNotNull(loggedIn)
+        assertNotNull(loggedIn.token)
+        assertEquals(user.uid, loggedIn.uid)
+
+        val foundUser = userRepoInMem.findByIdentifier(loggedIn.uid)
+        assertNotNull(foundUser)
+        assertEquals(loggedIn.token, foundUser.token)
+    }
+
+    @Test
+    fun logout() {
+        val user = userRepoInMem.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
+        val loggedIn = userRepoInMem.login(user.email, user.password)
+        requireNotNull(loggedIn)
+
+        userRepoInMem.logout(user.email)
+
+        val loggedOut = userRepoInMem.findByIdentifier(loggedIn.uid)
+        assertNotNull(loggedOut)
+        assertNull(loggedOut.token)
     }
 }

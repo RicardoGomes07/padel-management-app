@@ -10,7 +10,6 @@ import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
 
-@Ignore
 class UserRepositoryTests {
     private val connection: Connection =
         DriverManager
@@ -44,8 +43,8 @@ class UserRepositoryTests {
     @Test
     fun `retrieve user with user token`() {
         val user1 = userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
-        val user = userRepoJdbc.findUserByToken(user1.token)
-        assertEquals(user1, user)
+        val users = userRepoJdbc.findAll()
+        assertTrue(users.items.contains(user1))
 
         val fakeToken = generateToken()
         val invalidUser = userRepoJdbc.findUserByToken(fakeToken)
@@ -79,12 +78,12 @@ class UserRepositoryTests {
 
     @Test
     fun `save updates existing user`() {
-        val user = userRepoJdbc.createUser("updateUser".toName(), "update@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("oldUser".toName(), "update@email.com".toEmail(), "password".toPassword())
         val updatedUser = user.copy(name = "updatedUser".toName())
         userRepoJdbc.save(updatedUser)
 
-        val retrievedUser = userRepoJdbc.findUserByToken(user.token)
-        assertEquals("updatedUser".toName(), retrievedUser?.name)
+        val retrievedUsers = userRepoJdbc.findAll()
+        assertTrue(retrievedUsers.items.contains(updatedUser))
     }
 
     @Test
@@ -94,11 +93,12 @@ class UserRepositoryTests {
                 uid = 99u,
                 name = "newUser".toName(),
                 email = "new@email.com".toEmail(),
+                password = "hashed1234".toPassword(),
                 token = generateToken(),
             )
         userRepoJdbc.save(newUser)
 
-        val retrievedUser = userRepoJdbc.findUserByToken(newUser.token)
+        val retrievedUser = userRepoJdbc.findUserByToken(newUser.token!!)
         assertEquals(newUser.name, retrievedUser?.name)
         assertEquals(newUser.email, retrievedUser?.email)
         assertEquals(newUser.token, retrievedUser?.token)
@@ -111,5 +111,31 @@ class UserRepositoryTests {
 
         userRepoJdbc.deleteByIdentifier(user.uid)
         assertNull(userRepoJdbc.findByIdentifier(user.uid))
+    }
+
+    @Test
+    fun login() {
+        val user = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
+        val loggedIn = userRepoJdbc.login(user.email, user.password)
+        assertNotNull(loggedIn)
+        assertNotNull(loggedIn.token)
+        assertEquals(user.uid, loggedIn.uid)
+
+        val foundUser = userRepoJdbc.findByIdentifier(loggedIn.uid)
+        assertNotNull(foundUser)
+        assertEquals(loggedIn.token, foundUser.token)
+    }
+
+    @Test
+    fun logout() {
+        val user = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
+        val loggedIn = userRepoJdbc.login(user.email, user.password)
+        requireNotNull(loggedIn)
+
+        userRepoJdbc.logout(user.email)
+
+        val loggedOut = userRepoJdbc.findByIdentifier(loggedIn.uid)
+        assertNotNull(loggedOut)
+        assertNull(loggedOut.token)
     }
 }

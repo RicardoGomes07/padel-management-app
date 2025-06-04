@@ -550,10 +550,11 @@ private fun isInTheFuture(
 private fun rentalSqlReturnFormat() =
     """
     SELECT r.rid as rental_id, r.date_ as rental_date, r.rd_start as rental_start, r.rd_end as rental_end,
-        u.uid as renter_id, u.name as renter_name, u.email as renter_email, u.token as renter_token,
+        u.uid as renter_id, u.name as renter_name, u.email as renter_email, u.password as renter_password,u.token as renter_token,
         cr.crid as court_id, cr.name as court_name,
         c.cid as court_club_id, c.name as court_club_name,
-        u2.uid as court_club_owner_id, u2.name as court_club_owner_name, u2.email as court_club_owner_email, u2.token as court_club_owner_token
+        u2.uid as court_club_owner_id, u2.name as court_club_owner_name, u2.email as court_club_owner_email, 
+            u2.password as court_club_owner_password, u2.token as court_club_owner_token
     FROM rentals r
     LEFT JOIN users u ON r.renter_id = u.uid
     LEFT JOIN courts cr ON r.court_id = cr.crid
@@ -580,7 +581,8 @@ private fun ResultSet.mapRental(): Rental =
                 uid = getInt("renter_id").toUInt(),
                 name = getString("renter_name").toName(),
                 email = getString("renter_email").toEmail(),
-                token = getString("renter_token").toToken(),
+                password = getString("renter_password").toPassword(),
+                token = getString("renter_token")?.toToken(),
             ),
         court =
             Court(
@@ -595,7 +597,8 @@ private fun ResultSet.mapRental(): Rental =
                                 uid = getInt("court_club_owner_id").toUInt(),
                                 name = getString("court_club_owner_name").toName(),
                                 email = getString("court_club_owner_email").toEmail(),
-                                token = getString("court_club_owner_token").toToken(),
+                                password = getString("court_club_owner_password").toPassword(),
+                                token = getString("court_club_owner_token")?.toToken(),
                             ),
                     ),
             ),

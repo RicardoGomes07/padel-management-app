@@ -12,6 +12,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name("Ricardo"),
                 email = Email("ric.gmail.com"),
+                password = "password".toPassword(),
                 token = generateToken(),
             )
         }
@@ -24,6 +25,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name(""),
                 email = Email("ric@gmail.com"),
+                password = "password".toPassword(),
                 token = generateToken(),
             )
         }
@@ -36,6 +38,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name("Ricardo"),
                 email = Email("ric@gmail.com"),
+                password = "password".toPassword(),
                 token = generateToken(),
             ),
         )
@@ -47,7 +50,7 @@ class DomainModelTests {
             Password("short")
         }
         assertFailsWith<IllegalArgumentException> {
-            Password("thisisaverylongpasswordthatshouldnotbeaccepted")
+            Password((1..65).joinToString("") { "x" })
         }
         assertFailsWith<IllegalArgumentException> {
             Password("")

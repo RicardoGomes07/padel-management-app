@@ -11,5 +11,6 @@ data class User(
     val uid: UInt,
     val name: Name,
     val email: Email,
-    val token: Token,
+    val password: Password,
+    val token: Token?,
 )

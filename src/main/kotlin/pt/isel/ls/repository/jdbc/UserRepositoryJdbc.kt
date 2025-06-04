@@ -28,11 +28,9 @@ class UserRepositoryJdbc(
         email: Email,
         password: Password,
     ): User {
-        val token = generateToken()
-
         val sqlInsert =
             """
-            INSERT INTO users (name, email, token)
+            INSERT INTO users (name, email, password)
             VALUES (?, ?, ?)
             ON CONFLICT (email) DO NOTHING
             RETURNING *;
@@ -41,7 +39,7 @@ class UserRepositoryJdbc(
         return connection.prepareStatement(sqlInsert).use { stmt ->
             stmt.setString(1, name.value)
             stmt.setString(2, email.value)
-            stmt.setString(3, token.toString())
+            stmt.setString(3, password.value)
 
             stmt.executeQuery().use { rs ->
                 ensureOrThrow(
@@ -50,6 +48,51 @@ class UserRepositoryJdbc(
                 )
                 rs.mapUser()
             }
+        }
+    }
+
+    override fun login(
+        email: Email,
+        password: Password,
+    ): User =
+        connection.executeMultipleQueries {
+            val sqlSelect = "SELECT * FROM users WHERE email = ?"
+
+            val user =
+                connection.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setString(1, email.value)
+                    stmt.executeQuery().use { rs ->
+                        if (rs.next()) rs.mapUser() else null
+                    }
+                }
+            requireNotNull(user)
+
+            require(password == user.password)
+
+            val token = generateToken()
+
+            val sqlUpdate = "UPDATE users SET token = ? WHERE email = ? RETURNING *"
+
+            return@executeMultipleQueries connection.prepareStatement(sqlUpdate).use { stmt ->
+                stmt.setString(1, token.toString())
+                stmt.setString(2, email.value)
+                stmt.executeQuery().use { rs ->
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = UserError.UserFailedLogin(),
+                    )
+
+                    rs.mapUser()
+                }
+            }
+        }
+
+    override fun logout(email: Email) {
+        val sqlUpdate = "UPDATE users SET token = NULL WHERE email = ?"
+
+        connection.prepareStatement(sqlUpdate).use { stmt ->
+            stmt.setString(1, email.value)
+            stmt.executeUpdate()
         }
     }
 
@@ -76,19 +119,21 @@ class UserRepositoryJdbc(
     override fun save(element: User) {
         val sqlSave =
             """
-            INSERT INTO users (name, email, token)
-            VALUES (?, ?, ?)
-            ON CONFLICT (email, token)
+            INSERT INTO users (name, email, password, token)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT (email)
             DO UPDATE SET
                 name = EXCLUDED.name,
                 email = EXCLUDED.email,
+                password = EXCLUDED.password,
                 token = EXCLUDED.token;
             """.trimIndent()
 
         connection.prepareStatement(sqlSave).use { stmt ->
             stmt.setString(1, element.name.value)
             stmt.setString(2, element.email.value)
-            stmt.setString(3, element.token.toString())
+            stmt.setString(3, element.password.value)
+            stmt.setString(4, element.token.toString())
 
             stmt.executeUpdate()
         }
@@ -189,5 +234,6 @@ fun ResultSet.mapUser(): User =
         uid = getInt("uid").toUInt(),
         name = getString("name").toName(),
         email = getString("email").toEmail(),
-        token = getString("token").toToken(),
+        password = getString("password").toPassword(),
+        token = getString("token")?.takeIf { it != "null" }?.toToken(),
     )
