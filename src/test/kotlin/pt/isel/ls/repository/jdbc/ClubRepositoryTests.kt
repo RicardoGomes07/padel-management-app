@@ -10,7 +10,6 @@ import java.sql.Connection
 import java.sql.DriverManager
 import kotlin.test.*
 
-
 class ClubRepositoryTests {
     private val connection: Connection =
         DriverManager

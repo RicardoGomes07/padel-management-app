@@ -2,7 +2,9 @@
 
 package pt.isel.ls.webapi
 
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.plus
 import kotlinx.serialization.json.Json
 import org.http4k.core.Method.GET
 import org.http4k.core.Method.POST
@@ -111,7 +113,7 @@ class ClubWebApiTests {
     @Test
     fun `get available hours with invalid court`() {
         val courtId = 999
-        val date = LocalDate.parse("2026-06-01")
+        val date = currentDate().plus(DatePeriod(days = 1))
         val token = createUser()
         val getAvailableHoursRequest =
             clubsRoutes(
@@ -127,7 +129,7 @@ class ClubWebApiTests {
         val token = createUser()
         val clubId = createClub(token).cid
         val courtId = createCourt(token, clubId.toInt())
-        val date = LocalDate.parse("2026-06-01")
+        val date = currentDate().plus(DatePeriod(days = 1))
 
         val getAvailableHoursRequest =
             clubsRoutes(
