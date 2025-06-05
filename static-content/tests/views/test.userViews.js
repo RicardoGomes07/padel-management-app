@@ -72,4 +72,76 @@ describe("UsersViews", function () {
             });
         });
     });
+    describe("renderSignUpView", function () {
+        context("when rendering sign up view", function () {
+            it("should render sign up form with correct fields and submit button", function () {
+                const handleSubmit = function() {};
+                usersViews.renderSignUpView(contentHeader, content, handleSubmit);
+
+                assert.strictEqual(contentHeader.textContent, "Sign Up");
+                const info = content.querySelector("p");
+                assert.strictEqual(info.textContent, "Please sign up to access our website.");
+
+                const form = content.querySelector("form");
+                assert.isNotNull(form);
+
+                const fields = form.querySelectorAll("input");
+                assert.strictEqual(fields.length, 3);
+                assert.strictEqual(fields[0].id, "name");
+                assert.strictEqual(fields[1].id, "email");
+                assert.strictEqual(fields[2].id, "password");
+
+                const submitButton = form.querySelector("button[type='submit']");
+                assert.isNotNull(submitButton);
+                assert.strictEqual(submitButton.textContent, "Sign Up");
+            });
+        });
+    });
+    describe("renderLoginView", function () {
+        context("when rendering login view", function () {
+            it("should render login form with correct fields and submit button", function () {
+                const handleSubmit = function() {};
+                usersViews.renderLoginView(contentHeader, content, handleSubmit);
+
+                assert.strictEqual(contentHeader.textContent, "Login");
+                const info = content.querySelector("p");
+                assert.strictEqual(info.textContent, "Please login to access our website.");
+
+                const form = content.querySelector("form");
+                assert.isNotNull(form);
+
+                const fields = form.querySelectorAll("input");
+                assert.strictEqual(fields.length, 2);
+                assert.strictEqual(fields[0].id, "email");
+                assert.strictEqual(fields[1].id, "password");
+
+                const submitButton = form.querySelector("button[type='submit']");
+                assert.isNotNull(submitButton);
+                assert.strictEqual(submitButton.textContent, "Login");
+            });
+        });
+    });
+    describe("rendersignUpAndLoginButtons", function () {
+        context("when rendering sign up and login buttons", function () {
+            it("should render sign up and login buttons with correct links", function () {
+                const buttons = usersViews.signUpAndLoginButtons();
+                const anchors = buttons.querySelectorAll("a");
+                assert.strictEqual(anchors.length, 2);
+                assert.strictEqual(anchors[0].textContent, "Sign Up");
+                assert.strictEqual(anchors[0].getAttribute("href"), "#users/create");
+
+                assert.strictEqual(anchors[1].textContent, "Login");
+                assert.strictEqual(anchors[1].getAttribute("href"), "#users/login");
+            
+            });
+        });
+     });
+     describe("renderlogoutButton", function () {
+        context("when rendering logout button", function () {
+            it("should render logout button with correct text and style", function () {
+                const button = usersViews.logoutButton();
+                assert.strictEqual(button.textContent, "Logout");
+            });
+        });
+     });
 });
