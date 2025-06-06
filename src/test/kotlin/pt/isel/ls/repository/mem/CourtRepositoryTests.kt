@@ -2,9 +2,9 @@
 
 package pt.isel.ls.repository.mem
 
+import pt.isel.ls.domain.createPassword
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
-import pt.isel.ls.domain.toPassword
 import pt.isel.ls.services.CourtError
 import kotlin.test.*
 
@@ -22,7 +22,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `create court with valid name and existing club`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -39,7 +39,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `find courts by club identifier`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court1 = courtRepoInMem.createCourt("Court A".toName(), club.cid)
         val court2 = courtRepoInMem.createCourt("Court B".toName(), club.cid)
@@ -58,7 +58,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `find court by identifier`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -68,7 +68,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `find all courts`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court1 = courtRepoInMem.createCourt("Court A".toName(), club.cid)
         val court2 = courtRepoInMem.createCourt("Court B".toName(), club.cid)
@@ -80,7 +80,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `delete court by identifier`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
         assertEquals(1, courtRepoInMem.findAll().count)
@@ -91,7 +91,7 @@ class CourtRepositoryTests {
 
     @Test
     fun `save updates existing court`() {
-        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoInMem.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), owner.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 

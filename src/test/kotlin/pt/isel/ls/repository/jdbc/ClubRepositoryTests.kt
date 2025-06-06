@@ -2,9 +2,9 @@
 
 package pt.isel.ls.repository.jdbc
 
+import pt.isel.ls.domain.createPassword
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
-import pt.isel.ls.domain.toPassword
 import pt.isel.ls.services.ClubError
 import java.sql.Connection
 import java.sql.DriverManager
@@ -29,7 +29,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `create club with duplicate name should fail`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         clubRepoJdbc.createClub("The King of Padel".toName(), owner.uid)
 
         assertFailsWith<ClubError.ClubAlreadyExists> {
@@ -46,7 +46,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find club by identifier`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("b"))
         val club = clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
         val foundClub = clubRepoJdbc.findByIdentifier(club.cid)
@@ -55,7 +55,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find all clubs`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("d"))
         val club1 = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         val club2 = clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
@@ -68,7 +68,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `delete club by identifier`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("s"))
         val club = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         assertEquals(1, clubRepoJdbc.findAll().count)
 
@@ -78,7 +78,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `save updates existing club`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("q"))
         val club = clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
         val updatedClub = club.copy(name = "Updated Fly Club".toName())
@@ -90,7 +90,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find all clubs by complete name`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("w"))
         val club1 = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 
@@ -103,7 +103,7 @@ class ClubRepositoryTests {
 
     @Test
     fun `find all clubs by partial name`() {
-        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val owner = userRepoJdbc.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("r"))
         val club1 = clubRepoJdbc.createClub("Force Club".toName(), owner.uid)
         clubRepoJdbc.createClub("Fly Club".toName(), owner.uid)
 

@@ -18,8 +18,4 @@ data class Token(
 fun generateToken() = Token(Uuid.random())
 
 @OptIn(ExperimentalUuidApi::class)
-fun String.toToken(): Token {
-    println("in this ho smh")
-    println(this)
-    return Token(Uuid.parse(this))
-}
+fun String.toToken(): Token = Token(Uuid.parse(this))

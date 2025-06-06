@@ -7,6 +7,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import pt.isel.ls.domain.createPassword
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.UserService
 import pt.isel.ls.webapi.dto.AuthUser
@@ -26,8 +27,8 @@ val userApi =
 val userRoutes =
     routes(
         "users" bind POST to userApi::createUser,
-        "users/login" bind POST to userApi::login,
-        "users/logout" bind POST to userApi::logout,
+        "auth/login" bind POST to userApi::login,
+        "auth/logout" bind POST to userApi::logout,
         "users/{uid}" bind GET to userApi::getUserInfo,
     )
 
@@ -42,7 +43,7 @@ fun randomString(
 fun createUser(): String {
     val name = randomString(10)
     val email = "$name@email.com"
-    val password = "password"
+    val password = createPassword("a").value
     userRoutes(
         Request(POST, "users")
             .header("Content-Type", "application/json")
@@ -51,7 +52,7 @@ fun createUser(): String {
 
     val loginResponse =
         userRoutes(
-            Request(POST, "users/login")
+            Request(POST, "auth/login")
                 .header("Content-Type", "application/json")
                 .body(Json.encodeToString<LoginInput>(LoginInput(email, password))),
         )
@@ -75,7 +76,7 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "ric@email.com", "password"))),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "ric@email.com", createPassword("a").value))),
             )
         assertEquals(Status.CREATED, response.status)
         val user = Json.decodeFromString<UserOutput>(response.bodyString())
@@ -88,7 +89,11 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Riczao", "riczao@gmail.com", "password"))),
+                    .body(
+                        Json.encodeToString<UserCreationInput>(
+                            UserCreationInput("Riczao", "riczao@gmail.com", createPassword("a").value),
+                        ),
+                    ),
             )
         assertEquals(Status.CREATED, response.status)
 
@@ -96,7 +101,15 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Riczao", "riczao@gmail.com", "password"))),
+                    .body(
+                        Json.encodeToString<UserCreationInput>(
+                            UserCreationInput(
+                                "Riczao",
+                                "riczao@gmail.com",
+                                createPassword("a").value,
+                            ),
+                        ),
+                    ),
             )
         assertEquals(Status.BAD_REQUEST, response1.status)
     }
@@ -108,7 +121,7 @@ class UserWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", "password"))),
+                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", createPassword("a").value))),
             )
 
         assertEquals(Status.CREATED, userResponse.status)
@@ -117,7 +130,7 @@ class UserWebApiTests {
     @Test
     fun `login a user`() {
         val email = "ric@email.com"
-        val password = "password"
+        val password = createPassword("a").value
         val createResponse =
             userRoutes(
                 Request(POST, "users")
@@ -128,7 +141,7 @@ class UserWebApiTests {
 
         val loginResponse =
             userRoutes(
-                Request(POST, "users/login")
+                Request(POST, "auth/login")
                     .header("Content-Type", "application/json")
                     .body(Json.encodeToString<LoginInput>(LoginInput(email, password))),
             )
@@ -138,7 +151,7 @@ class UserWebApiTests {
     @Test
     fun `login and logout a user`() {
         val email = "ric@email.com"
-        val password = "password"
+        val password = createPassword("a").value
         val createResponse =
             userRoutes(
                 Request(POST, "users")
@@ -149,7 +162,7 @@ class UserWebApiTests {
 
         val loginResponse =
             userRoutes(
-                Request(POST, "users/login")
+                Request(POST, "auth/login")
                     .header("Content-Type", "application/json")
                     .body(Json.encodeToString<LoginInput>(LoginInput(email, password))),
             )
@@ -159,7 +172,7 @@ class UserWebApiTests {
 
         val logoutResponse =
             userRoutes(
-                Request(POST, "users/logout")
+                Request(POST, "auth/logout")
                     .header("Authorization", loggedIn.token),
             )
         assertEquals(Status.OK, logoutResponse.status)

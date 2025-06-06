@@ -29,7 +29,7 @@ class CourtServiceTests {
 
     @Test
     fun `create court with valid name and existing club`() {
-        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
         assertTrue(clubResult.isSuccess)
@@ -45,7 +45,7 @@ class CourtServiceTests {
 
     @Test
     fun `find courts by club identifier`() {
-        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
         assertTrue(clubResult.isSuccess)
@@ -66,7 +66,7 @@ class CourtServiceTests {
 
     @Test
     fun `find court by identifier`() {
-        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"), "password".toPassword())
+        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
         assertTrue(clubResult.isSuccess)
@@ -80,7 +80,7 @@ class CourtServiceTests {
 
     @Test
     fun `find all courts`() {
-        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"), "password".toPassword())
+        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val clubResult = clubService.createClub("Sports Club".toName(), ownerResult.getOrNull()!!)
         assertTrue(clubResult.isSuccess)

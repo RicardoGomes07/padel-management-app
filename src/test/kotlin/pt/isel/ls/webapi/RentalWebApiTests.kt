@@ -12,6 +12,7 @@ import org.http4k.core.Request
 import org.http4k.core.Status
 import org.http4k.routing.bind
 import org.http4k.routing.routes
+import pt.isel.ls.domain.createPassword
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.RentalService
 import pt.isel.ls.services.UserService
@@ -147,7 +148,15 @@ class RentalWebApiTests {
             userRoutes(
                 Request(POST, "users")
                     .header("Content-Type", "application/json")
-                    .body(Json.encodeToString<UserCreationInput>(UserCreationInput("Ric", "$name@email.com", "password"))),
+                    .body(
+                        Json.encodeToString<UserCreationInput>(
+                            UserCreationInput(
+                                "Ric",
+                                "$name@email.com",
+                                createPassword("a").value,
+                            ),
+                        ),
+                    ),
             )
         assertEquals(Status.CREATED, userResponse.status)
 

@@ -8,9 +8,8 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.CREATED
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.path
-import pt.isel.ls.domain.Email
-import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.toEmail
+import pt.isel.ls.domain.toName
 import pt.isel.ls.domain.toPassword
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.dto.*
@@ -24,8 +23,8 @@ class UserWebApi(
     fun createUser(request: Request): Response =
         request.handler {
             val input = Json.decodeFromString<UserCreationInput>(request.bodyString())
-            val userName = Name(input.name)
-            val email = Email(input.email)
+            val userName = input.name.toName()
+            val email = input.email.toEmail()
             val pwd = input.password.toPassword()
             userService
                 .createUser(userName, email, pwd)

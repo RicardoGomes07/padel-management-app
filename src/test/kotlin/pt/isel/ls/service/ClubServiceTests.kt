@@ -2,9 +2,9 @@ package pt.isel.ls.service
 
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
+import pt.isel.ls.domain.createPassword
 import pt.isel.ls.domain.toEmail
 import pt.isel.ls.domain.toName
-import pt.isel.ls.domain.toPassword
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.ClubService
 import pt.isel.ls.services.UserService
@@ -28,7 +28,7 @@ class ClubServiceTests {
 
     @Test
     fun `create club with valid name and existing owner`() {
-        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"), "password".toPassword())
+        val ownerResult = userService.createUser(Name("owner"), Email("owner@email.com"), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val clubResult = clubService.createClub("Sporting".toName(), ownerResult.getOrNull()!!)
         assertTrue(clubResult.isSuccess)
@@ -37,7 +37,7 @@ class ClubServiceTests {
 
     @Test
     fun `create club with duplicate name should fail`() {
-        val ownerResult = userService.createUser(Name("Ric"), Email("ric@email.com"), "password".toPassword())
+        val ownerResult = userService.createUser(Name("Ric"), Email("ric@email.com"), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val owner = ownerResult.getOrNull()!!
         val firstClubResult = clubService.createClub("Benfica".toName(), owner)
@@ -48,7 +48,7 @@ class ClubServiceTests {
 
     @Test
     fun `find club by identifier`() {
-        val owner = userService.createUser(Name("Ric1"), Email("ric@email.com"), "password".toPassword())
+        val owner = userService.createUser(Name("Ric1"), Email("ric@email.com"), createPassword("a"))
         assertTrue(owner.isSuccess)
         val club = clubService.createClub("Porto".toName(), owner.getOrNull()!!)
         assertTrue(club.isSuccess)
@@ -58,7 +58,7 @@ class ClubServiceTests {
 
     @Test
     fun `find all clubs`() {
-        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val owner = ownerResult.getOrNull()!!
         val club1 = clubService.createClub("Braga".toName(), owner)
@@ -71,7 +71,7 @@ class ClubServiceTests {
 
     @Test
     fun `find all clubs with complete name`() {
-        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val owner = ownerResult.getOrNull()!!
         val club1 = clubService.createClub("Braga".toName(), owner)
@@ -86,7 +86,7 @@ class ClubServiceTests {
 
     @Test
     fun `find all clubs with partial name`() {
-        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), "password".toPassword())
+        val ownerResult = userService.createUser("owner".toName(), "owner@email.com".toEmail(), createPassword("a"))
         assertTrue(ownerResult.isSuccess)
         val owner = ownerResult.getOrNull()!!
         val club1 = clubService.createClub("Braga".toName(), owner)

@@ -4,6 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
+fun createPassword(passwordLetter: String) = Password(passwordLetter.repeat(32))
+
 class DomainModelTests {
     @Test
     fun testCreateUser_with_wrongEmail() {
@@ -12,7 +14,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name("Ricardo"),
                 email = Email("ric.gmail.com"),
-                password = "password".toPassword(),
+                password = createPassword("a"),
                 token = generateToken(),
             )
         }
@@ -25,7 +27,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name(""),
                 email = Email("ric@gmail.com"),
-                password = "password".toPassword(),
+                password = createPassword("b"),
                 token = generateToken(),
             )
         }
@@ -38,7 +40,7 @@ class DomainModelTests {
                 uid = 1u,
                 name = Name("Ricardo"),
                 email = Email("ric@gmail.com"),
-                password = "password".toPassword(),
+                password = createPassword("c"),
                 token = generateToken(),
             ),
         )
@@ -59,8 +61,7 @@ class DomainModelTests {
 
     @Test
     fun valid_password_does_not_throw_exception() {
-        assertNotNull(Password("validPassword123"))
-        assertNotNull(Password("anotherValid1"))
+        createPassword("f")
     }
 
     @Test

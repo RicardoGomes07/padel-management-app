@@ -9,10 +9,8 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = MAX_C
     let dynamicParams = []
     let currentFilterProp = null
     let currentFilterValue = null
-    let hasNext = false
 
     const getElements = (skip, limit) => {
-        hasNext = cache.length > (skip + limit)
         return [cache.slice(skip, skip + limit), count]
     }
 
@@ -38,7 +36,6 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = MAX_C
 
                 if (res.status !== 200) {
                     onError(res.data)
-                    hasNext = false
                     return []
                 }
 
@@ -72,10 +69,6 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = MAX_C
 
         async getPage(page, onError) {
             return await fetchAndCache(page, onError)
-        },
-
-        hasNext() {
-            return hasNext
         },
     }
 }

@@ -10,8 +10,8 @@ import kotlinx.datetime.toLocalDateTime
 import pt.isel.ls.domain.Email
 import pt.isel.ls.domain.Name
 import pt.isel.ls.domain.TimeSlot
+import pt.isel.ls.domain.createPassword
 import pt.isel.ls.domain.toName
-import pt.isel.ls.domain.toPassword
 import pt.isel.ls.repository.mem.TransactionManagerInMem
 import pt.isel.ls.services.*
 import pt.isel.ls.webapi.currentDate
@@ -41,7 +41,7 @@ class RentalServiceTests {
 
     @Test
     fun `create rental with valid renter and court`() {
-        val renterResult = userService.createUser(Name("John Doe"), Email("john@example.com"), "password".toPassword())
+        val renterResult = userService.createUser(Name("John Doe"), Email("john@example.com"), createPassword("a"))
         assertTrue(renterResult.isSuccess)
         val renter = renterResult.getOrNull()!!
         val club = clubService.createClub("Sports Club".toName(), renter)
@@ -74,7 +74,7 @@ class RentalServiceTests {
                 .createUser(
                     Name("John Doe"),
                     Email("jonh@doe.email.com"),
-                    "password".toPassword(),
+                    createPassword("a"),
                 ).let {
                     val user = it.getOrNull()
                     assertTrue(user != null)
@@ -111,21 +111,19 @@ class RentalServiceTests {
                     court
                 }
 
-        val rental1 =
-            rentalService.createRental(
-                currentDate().plus(DatePeriod(days = 1)),
-                TimeSlot(10u, 13u),
-                user.uid,
-                court1.crid,
-            )
+        rentalService.createRental(
+            currentDate().plus(DatePeriod(days = 1)),
+            TimeSlot(10u, 13u),
+            user.uid,
+            court1.crid,
+        )
 
-        val rental2 =
-            rentalService.createRental(
-                currentDate().plus(DatePeriod(days = 1)),
-                TimeSlot(14u, 16u),
-                user.uid,
-                court2.crid,
-            )
+        rentalService.createRental(
+            currentDate().plus(DatePeriod(days = 1)),
+            TimeSlot(14u, 16u),
+            user.uid,
+            court2.crid,
+        )
 
         val availableCourts =
             rentalService

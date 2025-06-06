@@ -30,7 +30,7 @@ class UserRepositoryJdbc(
     ): User {
         val sqlInsert =
             """
-            INSERT INTO users (name, email, password)
+            INSERT INTO users (name, email, hashed_password)
             VALUES (?, ?, ?)
             ON CONFLICT (email) DO NOTHING
             RETURNING *;
@@ -119,13 +119,13 @@ class UserRepositoryJdbc(
     override fun save(element: User) {
         val sqlSave =
             """
-            INSERT INTO users (name, email, password, token)
+            INSERT INTO users (name, email, hashed_password, token)
             VALUES (?, ?, ?, ?)
             ON CONFLICT (email)
             DO UPDATE SET
                 name = EXCLUDED.name,
                 email = EXCLUDED.email,
-                password = EXCLUDED.password,
+                hashed_password = EXCLUDED.hashed_password,
                 token = EXCLUDED.token;
             """.trimIndent()
 
@@ -234,6 +234,6 @@ fun ResultSet.mapUser(): User =
         uid = getInt("uid").toUInt(),
         name = getString("name").toName(),
         email = getString("email").toEmail(),
-        password = getString("password").toPassword(),
+        password = getString("hashed_password").toPassword(),
         token = getString("token")?.takeIf { it != "null" }?.toToken(),
     )

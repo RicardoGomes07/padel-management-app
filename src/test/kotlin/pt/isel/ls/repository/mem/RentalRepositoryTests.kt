@@ -30,7 +30,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `create rental with valid renter and court`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -47,7 +47,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `create rental with past date should throw error RentalDateInPast`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -60,7 +60,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `overlapping should throw RentalAlreadyExists`() {
-        val renter = userRepoInMem.createUser("Alice".toName(), "alice@email.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("Alice".toName(), "alice@email.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -83,7 +83,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `find all rentals by renter id`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -96,7 +96,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `find rentals by court id and date`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -114,7 +114,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `find available hours for a court`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -139,7 +139,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `delete rental by id`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 
@@ -159,7 +159,7 @@ class RentalRepositoryTests {
 
     @Test
     fun `save updates an existing rental`() {
-        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), "password".toPassword())
+        val renter = userRepoInMem.createUser("John Doe".toName(), "john@example.com".toEmail(), createPassword("a"))
         val club = clubRepoInMem.createClub("Sports Club".toName(), renter.uid)
         val court = courtRepoInMem.createCourt("Court A".toName(), club.cid)
 

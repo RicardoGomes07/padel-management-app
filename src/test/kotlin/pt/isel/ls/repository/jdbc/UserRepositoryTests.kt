@@ -26,23 +26,23 @@ class UserRepositoryTests {
 
     @Test
     fun `user creation with valid Name and Email`() {
-        val user = userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), createPassword("a"))
         assertEquals("user".toName(), user.name)
         assertEquals("user@email.com".toEmail(), user.email)
     }
 
     @Test
     fun `user creation with invalid Email`() {
-        userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
+        userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), createPassword("a"))
         assertFailsWith<UserError.UserAlreadyExists> {
-            userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
+            userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), createPassword("a"))
         }
         assertEquals(1, userRepoJdbc.findAll().count)
     }
 
     @Test
     fun `retrieve user with user token`() {
-        val user1 = userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), "password".toPassword())
+        val user1 = userRepoJdbc.createUser("user".toName(), "user@email.com".toEmail(), createPassword("a"))
         val users = userRepoJdbc.findAll()
         assertTrue(users.items.contains(user1))
 
@@ -53,15 +53,15 @@ class UserRepositoryTests {
 
     @Test
     fun `find user by identifier`() {
-        val user = userRepoJdbc.createUser("testUser".toName(), "test@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("testUser".toName(), "test@email.com".toEmail(), createPassword("a"))
         val retrievedUser = userRepoJdbc.findByIdentifier(user.uid)
         assertEquals(user, retrievedUser)
     }
 
     @Test
     fun `find all users`() {
-        val user1 = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
-        val user2 = userRepoJdbc.createUser("user2".toName(), "user2@email.com".toEmail(), "password".toPassword())
+        val user1 = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), createPassword("a"))
+        val user2 = userRepoJdbc.createUser("user2".toName(), "user2@email.com".toEmail(), createPassword("b"))
         val allUsers = userRepoJdbc.findAll()
         assertEquals(2, allUsers.count)
         assertTrue(allUsers.items.containsAll(listOf(user1, user2)))
@@ -69,7 +69,7 @@ class UserRepositoryTests {
 
     @Test
     fun `delete user by identifier`() {
-        val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail(), createPassword("a"))
         assertEquals(1, userRepoJdbc.findAll().count)
 
         userRepoJdbc.deleteByIdentifier(user.uid)
@@ -78,7 +78,7 @@ class UserRepositoryTests {
 
     @Test
     fun `save updates existing user`() {
-        val user = userRepoJdbc.createUser("oldUser".toName(), "update@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("oldUser".toName(), "update@email.com".toEmail(), createPassword("a"))
         val updatedUser = user.copy(name = "updatedUser".toName())
         userRepoJdbc.save(updatedUser)
 
@@ -93,7 +93,7 @@ class UserRepositoryTests {
                 uid = 99u,
                 name = "newUser".toName(),
                 email = "new@email.com".toEmail(),
-                password = "hashed1234".toPassword(),
+                password = createPassword("a"),
                 token = generateToken(),
             )
         userRepoJdbc.save(newUser)
@@ -106,7 +106,7 @@ class UserRepositoryTests {
 
     @Test
     fun deleteUserAndFailToFindItById() {
-        val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("deleteUser".toName(), "delete@email.com".toEmail(), createPassword("a"))
         assertEquals(1, userRepoJdbc.findAll().count)
 
         userRepoJdbc.deleteByIdentifier(user.uid)
@@ -115,7 +115,7 @@ class UserRepositoryTests {
 
     @Test
     fun login() {
-        val user = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), createPassword("a"))
         val loggedIn = userRepoJdbc.login(user.email, user.password)
         assertNotNull(loggedIn)
         assertNotNull(loggedIn.token)
@@ -128,7 +128,7 @@ class UserRepositoryTests {
 
     @Test
     fun logout() {
-        val user = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), "password".toPassword())
+        val user = userRepoJdbc.createUser("user1".toName(), "user1@email.com".toEmail(), createPassword("a"))
         val loggedIn = userRepoJdbc.login(user.email, user.password)
         requireNotNull(loggedIn)
 

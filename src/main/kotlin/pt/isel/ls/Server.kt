@@ -47,11 +47,15 @@ fun main() {
             UserService(trxManagerJdbc),
         )
 
+    val authRoutes =
+        routes(
+            "/login" bind POST to userApi::login,
+            "/logout" bind POST to userApi::logout,
+        )
+
     val userRoutes =
         routes(
             "/" bind POST to userApi::createUser,
-            "/login" bind POST to userApi::login,
-            "/logout" bind POST to userApi::logout,
             "/{uid}" bind GET to userApi::getUserInfo,
             "/{uid}/rentals" bind GET to rentalApi::getUserRentals,
         )
@@ -74,6 +78,7 @@ fun main() {
 
     val app =
         routes(
+            "/auth" bind authRoutes,
             "/users" bind userRoutes,
             "/clubs" bind clubsRoutes,
             singlePageApp(ResourceLoader.Directory("static-content")),

@@ -240,7 +240,7 @@ fun courtSqlReturnFormat() =
     """
     SELECT cr.crid as court_id, cr.name as court_name, cr.club_id as club_id,
         c.name as club_name, c.owner as club_owner_id,
-        u.name as club_owner_name, u.email as club_owner_email, u.password as club_owner_password, u.token as club_owner_token
+        u.name as club_owner_name, u.email as club_owner_email, u.hashed_password as club_owner_hashed_password, u.token as club_owner_token
     FROM courts cr
     LEFT JOIN clubs c ON cr.club_id = c.cid
     LEFT JOIN users u ON c.owner = u.uid
@@ -264,7 +264,7 @@ fun ResultSet.mapCourt(): Court =
                         uid = getInt("club_owner_id").toUInt(),
                         name = getString("club_owner_name").toName(),
                         email = getString("club_owner_email").toEmail(),
-                        password = getString("club_owner_password").toPassword(),
+                        password = getString("club_owner_hashed_password").toPassword(),
                         token = getString("club_owner_token")?.toToken(),
                     ),
             ),

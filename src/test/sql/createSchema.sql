@@ -8,7 +8,7 @@ create table users (
     uid serial primary key,
     name varchar(255) not null,
     email varchar(255) unique not null,
-    password varchar(255) not null,
+    hashed_password varchar(32) not null check (char_length(hashed_password) = 32),
     token text unique,
     CONSTRAINT unique_email_token UNIQUE (email, token)
 );

@@ -5,6 +5,7 @@ import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";
 import { setUserInfo } from "../managers/userAuthenticationContext.js";
 import uriManager from "../managers/uriManager.js";
+import { hashPassword } from "../managers/PasswordCodificationManager.js";
 
 const { path, query } = request
 const { renderUserRentalsView, renderUserDetailsView, renderSignUpView, renderLoginView } = usersViews
@@ -51,7 +52,9 @@ function signUp(contentHeader, content){
         const email = e.target.querySelector("#email").value
         const password = e.target.querySelector("#password").value
 
-        const result = await createUser(name, email, password)
+        const hashedPassword = await hashPassword(password)
+
+        const result = await createUser(name, email, hashedPassword)
 
         if (result.status !== 201) {
             errorView(contentHeader, content, homeUri(), result.data)
@@ -76,7 +79,9 @@ function login(contentHeader, content) {
         const email = e.target.querySelector("#email").value
         const password = e.target.querySelector("#password").value
 
-        const result = await loginUser(email, password)
+        const hashedPassword = await hashPassword(password)
+
+        const result = await loginUser(email, hashedPassword)
 
         if (result.status !== 200) {
             errorView(contentHeader, content, homeUri(), result.data)
