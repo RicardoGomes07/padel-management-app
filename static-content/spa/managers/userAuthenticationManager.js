@@ -29,8 +29,6 @@ export function authenticated() {
 }
 
 export function setUserInfo(userInfo) {
-    const hadToken = authenticated()
-
     if (userInfo) {
         setSessionItem(TOKEN_KEY, userInfo.token)
         setSessionItem(USER_ID_KEY, userInfo.uid)
@@ -38,15 +36,9 @@ export function setUserInfo(userInfo) {
         removeSessionItem(TOKEN_KEY)
         removeSessionItem(USER_ID_KEY)
     }
-
-    const hasToken = authenticated()
-
-    if (hadToken !== hasToken) {
-        updateAuthUI()
-    }
 }
 
-export const userAuthenticationContext = ((authContent) => {
+export const userAuthenticationManager = ((authContent) => {
     let currentUid = getSessionItem(USER_ID_KEY)
     if (currentUid) {
         authContent.replaceChildren(logoutButton())
@@ -55,27 +47,23 @@ export const userAuthenticationContext = ((authContent) => {
     }
 
     return {
-        userChanged() {
+        stateChanged() {
             const newUid = getSessionItem(USER_ID_KEY)
             const changed = newUid !== currentUid
             currentUid = newUid
             return changed
         },
-        updateState(target = authStatusContent) {
-            if (currentUid) {
-                target.replaceChildren(logoutButton())
-            } else {
-                target.replaceChildren(signUpAndLoginButtons())
-            }
+        updateContent() {
+           updateAuthUI(authContent)
         }
     }
 })(authStatusContent)
 
 
-function updateAuthUI() {
+function updateAuthUI(target) {
     if (authenticated()) {
-        authStatusContent.replaceChildren(logoutButton())
+        target.replaceChildren(logoutButton())
     } else {
-        authStatusContent.replaceChildren(signUpAndLoginButtons())
+        target.replaceChildren(signUpAndLoginButtons())
     }
 }

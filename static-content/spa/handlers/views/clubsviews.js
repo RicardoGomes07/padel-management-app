@@ -2,7 +2,7 @@ import Html from "../../dsl/htmlfuns.js";
 import pagination  from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import clubsrequests from "../requests/clubsrequests.js";
-import { authenticated } from "../../managers/userAuthenticationContext.js";
+import { authenticated } from "../../managers/userAuthenticationManager.js";
 
 const { fetchClubs } = clubsrequests;
 const { input, a, ul, li, p, div, formElement } = Html;

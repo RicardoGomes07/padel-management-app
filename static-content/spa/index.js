@@ -4,7 +4,7 @@ import homeHandlers from "./handlers/home.js";
 import userHandlers from "./handlers/usershandlers.js";
 import courtHandlers from "./handlers/courtshandlers.js";
 import rentalHandlers from "./handlers/rentalshandlers.js";
-import {userAuthenticationContext} from "./managers/userAuthenticationContext.js";
+import {userAuthenticationManager} from "./managers/userAuthenticationManager.js";
 import errorManager from "./managers/errorManager.js";
 
 
@@ -40,11 +40,10 @@ function hashChangeHandler(){
 
     const contentHeader = document.getElementById("contentHeader")
     const content = document.getElementById("content")
-    const authContent = document.getElementById("authContent")
     const path =  window.location.hash.replace("#", "")
     const handler = router.getRouteHandler(path)
 
-    if (userAuthenticationContext.userChanged()) userAuthenticationContext.updateState(authContent)
+    if (userAuthenticationManager.stateChanged()) userAuthenticationManager.updateContent()
 
     if (errorManager.hasError()) errorManager.render()
     else errorManager.clear()

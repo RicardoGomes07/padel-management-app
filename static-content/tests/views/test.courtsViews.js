@@ -1,5 +1,5 @@
 import courtsViews from "../../spa/handlers/views/courtsviews.js";
-import { setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
+import { setUserInfo} from "../../spa/managers/userAuthenticationManager.js";
 const assert = window.chai.assert
 
 describe('CourtsViews', function () {

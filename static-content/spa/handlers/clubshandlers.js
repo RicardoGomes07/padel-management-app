@@ -4,7 +4,7 @@ import clubViews from "./views/clubsviews.js"
 import errorsViews from "./views/errorsview.js"
 import uriManager from "../managers/uriManager.js";
 import { createPaginationManager } from "../managers/paginationManager.js"
-import { authenticated } from "../managers/userAuthenticationContext.js";
+import { authenticated } from "../managers/userAuthenticationManager.js";
 import errorManager from "../managers/errorManager.js";
 import { redirectTo } from "../router.js";
 

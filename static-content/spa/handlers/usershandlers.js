@@ -3,7 +3,7 @@ import {ELEMS_PER_PAGE} from "./views/pagination.js"
 import usersViews from "./views/usersviews.js"
 import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";
-import { setUserInfo } from "../managers/userAuthenticationContext.js";
+import { setUserInfo } from "../managers/userAuthenticationManager.js";
 import uriManager from "../managers/uriManager.js";
 import errorManager from "../managers/errorManager.js";
 import { hashPassword } from "../managers/passwordCodificationManager.js";

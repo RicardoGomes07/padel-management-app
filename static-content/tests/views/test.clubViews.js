@@ -1,6 +1,6 @@
 import clubViews from "../../spa/handlers/views/clubsviews.js";
 import {ELEMS_PER_PAGE} from "../../spa/handlers/views/pagination.js";
-import {setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
+import {setUserInfo} from "../../spa/managers/userAuthenticationManager.js";
 
 const assert = window.chai.assert
 

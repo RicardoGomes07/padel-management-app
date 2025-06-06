@@ -2,7 +2,7 @@ import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import errorViews from "./errorsview.js";
-import {authenticated} from "../../managers/userAuthenticationContext.js";
+import {authenticated} from "../../managers/userAuthenticationManager.js";
 import errorManager from "../../managers/errorManager.js";
 
 const { errorView } = errorViews

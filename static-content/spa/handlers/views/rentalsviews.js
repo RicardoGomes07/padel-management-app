@@ -1,6 +1,6 @@
 import Html from "../../dsl/htmlfuns.js";
 import uriManager from "../../managers/uriManager.js";
-import {authenticated} from "../../managers/userAuthenticationContext.js";
+import {authenticated} from "../../managers/userAuthenticationManager.js";
 
 
 const { a, ul, li, div, formElement} = Html;

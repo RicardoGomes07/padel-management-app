@@ -6,7 +6,7 @@ import { createPaginationManager } from "../managers/paginationManager.js";
 import auxiliaryFuns from "./auxFuns.js";
 import uriManager from "../managers/uriManager.js";
 import { ELEMS_PER_PAGE } from "./views/pagination.js";
-import { authenticated } from "../managers/userAuthenticationContext.js";
+import { authenticated } from "../managers/userAuthenticationManager.js";
 import errorManager from "../managers/errorManager.js";
 import { redirectTo } from "../router.js";
 

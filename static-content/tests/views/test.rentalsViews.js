@@ -1,5 +1,5 @@
 import rentalsViews from "../../spa/handlers/views/rentalsviews.js";
-import {setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
+import {setUserInfo} from "../../spa/managers/userAuthenticationManager.js";
 const assert = window.chai.assert
 
 describe("rentalsViews", function () {

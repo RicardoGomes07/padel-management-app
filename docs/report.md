@@ -1,4 +1,4 @@
-# Phase 1
+# LS Project - SPA and Web API for Padel Clubs Management System
 
 ## Introduction
 
@@ -10,13 +10,13 @@ This document contains the relevant design and implementation aspects of LS proj
 
 The following diagram holds the Entity-Relationship model for the information managed by the system.
 
-![Entity-Relationship Model](./Entity-Relationship.png)
+![Entity-Relationship Model](./Entity-Relationship-Diagram.png)
 
 We highlight the following aspects:
 
 Our data model consists of four entities: `User`, `Club`, `Court`, and `Rental`, each with the following attributes:
 
-- **`User`**: `uid`, `name`, `email`, `token`.
+- **`User`**: `uid`, `name`, `email`, `token`, `password`.
 - **`Club`**: `cid`, `name`, `owner`.
 - **`Court`**: `crid`, `name`, `club_id`.
 - **`Rental`**: `rid`, `date_`, `rd_start`, `rd_end`, `renter_id`, `court_id`.
@@ -63,11 +63,11 @@ In our Open-API specification, we highlight the following aspects:
 Our endpoints are organized in the following way:
 * `/users` - User management
 * `/clubs` - Club management
-* `/courts` - Court management
-* `/rentals` - Rental management
+* `/clubs/{cid}/courts` - Court management
+* `/clubs/{cid}/courts/{crid}/rentals` - Rental management
 
-All the endpoints require authentication with a Token, except the  post  to`/users` endpoint 
-that create a new user in the system. 
+All endpoints that make changes to the database require authentication, which is done 
+through a token passed in the request header. The token is generated when a user logs in.
 
 We also specify the actual dto classes that are used in the by our webApi.
 
@@ -148,6 +148,9 @@ detailing what went wrong.
 in the API and returned to the client.
 
 ## Route handling
+
+---
+
 The module that contains the logic for handling requests to each respective path is the 'handlers' module. This module, along with the others that follow, maintain the previous design, where for each endpoint corresponds to a specific handler:
 - home
 - usershandlers
@@ -166,13 +169,37 @@ Special cases:
 When working with form elements, the structure of the function its different.
 We start by creating a function ( HandleSubmint ) where we make our request with the values extracted from the form Element in the view function, and then we call the view function passing the arguments needed and the created function. 
 
+## Index and Router
+
+---
+
+The Index.js is the main entry point of the application, responsible for:
+* Setting up the event listeners
+* Defining the routes for the application
+* Processing the URL hash changes
+
+The router.js implements a custom routing system, with:
+* Route management
+* URL matching system
+* Request arguments processing
+
 ## Requests
+
 This module is responsible for making requests to the database. For each resource that requires database information, there is a corresponding fetcher in this module to retrieve the necessary information.
 
+---
+
 ## Views
+
 This module builds the content to show in the resource and replaces the previously displayed content. Updates the header to match the current resource, builds the pagination links, if necessary, with the use of the 'createPaginationLinks' from pagination.js, and the rest of the necessary information for the page and replaces the content with the combination of the later 2.
 
-## Pagination Manager
+---
+
+## Managers in SPA
+
+---
+
+### Pagination Manager
 
 In order to avoid making unnecessary backend requests, handlers request the information through a function of this module that provides the following functionaliities:
 * The elements to show
@@ -183,14 +210,35 @@ Only clubs and courts handlers use a pagination manager as we considered rentals
 A cache is shared between operations (if multiple) that require pagination, in the same handler, so parameters to the operations were introduced where, the operation provides the new parameter and resets the cache if either the name of the parameter or its value changed.
 Another important design decision was to use pages with a fixed number of elements per page, defined in the app. The pagination manager is then tasked to calculate the skip and limit value that it needs to make the request to the server, which uses these two parameters to fetch the necessary data from the database.
 
-## Index and Router
+## URI Manager
 
-The Index.js is the main entry point of the application, responsible for:
-* Setting up the event listeners 
-* Defining the routes for the application
-* Processing the URL hash changes
+This module centralizes the construction of all navigable URLs within the application.  
+It exports an object containing functions that return the appropriate URL for each supported resource or route.
 
-The router.js implements a custom routing system, with:
-* Route management
-* URL matching system
-* Request arguments processing
+
+## Error Manager
+
+To handle and display error messages to users, we use a dedicated `<div>` element in the UI.  
+Each time a handler is loaded:
+
+- We check the error manager for any stored error message.
+- If an error exists, it is displayed in the `<div>` and then cleared from the manager.
+- If no error is present, the `<div>` is cleared to prevent showing outdated messages.
+
+
+## User Authentication Manager
+
+This manager exposes two primary functions:
+
+1. **Authentication State Checker**  
+   Detects changes in the user's authentication status (e.g., logged in ↔ logged out).
+
+2. **UI Updater**  
+   Updates the interface to reflect the current authentication state:
+    - Shows **Login** and **Sign Up** buttons when the user is logged out.
+    - Shows a **Logout** button when the user is logged in.
+
+Additionally, this module includes helper utilities for:
+
+- Managing session storage (storing user token and information).
+- Updating the relevant UI components accordingly.

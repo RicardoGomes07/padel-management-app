@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js";
-import { getCurrToken } from "../../managers/userAuthenticationContext.js";
+import { getCurrToken } from "../../managers/userAuthenticationManager.js";
 
 const userToken = getCurrToken()
 

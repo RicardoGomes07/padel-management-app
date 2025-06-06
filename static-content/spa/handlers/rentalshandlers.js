@@ -7,7 +7,7 @@ import courtsRequests from "./requests/courtsrequests.js";
 import courtsViews from "./views/courtsviews.js";
 import uriManager from "../managers/uriManager.js";
 import auxfuns from "./auxFuns.js";
-import { authenticated } from "../managers/userAuthenticationContext.js";
+import { authenticated } from "../managers/userAuthenticationManager.js";
 import errorManager from "../managers/errorManager.js";
 
 const { renderRentalDetailsView, renderCalendarToSearchRentals, renderUpdateRentalView, renderRentalCreationForm } = rentalsViews

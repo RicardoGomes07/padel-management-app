@@ -1,7 +1,7 @@
 import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
-import { setUserInfo } from "../../managers/userAuthenticationContext.js";
+import { setUserInfo } from "../../managers/userAuthenticationManager.js";
 import usersRequests from "../requests/usersrequests.js";
 import { redirectTo } from "../../router.js";
 
