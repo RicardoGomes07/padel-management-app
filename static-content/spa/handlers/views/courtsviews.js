@@ -3,6 +3,7 @@ import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import errorViews from "./errorsview.js";
 import {authenticated} from "../../managers/userAuthenticationContext.js";
+import errorManager from "../../managers/errorManager.js";
 
 const { errorView } = errorViews
 const { createPaginationLinks } = pagination
@@ -105,10 +106,12 @@ function renderCourtAvailableHoursView(contentHeader, content, availableHours, c
         const end = Number(endStr)
 
         if (!rangeIsValid(availableHours, start, end)) {
-            errorView(contentHeader, content, getCourtAvailableHoursUri(cid, crid), {
-                title: "Invalid Range",
-                description: "The selected range is not valid or does not exist."
-            })
+            errorManager.store(
+                errorView({
+                    title: "Invalid Range",
+                    description: "The selected range is not valid or does not exist."
+                })
+            ).render() // Render the error view because we don't change the handler so it won't be rendered automatically
             return
         }
 

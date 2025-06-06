@@ -1,9 +1,9 @@
 import rentalsViews from "../../spa/handlers/views/rentalsviews.js";
-import {setAuthStatusContent, setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
+import {setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
 const assert = window.chai.assert
 
 describe("rentalsViews", function () {
-    let contentHeader, content, authContent;
+    let contentHeader, content;
 
     // Mock user authentication info
     const mockUser = {uid: 1, token: "test-token"}
@@ -21,8 +21,6 @@ describe("rentalsViews", function () {
     beforeEach(function () {
         contentHeader = document.createElement("div");
         content = document.createElement("div");
-        authContent = document.createElement("div");
-        setAuthStatusContent(authContent)
     });
 
     describe("renderRentalDetailsView", function () {

@@ -4,9 +4,9 @@ import homeHandlers from "./handlers/home.js";
 import userHandlers from "./handlers/usershandlers.js";
 import courtHandlers from "./handlers/courtshandlers.js";
 import rentalHandlers from "./handlers/rentalshandlers.js";
-import {setAuthStatusContent, userAuthenticationContext} from "./managers/userAuthenticationContext.js";
+import {userAuthenticationContext} from "./managers/userAuthenticationContext.js";
+import errorManager from "./managers/errorManager.js";
 
-const authenticationContext = userAuthenticationContext()
 
 window.addEventListener('load', loadHandler)
 window.addEventListener('hashchange', hashChangeHandler)
@@ -41,12 +41,13 @@ function hashChangeHandler(){
     const contentHeader = document.getElementById("contentHeader")
     const content = document.getElementById("content")
     const authContent = document.getElementById("authContent")
-    setAuthStatusContent(authContent)
     const path =  window.location.hash.replace("#", "")
     const handler = router.getRouteHandler(path)
 
-    if (authenticationContext.userChanged()) authenticationContext.updateState(authContent)
+    if (userAuthenticationContext.userChanged()) userAuthenticationContext.updateState(authContent)
 
+    if (errorManager.hasError()) errorManager.render()
+    else errorManager.clear()
 
     request.cleanArgs() // Clean the previous argument values that can have the same name as skip and limit
     request.getRequestArgs(handler,path)

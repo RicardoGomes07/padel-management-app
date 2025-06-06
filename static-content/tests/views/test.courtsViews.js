@@ -1,5 +1,5 @@
 import courtsViews from "../../spa/handlers/views/courtsviews.js";
-import {setAuthStatusContent, setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
+import { setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
 const assert = window.chai.assert
 
 describe('CourtsViews', function () {
@@ -10,8 +10,7 @@ describe('CourtsViews', function () {
     beforeEach(function () {
         contentHeader = document.createElement('div');
         content = document.createElement('div');
-        authContent = document.createElement('div');
-        setAuthStatusContent(authContent)
+        authContent = document.createElement('div').className = "authContent";
     });
 
     describe('renderCourtDetailsView', function () {

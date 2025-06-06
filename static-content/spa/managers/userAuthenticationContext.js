@@ -1,8 +1,10 @@
 import usersViews from "../handlers/views/usersviews.js";
+import htmlfuns from "../dsl/htmlfuns.js";
 
+const {div} = htmlfuns
 const TOKEN_KEY = "userToken"
 const USER_ID_KEY = "uid"
-let authStatusContent = null
+const authStatusContent = document.getElementById("authContent") || div() // Fallback to a div if the element is not found to be used in tests
 const { signUpAndLoginButtons, logoutButton } = usersViews
 
 
@@ -23,7 +25,6 @@ export function getCurrToken() {
 }
 
 export function authenticated() {
-
     return getCurrToken() !== null
 }
 
@@ -44,10 +45,8 @@ export function setUserInfo(userInfo) {
         updateAuthUI()
     }
 }
-export function setAuthStatusContent(content) {
-    authStatusContent = content
-}
-export function userAuthenticationContext(authContent = authStatusContent) {
+
+export const userAuthenticationContext = ((authContent) => {
     let currentUid = getSessionItem(USER_ID_KEY)
     if (currentUid) {
         authContent.replaceChildren(logoutButton())
@@ -70,7 +69,7 @@ export function userAuthenticationContext(authContent = authStatusContent) {
             }
         }
     }
-}
+})(authStatusContent)
 
 
 function updateAuthUI() {

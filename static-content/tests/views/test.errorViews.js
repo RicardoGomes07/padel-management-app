@@ -1,28 +1,46 @@
 import errorViews from "../../spa/handlers/views/errorsview.js";
 const assert = window.chai.assert
 
+const DEFAULT_ERROR_TITLE = "Unknown Error";
+const DEFAULT_ERROR_MESSAGE = "Something went wrong";
+
 describe("ErrorViews", function () {
-    let contentHeader, content;
-    
+    let errorContent;
+
     beforeEach(function () {
-        contentHeader = document.createElement('div');
-        content = document.createElement('div');
+        errorContent = document.createElement("div");
+        document.body.appendChild(errorContent);
+    });
+
+    afterEach(function () {
+        document.body.removeChild(errorContent);
     });
 
     describe("errorView", function () {
         it("should render error view with default error details", function () {
-            const backLocation = "#home";
+            const view = errorViews.errorView();
+            errorContent.appendChild(view);
 
-            errorViews.errorView(contentHeader, content, backLocation);
-            assert.strictEqual(contentHeader.textContent, "Unknown Error");
+            const paragraphs = errorContent.querySelectorAll("p");
+            assert.strictEqual(paragraphs.length, 2);
+            assert.strictEqual(paragraphs[0].textContent, DEFAULT_ERROR_TITLE + ":");
+            assert.strictEqual(paragraphs[1].textContent, DEFAULT_ERROR_MESSAGE);
+        });
 
-            const backLink = content.querySelector("a");
-            assert.strictEqual(backLink.textContent, "Back");
-            assert.strictEqual(backLink.getAttribute("href"), "#home");
+        it("should render error view with custom error details", function () {
+            const customError = {
+                title: "Custom Error",
+                message: "This is a custom error message",
+                description: "Detailed error description"
+            };
 
-            const errorDescription = content.querySelector("p");
-            assert.strictEqual(errorDescription.textContent, "Something went wrong");
+            const view = errorViews.errorView(customError);
+            errorContent.appendChild(view);
 
+            const paragraphs = errorContent.querySelectorAll("p");
+            assert.strictEqual(paragraphs.length, 2);
+            assert.strictEqual(paragraphs[0].textContent, customError.title + ":");
+            assert.strictEqual(paragraphs[1].textContent, customError.description);
         });
     });
 });

@@ -1,19 +1,17 @@
 import clubViews from "../../spa/handlers/views/clubsviews.js";
 import {ELEMS_PER_PAGE} from "../../spa/handlers/views/pagination.js";
-import {setAuthStatusContent, setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
+import {setUserInfo} from "../../spa/managers/userAuthenticationContext.js";
 
 const assert = window.chai.assert
 
 describe('ClubViews', function () {
-    let contentHeader, content, authContent;
+    let contentHeader, content;
 
     const mockUser = { uid: 1, token: "mockToken"}
 
     beforeEach(function () {
         contentHeader = document.createElement('div');
         content = document.createElement('div');
-        authContent = document.createElement('div');
-        setAuthStatusContent(authContent)
     });
 
     describe('renderClubDetailsView', function () {

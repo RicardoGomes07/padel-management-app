@@ -1,4 +1,4 @@
-import { request } from "../router.js"
+import { redirectTo, request } from "../router.js"
 import {ELEMS_PER_PAGE} from "./views/pagination.js";
 import rentalsViews from "./views/rentalsviews.js"
 import rentalsRequests from "./requests/rentalsrequests.js"
@@ -7,14 +7,15 @@ import courtsRequests from "./requests/courtsrequests.js";
 import courtsViews from "./views/courtsviews.js";
 import uriManager from "../managers/uriManager.js";
 import auxfuns from "./auxFuns.js";
-import {authenticated} from "../managers/userAuthenticationContext.js";
+import { authenticated } from "../managers/userAuthenticationContext.js";
+import errorManager from "../managers/errorManager.js";
 
 const { renderRentalDetailsView, renderCalendarToSearchRentals, renderUpdateRentalView, renderRentalCreationForm } = rentalsViews
 const { fetchRentalDetails} = rentalsRequests
 const { errorView } = errorsViews
 const { path, query } = request
 const { renderCourtRentalsView } = courtsViews
-const { listCourtRentalsUri, getRentalDetailsUri, getCourtDetailsUri} = uriManager
+const { listCourtRentalsUri, getRentalDetailsUri, loginUri} = uriManager
 const { parseHourFromString } = auxfuns
 
 
@@ -25,10 +26,12 @@ async function getRentalDetails(contentHeader, content) {
 
     const result = await fetchRentalDetails(clubId, courtId, rentalId)
 
-    if(result.status !== 200)
-        errorView(contentHeader, content, listCourtRentalsUri(courtId, courtId) ,result.data)
-    else
+    if (result.status === 200){
         renderRentalDetailsView(contentHeader, content, result.data)
+    } else{
+        errorManager.store(errorView(result.data))
+        redirectTo(listCourtRentalsUri(clubId,courtId))
+    }
 }
 
 async function createRental(contentHeader, content) {
@@ -36,9 +39,7 @@ async function createRental(contentHeader, content) {
     const crid = Number(path("crid"))
 
     if(!authenticated()){
-        errorView(contentHeader, content, getCourtDetailsUri(cid, crid),
-            { title: "Unauthorized", message: "You must have an account to create a rental." }
-        )
+        redirectTo(loginUri())
         return
     }
 
@@ -66,11 +67,8 @@ async function createRental(contentHeader, content) {
 
         const response = await rentalsRequests.createRental(cid, crid, date, parseHourFromString(startHour), parseHourFromString(endHour))
 
-        if (response.status === 201) {
-            window.location.hash = getRentalDetailsUri(cid, crid, response.data.rid)
-        } else {
-            errorView(contentHeader, content, getCourtDetailsUri(cid, crid), response.data)
-        }
+        if (response.status === 201) redirectTo(getRentalDetailsUri(cid, crid, response.data.rid))
+        else errorManager.store(errorView(response.data)).render()
     }
 
     renderRentalCreationForm(contentHeader, content, cid, crid, rentalInfo, onSubmit)
@@ -83,15 +81,12 @@ async function updateRental(contentHeader, content) {
     const rid = Number(path("rid"))
 
     if(!authenticated()){
-        errorView(contentHeader, content, getRentalDetailsUri(cid, crid, rid),
-            { title: "Unauthorized", message: "You must have an account to update a rental." }
-        )
+        redirectTo(loginUri())
         return
     }
 
     const handleSubmit = async function(e) {
         e.preventDefault()
-
         const validDate = e.target.querySelector("#date").value
         const startHour = e.target.querySelector("#startHour").value
         const endHour = e.target.querySelector("#endHour").value
@@ -103,18 +98,16 @@ async function updateRental(contentHeader, content) {
 
         const response = await rentalsRequests.editRental(cid, crid, rid, validDate, startHour, endHour)
 
-        if (response.status === 200) {
-            window.location.hash = getRentalDetailsUri(cid, crid, rid)
-        } else {
-            errorView(contentHeader, content, getRentalDetailsUri(cid, crid, rid), response.data)
-        }
+        if (response.status === 200) redirectTo(getRentalDetailsUri(cid, crid, rid))
+        else errorManager.store(errorView(response.data)).render()
     }
 
-    const response = await rentalsRequests.fetchRentalDetails(cid, crid, rid);
-    if (response.status === 200) {
-        renderUpdateRentalView(contentHeader, content, response.data, handleSubmit);
+    const response = await rentalsRequests.fetchRentalDetails(cid, crid, rid)
+    if (response.status === 200){
+        renderUpdateRentalView(contentHeader, content, response.data, handleSubmit)
     } else {
-        errorView(contentHeader, content, listCourtRentalsUri(cid, crid), response.data);
+        errorManager.store(errorView(response.data))
+        redirectTo(getRentalDetailsUri(cid, crid, rid))
     }
 
 }
@@ -126,18 +119,17 @@ async function deleteRental(contentHeader, content) {
     const page = Number(query("page")) || 1
 
     if(!authenticated()){
-        errorView(contentHeader, content, listCourtRentalsUri(cid, crid),
-            { title: "Unauthorized", message: "You must have an account to delete a rental." }
-        )
+        redirectTo(loginUri())
         return
     }
 
     const result = await rentalsRequests.deleteRental(cid, crid, rid)
 
-    if (result.status !== 200) {
-        errorView(contentHeader, content, listCourtRentalsUri(cid,crid), result.data)
-    } else {
-        window.location.hash = listCourtRentalsUri(cid, crid, page)
+    if (result.status === 200){
+        redirectTo(listCourtRentalsUri(cid, crid, page))
+    } else{
+        errorManager.store(errorView(result.data)) // Se if error is being shown correctly
+        redirectTo(getRentalDetailsUri(cid, crid, rid))
     }
 }
 
@@ -154,7 +146,7 @@ function searchRentals(contentHeader, content) {
 
         const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, ELEMS_PER_PAGE, validDate)
         if (rsp.status !== 200){
-            errorView(contentHeader, content, listCourtRentalsUri(cid,crid), rsp.data)
+            errorManager.store(errorView(rsp.data)).render()
             return
         }
 

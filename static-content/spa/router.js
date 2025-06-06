@@ -73,3 +73,7 @@ function getRequestArgs(handler, path) {
     })
     return args
 }
+
+export function redirectTo(path) {
+    window.location.hash = path
+}

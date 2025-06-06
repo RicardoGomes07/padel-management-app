@@ -5,16 +5,16 @@ import errorsViews from "./views/errorsview.js"
 import uriManager from "../managers/uriManager.js";
 import { createPaginationManager } from "../managers/paginationManager.js"
 import { authenticated } from "../managers/userAuthenticationContext.js";
+import errorManager from "../managers/errorManager.js";
+import { redirectTo } from "../router.js";
 
 const { fetchClubDetails, fetchClubs } = clubsRequests
 const { renderClubDetailsView, renderClubsView, renderCreateClubView } = clubViews
 const { errorView } = errorsViews
 const { path, query } = request
-const { listClubsUri, getClubDetailsUri } = uriManager
+const { loginUri, getClubDetailsUri, listClubsUri } = uriManager
 
-
-const clubsPagination =
-    createPaginationManager(fetchClubs, "clubs")
+const clubsPagination = createPaginationManager(fetchClubs, "clubs")
 
 async function getClubs(contentHeader, content) {
     const name = query("name")
@@ -25,7 +25,7 @@ async function getClubs(contentHeader, content) {
         .resetCacheIfNeeded("name", name)
         .getPage(
             page,
-            (message) => { errorView(contentHeader, content, listClubsUri() ,message) }
+            (message) => { errorManager.store(errorView(message)).render() }
         )
 
     renderClubsView(
@@ -43,26 +43,29 @@ async function getClubDetails(contentHeader, content) {
 
     const result = await fetchClubDetails(cid)
 
-    if( result.status !== 200) errorView(contentHeader, content, listClubsUri() ,result.data)
-    else renderClubDetailsView(contentHeader, content, result.data)
+    if( result.status === 200){
+        renderClubDetailsView(contentHeader, content, result.data)
+    } else {
+        errorManager.store(errorView(result.data))
+        redirectTo(listClubsUri())
+    }
 }
 
 function createClub(contentHeader, content) {
-    if (!authenticated()) {
-        errorView(contentHeader, content, listClubsUri(),
-            { title: "Unauthorized", message: "You must have an account to create a club." }
-        )
+    if (!authenticated()){
+        redirectTo(loginUri())
         return
     }
+
     const handleSubmit = async function(e){
         e.preventDefault()
-        const clubName = document.querySelector("#clubName").value
+        const clubName = document.querySelector("#clubName").value.trim()
         const result = await clubsRequests.createClub(clubName)
         if (result.status === 201) {
             const newClubId = result.data.cid
-            window.location.hash = getClubDetailsUri(newClubId)
+            redirectTo(getClubDetailsUri(newClubId))
         } else {
-            errorView(contentHeader, content, result.data)
+            errorManager.store(errorView(result.data)).render()
         }
     }
 

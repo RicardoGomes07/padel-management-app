@@ -3,6 +3,7 @@ import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
 import { setUserInfo } from "../../managers/userAuthenticationContext.js";
 import usersRequests from "../requests/usersrequests.js";
+import { redirectTo } from "../../router.js";
 
 const { div, a, ul, li, p, formElement, button } = Html;
 const { createPaginationLinks } = pagination
@@ -90,7 +91,7 @@ function logoutButton() {
     return button("Logout", async () => {
         await usersRequests.logoutUser()
         setUserInfo(null)
-        window.location.hash = uriManager.homeUri()
+        redirectTo(homeUri())
     }, {
         className: "btn btn-danger mt-2",
         id: "logout-button",

@@ -2,24 +2,24 @@ import { request } from "../router.js";
 import courtsRequests  from "./requests/courtsrequests.js"
 import courtsViews from "./views/courtsviews.js"
 import errorsViews from "./views/errorsview.js"
-import {createPaginationManager} from "../managers/paginationManager.js";
+import { createPaginationManager } from "../managers/paginationManager.js";
 import auxiliaryFuns from "./auxFuns.js";
 import uriManager from "../managers/uriManager.js";
 import { ELEMS_PER_PAGE } from "./views/pagination.js";
 import { authenticated } from "../managers/userAuthenticationContext.js";
+import errorManager from "../managers/errorManager.js";
+import { redirectTo } from "../router.js";
 
 const { path, query } = request
 const { fetchCourtsByClub, fetchCourtDetails, fetchCourtRentals } = courtsRequests
 const { renderCourtsByClubView, renderCourtDetailsView, renderCourtRentalsView,
     renderCourtAvailableHoursView, renderCalendarToSearchAvailableHours, renderCreateCourtForm,
-    renderSearchForCourtsByDateAndTimeSlot, renderAvailableCourtsToRent} = courtsViews
+    renderSearchForCourtsByDateAndTimeSlot, renderAvailableCourtsToRent } = courtsViews
 const { errorView } = errorsViews
 const { isValidDate, parseHourFromString } = auxiliaryFuns
-const { getClubDetailsUri, listCourtRentalsUri, getCourtAvailableHoursUri , getCourtDetailsUri,
-    getAvailableHoursByDateUri, listClubCourtsUri } = uriManager
+const { getCourtDetailsUri, getAvailableHoursByDateUri, loginUri, listClubCourtsUri } = uriManager
 
-const courtsOfClubPagination =
-    createPaginationManager(fetchCourtsByClub, "courts")
+const courtsOfClubPagination = createPaginationManager(fetchCourtsByClub, "courts")
 
 async function getCourtsByClub(contentHeader, content) {
     const cid = path("cid")
@@ -30,7 +30,7 @@ async function getCourtsByClub(contentHeader, content) {
         .resetCacheIfNeeded("cid", Number(cid))
         .getPage(
             page,
-            (message) => { errorView(contentHeader, content, getClubDetailsUri(cid), message) }
+            (message) => { errorManager.store(errorView(message)).render() }
         )
 
     renderCourtsByClubView(
@@ -50,8 +50,12 @@ async function getCourtDetails(contentHeader, content) {
 
     const result = await fetchCourtDetails(cid, crid)
 
-    if (result.status !== 200) errorView(contentHeader, content, getClubDetailsUri(cid) ,result.data)
-    else renderCourtDetailsView(contentHeader, content, result.data, cid, crid, page)
+    if (result.status === 200){
+        renderCourtDetailsView(contentHeader, content, result.data, cid, crid, page)
+    } else {
+        errorManager.store(errorView(result.data))
+        redirectTo(listClubCourtsUri(cid))
+    }
 }
 
 async function getCourtRentals(contentHeader, content) {
@@ -63,8 +67,8 @@ async function getCourtRentals(contentHeader, content) {
 
     const rsp = await fetchCourtRentals(cid, crid, skip, ELEMS_PER_PAGE)
     if (rsp.status !== 200){
-        errorView(contentHeader, content, listCourtRentalsUri(cid, crid), rsp.data.items)
-        return
+        errorManager.store(errorView(rsp.data))
+        redirectTo(getCourtDetailsUri(cid, crid))
     }
 
     const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
@@ -87,41 +91,54 @@ async function getCourtAvailableHours(contentHeader, content) {
     const date = query("date")
     const range = query("range")
 
-    if (date === null) {
-        const handleSubmit = async function(e){
-            e.preventDefault()
-            const validDate = document.querySelector("#date").value
-            window.location.hash = getAvailableHoursByDateUri(cid,crid, validDate)
-        }
+    const handleSubmit = (e) => {
+        e.preventDefault()
+        const dateValue = e.target.querySelector("#date").value
+        redirectTo(getAvailableHoursByDateUri(cid, crid, dateValue))
+    }
+
+    const showCalendar = (error) => {
+        if (error) errorManager.store(errorView(error)).render()
         renderCalendarToSearchAvailableHours(contentHeader, content, cid, crid, handleSubmit)
+    }
+
+    if (!date) {
+        showCalendar()
         return
     }
 
     if (!isValidDate(date)) {
-        errorView(contentHeader, content, getCourtAvailableHoursUri(cid, crid), {
-            title: "Invalid date",
-            description: "The selected date is not valid"
-        })
+        showCalendar({ title: "Invalid date", description: "The selected date is not valid" })
         return
     }
 
-    const response = await courtsRequests.getAvailableHours(cid, crid, date)
-    if (response.status === 200) {
-        renderCourtAvailableHoursView(contentHeader, content, response.data.hours, cid, crid, date, range)
-    } else {
-        errorView(contentHeader, content, getCourtAvailableHoursUri(cid,crid), response.data)
+    try {
+        const response = await courtsRequests.getAvailableHours(cid, crid, date)
+        if (response.status !== 200) {
+            showCalendar(response.data)
+            return
+        }
+
+        renderCourtAvailableHoursView(
+            contentHeader,
+            content,
+            response.data.hours,
+            cid,
+            crid,
+            date,
+            range
+        )
+    } catch {
+        showCalendar({ title: "Error", description: "Could not fetch available hours." })
     }
 }
 
 function createCourt(contentHeader, content) {
     const cid = path("cid")
     if (!authenticated()){
-        errorView(contentHeader, content, listClubCourtsUri(cid),
-            { title: "Unauthorized", message: "You must have an account to create a court." }
-        )
+        redirectTo(loginUri())
         return
     }
-
 
     const handleSubmit = async function (e) {
         e.preventDefault()
@@ -129,9 +146,9 @@ function createCourt(contentHeader, content) {
         const response = await courtsRequests.createCourt(cid, courtName)
         if (response.status === 201){
             const crid = response.data.crid
-            window.location.hash = getCourtDetailsUri(cid, crid)
+            redirectTo(getCourtDetailsUri(cid, crid))
         } else {
-            errorView(contentHeader, content, getClubDetailsUri(cid), response.data)
+            errorManager.store(errorView(response.data)).render()
         }
     }
     renderCreateCourtForm(contentHeader, content, cid, handleSubmit)
@@ -152,7 +169,7 @@ function searchCourtsToRent(contentHeader, content) {
         const availableCourts = availableCourtsRsp.data.items.courts
 
         if (availableCourtsRsp.status === 200) renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour)
-        else errorView(contentHeader, content, getClubDetailsUri(cid), availableCourts)
+        else errorManager.store(errorView(availableCourtsRsp.data)).render()
     }
     renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, submitHandler)
 }

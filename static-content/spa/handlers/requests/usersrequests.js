@@ -1,7 +1,6 @@
-import {API_BASE_URL} from "../../managers/uriManager.js";
+import { API_BASE_URL } from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js";
 import { getCurrToken } from "../../managers/userAuthenticationContext.js";
-
 
 
 function fetchUserRentals(uid, skip, limit) {
@@ -25,7 +24,7 @@ function createUser(name, email, password) {
 }
 
 function loginUser(email, password) {
-    return fetch(`${API_BASE_URL}users/login`, {
+    return fetch(`${API_BASE_URL}auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -35,7 +34,7 @@ function loginUser(email, password) {
 }
 
 function logoutUser() {
-    return fetch(`${API_BASE_URL}users/logout`, {
+    return fetch(`${API_BASE_URL}auth/logout`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

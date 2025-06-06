@@ -1,4 +1,4 @@
-insert into users(name, email, password, token) values
+insert into users(name, email, hashed_password, token) values
     ('Leonel Correia', 'leonel@gmail.com', '01234567890123456789012345678912', 'b734312a-94c6-492e-a243-5ebe17e023ca'),
     ('Paulo Carvalho', 'paulo@hotmail.com', '01234567890123456789012345678913','71c78a21-8edd-4711-bfaa-ac50a65e7911'),
     ('Ricardo Gomes', 'ricardo@isel.pt', '01234567890123456789012345678914', '501f5a93-c395-4055-888f-3cc4630703ab');
