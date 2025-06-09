@@ -21,17 +21,20 @@ async function getUserRentals(contentHeader, content) {
     const page = Number(query("page")) || 1
     const skip = (page - 1) * ELEMS_PER_PAGE
 
-    const rsp = await fetchUserRentals(uid, skip, ELEMS_PER_PAGE).then(result => result.data)
+    const rsp = await fetchUserRentals(uid, skip, ELEMS_PER_PAGE)
+
     if (rsp.status !== 200) {
         errorManager.store(errorView(rsp.data))
         redirectTo(homeUri())
         return
     }
-    const rentals = rsp.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
+    const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
     const count = rsp.count
 
-    const userName = await fetchUserDetails(Number(uid)).then(user => user.data.name)
-    if (userName.status !== 200) {
+    const rspUser = await fetchUserDetails(uid)
+    const userName = rspUser.data.name
+
+    if (rspUser.status !== 200) {
         errorManager.store(errorView(userName.data))
         redirectTo(homeUri())
         return

@@ -2,7 +2,6 @@ import { API_BASE_URL } from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js"
 import { getCurrToken } from "../../managers/userAuthenticationManager.js";
 
-const userToken = getCurrToken()
 
 function fetchClubDetails(cid){
     return fetch(`${API_BASE_URL}clubs/${cid}`)
@@ -16,6 +15,7 @@ function fetchClubs(name, skip, limit) {
 }
 
 function createClub(clubName) {
+    const userToken = getCurrToken()
     return fetch(`${API_BASE_URL}clubs`, {
         method: "POST",
         headers: {

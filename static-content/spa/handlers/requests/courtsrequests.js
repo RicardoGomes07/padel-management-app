@@ -2,7 +2,7 @@ import { API_BASE_URL } from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js"
 import { getCurrToken } from "../../managers/userAuthenticationManager.js";
 
-const userToken = getCurrToken()
+
 
 function fetchCourtsByClub(cid, skip, limit) {
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/?skip=${skip}&limit=${limit}`)
@@ -25,6 +25,7 @@ function fetchCourtRentalsByDate(cid, crid, skip, limit, date) {
 }
 
 function createCourt(clubId, courtName) {
+    const userToken = getCurrToken()
     return fetch(`${API_BASE_URL}clubs/${clubId}/courts`, {
         method: "POST",
         headers: {

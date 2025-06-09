@@ -2,7 +2,6 @@ import { API_BASE_URL } from "../../managers/uriManager.js";
 import { handleResponse } from "./fetch.js";
 import { getCurrToken } from "../../managers/userAuthenticationManager.js";
 
-const userToken = getCurrToken()
 
 function fetchRentalDetails(cid, crid, rid) {
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals/${rid}`)
@@ -10,6 +9,8 @@ function fetchRentalDetails(cid, crid, rid) {
 }
 
 function createRental(cid, crid, date, startTime, endTime) {
+    const userToken = getCurrToken()
+
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals`, {
         method: "POST",
         headers: {
@@ -21,6 +22,8 @@ function createRental(cid, crid, date, startTime, endTime) {
 }
 
 function editRental(cid, crid, rid, date, startTime, endTime) {
+    const userToken = getCurrToken()
+
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals/${rid}`, {
         method: "PUT",
         headers: {
@@ -32,6 +35,8 @@ function editRental(cid, crid, rid, date, startTime, endTime) {
 }
 
 function deleteRental(cid, crid, rid) {
+    const userToken = getCurrToken()
+
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals/${rid}`, {
         method: "DELETE",
         headers: {
