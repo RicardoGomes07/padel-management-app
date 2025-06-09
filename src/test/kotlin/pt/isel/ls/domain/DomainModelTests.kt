@@ -4,7 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-fun createPassword(passwordLetter: String) = Password(passwordLetter.repeat(32))
+fun createPassword(passwordLetter: String) = Password(passwordLetter.repeat(44))
 
 class DomainModelTests {
     @Test

@@ -73,7 +73,7 @@ function signUp(contentHeader, content){
         const result = await createUser(name, email, hashedPassword)
 
         if (result.status === 201) {
-            const login = await loginUser(email, password)
+            const login = await loginUser(email, hashedPassword)
             if (login.status === 200) {
                 setUserInfo(login.data)
                 redirectTo(homeUri())
@@ -97,7 +97,7 @@ function login(contentHeader, content) {
         const hashedPassword = await hashPassword(password)
 
         const result = await loginUser(email, hashedPassword)
-        console.log(result)
+
         if (result.status === 200) {
             setUserInfo(result.data)
             redirectTo(homeUri())
@@ -109,11 +109,18 @@ function login(contentHeader, content) {
     renderLoginView(contentHeader, content, handleSubmit)
 }
 
+async function logout() {
+    await usersRequests.logoutUser()
+    setUserInfo(null)
+    redirectTo(homeUri())
+}
+
 const userHandlers = {
     getUserDetails,
     getUserRentals,
     signUp,
     login,
+    logout,
 }
 
 export default userHandlers

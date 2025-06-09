@@ -1,13 +1,11 @@
 import Html from "../../dsl/htmlfuns.js";
 import pagination from "./pagination.js";
 import uriManager from "../../managers/uriManager.js";
-import { setUserInfo } from "../../managers/userAuthenticationManager.js";
-import usersRequests from "../requests/usersrequests.js";
 import { redirectTo } from "../../router.js";
 
 const { div, a, ul, li, p, formElement, button } = Html;
 const { createPaginationLinks } = pagination
-const { getUserRentalsUri, getUserProfileUri, getRentalDetailsUri, loginUri, signUpUri } = uriManager
+const { getUserRentalsUri, getUserProfileUri, getRentalDetailsUri, loginUri, signUpUri, logoutUri } = uriManager
 
 function renderUserRentalsView(contentHeader, content, rentals, count, username,  uid, page) {
     const currHeader = contentHeader.textContent
@@ -88,10 +86,8 @@ function renderLoginView(contentHeader, content, handleSubmit) {
 }
 
 function logoutButton() {
-    return button("Logout", async () => {
-        await usersRequests.logoutUser()
-        setUserInfo(null)
-        redirectTo(homeUri())
+    return button("Logout", () => {
+        redirectTo(logoutUri())
     }, {
         className: "btn btn-danger mt-2",
         id: "logout-button",

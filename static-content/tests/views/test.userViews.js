@@ -128,10 +128,10 @@ describe("UsersViews", function () {
                 const anchors = buttons.querySelectorAll("a");
                 assert.strictEqual(anchors.length, 2);
                 assert.strictEqual(anchors[0].textContent, "Sign Up");
-                assert.strictEqual(anchors[0].getAttribute("href"), "#users/create");
+                assert.strictEqual(anchors[0].getAttribute("href"), "#auth/signup");
 
                 assert.strictEqual(anchors[1].textContent, "Login");
-                assert.strictEqual(anchors[1].getAttribute("href"), "#users/login");
+                assert.strictEqual(anchors[1].getAttribute("href"), "#auth/login");
             
             });
         });

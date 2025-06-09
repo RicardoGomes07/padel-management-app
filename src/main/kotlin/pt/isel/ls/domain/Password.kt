@@ -6,7 +6,7 @@ value class Password(
 ) {
     init {
         require(value.isNotBlank()) { "Password cannot be blank" }
-        require(value.length == 32) { "Password must be 32 characters long" }
+        require(value.length == 44) { "Password must be 44 characters long" }
     }
 }
 
