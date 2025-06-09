@@ -1,7 +1,8 @@
-insert into users(name, email, hashed_password, token) values
-    ('Leonel Correia', 'leonel@gmail.com', '01234567890123456789012345678912345678912345', 'b734312a-94c6-492e-a243-5ebe17e023ca'),
-    ('Paulo Carvalho', 'paulo@hotmail.com', '01234567890123456789012345678912345678912346','71c78a21-8edd-4711-bfaa-ac50a65e7911'),
-    ('Ricardo Gomes', 'ricardo@isel.pt', '01234567890123456789012345678912345678912347', '501f5a93-c395-4055-888f-3cc4630703ab');
+-- all passwords are 'password'
+insert into users(name, email, hashed_password) values
+    ('Leonel Correia', 'leonel@gmail.com', 's+/9j8R9cA/SY0xOlzLGC3BZkQioifQDK4Z/dCn0Xu0='),
+    ('Paulo Carvalho', 'paulo@hotmail.com', 's+/9j8R9cA/SY0xOlzLGC3BZkQioifQDK4Z/dCn0Xu0='),
+    ('Ricardo Gomes', 'ricardo@isel.pt', 's+/9j8R9cA/SY0xOlzLGC3BZkQioifQDK4Z/dCn0Xu0=');
 
 insert into clubs(name, owner) values
     ('Benfica', 1),
