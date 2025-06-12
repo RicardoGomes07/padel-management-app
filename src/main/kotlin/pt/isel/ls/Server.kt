@@ -25,6 +25,7 @@ import java.sql.DriverManager
 private val logger = LoggerFactory.getLogger("HTTPServer")
 
 val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_URL environment variable")
+const val SERVER_PORT = 9000
 
 fun main() {
     val connection = DriverManager.getConnection(DB_URL)
@@ -84,7 +85,7 @@ fun main() {
             singlePageApp(ResourceLoader.Directory("static-content")),
         )
 
-    val jettyServer = app.asServer(Jetty(9000)).start()
+    val jettyServer = app.asServer(Jetty(SERVER_PORT)).start()
     logger.info("server started listening")
 
     readln()
