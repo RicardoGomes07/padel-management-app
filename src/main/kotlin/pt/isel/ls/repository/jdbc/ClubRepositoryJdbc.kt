@@ -30,7 +30,8 @@ class ClubRepositoryJdbc(
         connection.executeMultipleQueries {
             val sqlCheckFK =
                 """
-                SELECT * FROM users u WHERE u.uid = ?
+                ${userSqlReturnFormat()}
+                WHERE u.uid = ?
                 """.trimIndent()
 
             val owner =
@@ -50,7 +51,7 @@ class ClubRepositoryJdbc(
                 INSERT INTO clubs (name, owner)
                 VALUES (?, ?)
                 ON CONFLICT (name) DO NOTHING
-                RETURNING cid AS club_id, name AS club_name, owner AS owner_id
+                RETURNING ${renameClubRows()}
                 """.trimIndent()
 
             connection.prepareStatement(sqlInsert).use { stmt ->
@@ -225,12 +226,21 @@ class ClubRepositoryJdbc(
 }
 
 /**
+ * Function that returns the rows of the clubs table renamed
+ * @return string renaming the rows of the table
+ */
+private fun renameClubRows(alias: String = "") =
+    """
+    ${alias}cid as club_id, ${alias}name as club_name, ${alias}owner as owner_id 
+    """.trimIndent()
+
+/**
  * Function with the default select query to retrieve a club with the information of the owner
  * @return the default select query string
  */
 fun clubSqlReturnFormat() =
     """
-    SELECT c.cid as club_id, c.name as club_name, c.owner as owner_id,
+    SELECT ${renameClubRows("c.")},
         u.name as owner_name, u.email as owner_email, u.hashed_password as owner_hashed_password, u.token as owner_token
     FROM clubs c
     LEFT JOIN users u ON u.uid = c.owner
@@ -241,19 +251,14 @@ fun clubSqlReturnFormat() =
  *  in this case the one defined in the default select query
  * @return The mapped Club
  */
-fun ResultSet.mapClub() =
-    Club(
-        cid = getInt("club_id").toUInt(),
-        name = Name(getString("club_name")),
-        owner =
-            User(
-                uid = getInt("owner_id").toUInt(),
-                name = Name(getString("owner_name")),
-                email = Email(getString("owner_email")),
-                password = getString("owner_hashed_password").toPassword(),
-                token = getString("owner_token")?.toToken(),
-            ),
-    )
+fun ResultSet.mapClub(
+    clubName: String = "club",
+    ownerName: String = "owner",
+) = Club(
+    cid = getInt("${clubName}_id").toUInt(),
+    name = Name(getString("${clubName}_name")),
+    owner = mapUser(ownerName),
+)
 
 /**
  * Function that maps a ResultSet to a Club, according to the name dictionary defined,
@@ -261,9 +266,11 @@ fun ResultSet.mapClub() =
  * @param owner User correspondent to the owner
  * @return The mapped Club
  */
-fun ResultSet.mapClub(owner: User) =
-    Club(
-        cid = getInt("club_id").toUInt(),
-        name = Name(getString("club_name")),
-        owner = owner,
-    )
+fun ResultSet.mapClub(
+    owner: User,
+    clubName: String = "club",
+) = Club(
+    cid = getInt("${clubName}_id").toUInt(),
+    name = Name(getString("${clubName}_name")),
+    owner = owner,
+)

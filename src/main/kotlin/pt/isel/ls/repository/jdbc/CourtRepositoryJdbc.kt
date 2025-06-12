@@ -50,7 +50,7 @@ class CourtRepositoryJdbc(
                 """
                 INSERT INTO courts (name, club_id)
                 VALUES (?, ?)
-                RETURNING crid as court_id, name as court_name, club_id
+                RETURNING ${renameCourtRows()}
                 """.trimIndent()
 
             val newCourt =
@@ -233,12 +233,21 @@ class CourtRepositoryJdbc(
 }
 
 /**
+ * Function that returns the rows of the courts table renamed
+ * @return string renaming the rows of the table
+ */
+private fun renameCourtRows(alias: String = "") =
+    """
+    ${alias}crid as court_id, ${alias}name as court_name, ${alias}club_id as club_id
+    """.trimIndent()
+
+/**
  * Function with the default select query to retrieve a court with the information of the club
  * @return the default select query string
  */
 fun courtSqlReturnFormat() =
     """
-    SELECT cr.crid as court_id, cr.name as court_name, cr.club_id as club_id,
+    SELECT ${renameCourtRows("cr.")},
         c.name as club_name, c.owner as club_owner_id,
         u.name as club_owner_name, u.email as club_owner_email, u.hashed_password as club_owner_hashed_password, u.token as club_owner_token
     FROM courts cr
@@ -251,23 +260,15 @@ fun courtSqlReturnFormat() =
  *  in this case the one defined in the default select query
  * @return The mapped Court
  */
-fun ResultSet.mapCourt(): Court =
+fun ResultSet.mapCourt(
+    courtName: String = "court",
+    clubName: String = "club",
+    clubOwnerName: String = "club_owner",
+): Court =
     Court(
-        crid = getInt("court_id").toUInt(),
-        name = getString("court_name").toName(),
-        club =
-            Club(
-                cid = getInt("club_id").toUInt(),
-                name = getString("club_name").toName(),
-                owner =
-                    User(
-                        uid = getInt("club_owner_id").toUInt(),
-                        name = getString("club_owner_name").toName(),
-                        email = getString("club_owner_email").toEmail(),
-                        password = getString("club_owner_hashed_password").toPassword(),
-                        token = getString("club_owner_token")?.toToken(),
-                    ),
-            ),
+        crid = getInt("${courtName}_id").toUInt(),
+        name = getString("${courtName}_name").toName(),
+        club = mapClub(clubName, clubOwnerName),
     )
 
 /**
@@ -276,9 +277,11 @@ fun ResultSet.mapCourt(): Court =
  * @param club Club
  * @return The mapped Court
  */
-fun ResultSet.mapCourt(club: Club) =
-    Court(
-        crid = getInt("court_id").toUInt(),
-        name = getString("court_name").toName(),
-        club = club,
-    )
+fun ResultSet.mapCourt(
+    club: Club,
+    courtName: String = "court",
+) = Court(
+    crid = getInt("${courtName}_id").toUInt(),
+    name = getString("${courtName}_name").toName(),
+    club = club,
+)

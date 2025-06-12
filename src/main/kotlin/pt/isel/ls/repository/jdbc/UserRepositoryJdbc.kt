@@ -33,7 +33,7 @@ class UserRepositoryJdbc(
             INSERT INTO users (name, email, hashed_password)
             VALUES (?, ?, ?)
             ON CONFLICT (email) DO NOTHING
-            RETURNING *;
+            RETURNING ${renameUserRows()};
             """.trimIndent()
 
         return connection.prepareStatement(sqlInsert).use { stmt ->
@@ -56,7 +56,11 @@ class UserRepositoryJdbc(
         password: Password,
     ): User =
         connection.executeMultipleQueries {
-            val sqlSelect = "SELECT * FROM users WHERE email = ?"
+            val sqlSelect =
+                """
+                ${userSqlReturnFormat()}
+                WHERE u.email = ?
+                """.trimIndent()
 
             val user =
                 connection.prepareStatement(sqlSelect).use { stmt ->
@@ -71,7 +75,7 @@ class UserRepositoryJdbc(
 
             val token = generateToken()
 
-            val sqlUpdate = "UPDATE users SET token = ? WHERE email = ? RETURNING *"
+            val sqlUpdate = "UPDATE users SET token = ? WHERE email = ? RETURNING ${renameUserRows()}"
 
             return@executeMultipleQueries connection.prepareStatement(sqlUpdate).use { stmt ->
                 stmt.setString(1, token.toString())
@@ -102,7 +106,11 @@ class UserRepositoryJdbc(
      * @return The respective User if found, otherwise null
      */
     override fun findUserByToken(token: Token): User? {
-        val sqlSelect = "SELECT * FROM users WHERE token = ?"
+        val sqlSelect =
+            """
+            ${userSqlReturnFormat()}
+            WHERE u.token = ?
+            """
 
         return connection.prepareStatement(sqlSelect).use { stmt ->
             stmt.setString(1, token.toString())
@@ -145,7 +153,11 @@ class UserRepositoryJdbc(
      * @return User if found, otherwise null
      */
     override fun findByIdentifier(id: UInt): User? {
-        val sqlSelect = "SELECT * FROM users WHERE uid = ?"
+        val sqlSelect =
+            """
+            ${userSqlReturnFormat()}
+            WHERE u.uid = ?
+            """.trimIndent()
 
         return connection.prepareStatement(sqlSelect).use { stmt ->
             stmt.setInt(1, id.toInt())
@@ -169,8 +181,8 @@ class UserRepositoryJdbc(
         connection.executeMultipleQueries {
             val sqlSelect =
                 """
-                SELECT * FROM users
-                ORDER BY uid DESC
+                ${userSqlReturnFormat()}
+                ORDER BY u.uid DESC
                 LIMIT ? OFFSET ?
                 """.trimIndent()
 
@@ -225,15 +237,35 @@ class UserRepositoryJdbc(
 }
 
 /**
+ * Function that returns the rows of the table renamed
+ * @return string renaming the rows of the table
+ */
+private fun renameUserRows(alias: String = "") =
+    """
+    ${alias}uid as _id, ${alias}name as _name, ${alias}email as _email,
+        ${alias}hashed_password as _hashed_password, ${alias}token as _token 
+    """.trimIndent()
+
+/**
+ * Function with the default select query to retrieve a user
+ * @return the default select query string
+ */
+fun userSqlReturnFormat() =
+    """
+    SELECT ${renameUserRows("u.")}
+    FROM users u
+    """.trimIndent()
+
+/**
  * Function that maps a ResultSet to a User, according to the name dictionary defined,
  *  in this case default name of Columns
  * @return The mapped User
  */
-fun ResultSet.mapUser(): User =
+fun ResultSet.mapUser(userName: String = ""): User =
     User(
-        uid = getInt("uid").toUInt(),
-        name = getString("name").toName(),
-        email = getString("email").toEmail(),
-        password = getString("hashed_password").toPassword(),
-        token = getString("token")?.takeIf { it != "null" }?.toToken(),
+        uid = getInt("${userName}_id").toUInt(),
+        name = getString("${userName}_name").toName(),
+        email = getString("${userName}_email").toEmail(),
+        password = getString("${userName}_hashed_password").toPassword(),
+        token = getString("${userName}_token")?.takeIf { it != "null" }?.toToken(),
     )

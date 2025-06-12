@@ -6,11 +6,11 @@ value class Email(
 ) {
     private fun String.validateEmail(): Boolean {
         val emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$".toRegex()
-        return this.matches(emailRegex)
+        return this.length <= 255 && this.matches(emailRegex)
     }
 
     init {
-        require(value.validateEmail())
+        require(value.validateEmail()) { "Email is either misformatted or is too long." }
     }
 }
 

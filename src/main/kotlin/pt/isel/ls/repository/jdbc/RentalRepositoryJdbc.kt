@@ -41,7 +41,8 @@ class RentalRepositoryJdbc(
 
             val sqlSelectRenter =
                 """
-                SELECT * FROM users WHERE uid = ?
+                ${userSqlReturnFormat()}
+                WHERE uid = ?
                 """.trimIndent()
 
             val renter =
@@ -84,8 +85,7 @@ class RentalRepositoryJdbc(
             val sqlInsert =
                 """
                 INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id) values (?, ?, ?, ?, ?)
-                RETURNING rid as rental_id, date_ as rental_date, rd_start as rental_start, rd_end as rental_end,
-                    renter_id, court_id
+                RETURNING ${renameRentalRows()}
                 """.trimIndent()
 
             connection.prepareStatement(sqlInsert).use { stmt ->
@@ -301,8 +301,7 @@ class RentalRepositoryJdbc(
                 rd_start = ?,
                 rd_end = ?
             WHERE rid = ?
-            RETURNING rid as rental_id, date_ as rental_date, rd_start as rental_start, rd_end as rental_end,
-                    renter_id, court_id
+            RETURNING ${renameRentalRows()}
             """.trimIndent()
 
         val updatedRental =
@@ -544,15 +543,25 @@ private fun isInTheFuture(
 }
 
 /**
+ * Function that returns the rows of the rentals table renamed
+ * @return string renaming the rows of the table
+ */
+private fun renameRentalRows(alias: String = "") =
+    """
+    ${alias}rid as rental_id, ${alias}date_ as rental_date, ${alias}rd_start as rental_start, ${alias}rd_end as rental_end,
+        ${alias}renter_id as renter_id, ${alias}court_id as court_id
+    """.trimIndent()
+
+/**
  * Function with the default select query to retrieve a rental with the information of the renter and court
  * @return the default select query string
  */
 private fun rentalSqlReturnFormat() =
     """
-    SELECT r.rid as rental_id, r.date_ as rental_date, r.rd_start as rental_start, r.rd_end as rental_end,
-        u.uid as renter_id, u.name as renter_name, u.email as renter_email, 
+    SELECT ${renameRentalRows("r.")},
+        u.name as renter_name, u.email as renter_email, 
             u.hashed_password as renter_hashed_password, u.token as renter_token,
-        cr.crid as court_id, cr.name as court_name,
+        cr.name as court_name,
         c.cid as court_club_id, c.name as court_club_name,
         u2.uid as court_club_owner_id, u2.name as court_club_owner_name, u2.email as court_club_owner_email, 
             u2.hashed_password as court_club_owner_hashed_password, u2.token as court_club_owner_token
@@ -568,41 +577,23 @@ private fun rentalSqlReturnFormat() =
  *  in this case the one defined in the default select query
  * @return The mapped Rental
  */
-private fun ResultSet.mapRental(): Rental =
+private fun ResultSet.mapRental(
+    rentalName: String = "rental",
+    renterName: String = "renter",
+    courtName: String = "court",
+    courtClubName: String = "court_club",
+    courtClubOwnerName: String = "court_club_owner",
+): Rental =
     Rental(
-        rid = getInt("rental_id").toUInt(),
-        date = LocalDate.fromEpochDays(getInt("rental_date")),
+        rid = getInt("${rentalName}_id").toUInt(),
+        date = LocalDate.fromEpochDays(getInt("${rentalName}_date")),
         rentTime =
             TimeSlot(
-                getInt("rental_start").toUInt(),
-                getInt("rental_end").toUInt(),
+                getInt("${rentalName}_start").toUInt(),
+                getInt("${rentalName}_end").toUInt(),
             ),
-        renter =
-            User(
-                uid = getInt("renter_id").toUInt(),
-                name = getString("renter_name").toName(),
-                email = getString("renter_email").toEmail(),
-                password = getString("renter_hashed_password").toPassword(),
-                token = getString("renter_token")?.toToken(),
-            ),
-        court =
-            Court(
-                crid = getInt("court_id").toUInt(),
-                name = getString("court_name").toName(),
-                club =
-                    Club(
-                        cid = getInt("court_club_id").toUInt(),
-                        name = getString("court_club_name").toName(),
-                        owner =
-                            User(
-                                uid = getInt("court_club_owner_id").toUInt(),
-                                name = getString("court_club_owner_name").toName(),
-                                email = getString("court_club_owner_email").toEmail(),
-                                password = getString("court_club_owner_hashed_password").toPassword(),
-                                token = getString("court_club_owner_token")?.toToken(),
-                            ),
-                    ),
-            ),
+        renter = mapUser(renterName),
+        court = mapCourt(courtName, courtClubName, courtClubOwnerName),
     )
 
 /**
@@ -615,13 +606,14 @@ private fun ResultSet.mapRental(): Rental =
 private fun ResultSet.mapRental(
     renter: User,
     court: Court,
+    rentalName: String = "rental",
 ) = Rental(
-    rid = getInt("rental_id").toUInt(),
-    date = LocalDate.fromEpochDays(getInt("rental_date")),
+    rid = getInt("${rentalName}_id").toUInt(),
+    date = LocalDate.fromEpochDays(getInt("${rentalName}_date")),
     rentTime =
         TimeSlot(
-            getInt("rental_start").toUInt(),
-            getInt("rental_end").toUInt(),
+            getInt("${rentalName}_start").toUInt(),
+            getInt("${rentalName}_end").toUInt(),
         ),
     renter = renter,
     court = court,

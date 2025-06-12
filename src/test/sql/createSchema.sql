@@ -15,7 +15,7 @@ create table users (
 
 create table clubs (
     cid serial primary key,
-    name varchar(80) unique not null,
+    name varchar(255) unique not null,
     owner int references users(uid) on update cascade on delete set null
 );
 
