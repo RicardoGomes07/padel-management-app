@@ -25,7 +25,7 @@ import java.sql.DriverManager
 private val logger = LoggerFactory.getLogger("HTTPServer")
 
 val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_URL environment variable")
-const val SERVER_PORT = 9000
+val SERVER_PORT = System.getenv("PORT")?.toIntOrNull() ?: 9000
 
 fun main() {
     val connection = DriverManager.getConnection(DB_URL)

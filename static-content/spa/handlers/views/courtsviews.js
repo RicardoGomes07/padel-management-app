@@ -249,14 +249,14 @@ function renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, sub
     content.replaceChildren(backLink,form)
 }
 
-function renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour){
+function renderAvailableCourtsToRent(contentHeader, content, availableCourts, cid ,date, startHour, endHour){
     const header = "Available Courts"
     
-    const courts = ul(
+    const courts = availableCourts.length > 0 ? ul(
         ...availableCourts.map(court =>
             li(a(court.name, createRentalUri(court.cid, court.crid, date, startHour, endHour)))
         )
-    )
+    ) : div(a("Back", getClubDetailsUri(cid)), p("No courts available for the selected date and time slot."))
     contentHeader.replaceChildren(header)
     content.replaceChildren(courts)
 }

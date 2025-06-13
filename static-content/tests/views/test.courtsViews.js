@@ -246,13 +246,13 @@ describe('CourtsViews', function () {
         it("should render header and list of available courts with correct links", function () {
             const availableCourts = [
                 { cid: 1, crid: 10, name: "Court A" },
-                { cid: 2, crid: 20, name: "Court B" }
+                { cid: 1, crid: 20, name: "Court B" }
             ];
             const date = "2024-05-23";
             const startHour = "10";
             const endHour = "12";
 
-            courtsViews.renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour);
+            courtsViews.renderAvailableCourtsToRent(contentHeader, content, availableCourts, 1, date, startHour, endHour);
 
             // Check header text
             assert.strictEqual(contentHeader.textContent, "Available Courts");

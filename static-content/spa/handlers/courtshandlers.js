@@ -168,7 +168,7 @@ function searchCourtsToRent(contentHeader, content) {
             )
         const availableCourts = availableCourtsRsp.data.items.courts
 
-        if (availableCourtsRsp.status === 200) renderAvailableCourtsToRent(contentHeader, content, availableCourts, date, startHour, endHour)
+        if (availableCourtsRsp.status === 200) renderAvailableCourtsToRent(contentHeader, content, availableCourts, cid, date, startHour, endHour)
         else errorManager.store(errorView(availableCourtsRsp.data)).render()
     }
     renderSearchForCourtsByDateAndTimeSlot(contentHeader, content, cid, submitHandler)
