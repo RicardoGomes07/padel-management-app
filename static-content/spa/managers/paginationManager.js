@@ -58,11 +58,17 @@ export function createPaginationManager(fetchFun, jsonProp, maxCacheSize = MAX_C
             return this
         },
 
+        resetCache(propName=null, propValue=null) {
+            cache.length = 0
+            currentFilterProp = propName
+            currentFilterValue = propValue
+            count = 0
+            return this
+        },
+
         resetCacheIfNeeded(propName, propValue) {
             if (currentFilterProp !== propName || currentFilterValue !== propValue) {
-                cache.length = 0 // reset cache se filtro mudou
-                currentFilterProp = propName
-                currentFilterValue = propValue
+                this.resetCache(propName, propValue)
             }
             return this
         },

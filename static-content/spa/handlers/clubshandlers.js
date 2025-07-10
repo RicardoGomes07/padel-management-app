@@ -62,6 +62,7 @@ function createClub(contentHeader, content) {
         const clubName = document.querySelector("#clubName").value.trim()
         const result = await clubsRequests.createClub(clubName)
         if (result.status === 201) {
+            clubsPagination.resetCache()
             const newClubId = result.data.cid
             redirectTo(getClubDetailsUri(newClubId))
         } else {

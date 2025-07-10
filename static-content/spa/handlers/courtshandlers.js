@@ -145,6 +145,7 @@ function createCourt(contentHeader, content) {
         const courtName = e.target.querySelector("#courtName").value
         const response = await courtsRequests.createCourt(cid, courtName)
         if (response.status === 201){
+            courtsOfClubPagination.resetCache()
             const crid = response.data.crid
             redirectTo(getCourtDetailsUri(cid, crid))
         } else {

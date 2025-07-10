@@ -112,7 +112,7 @@ async function updateRental(contentHeader, content) {
 
 }
 
-async function deleteRental(contentHeader, content) {
+async function deleteRental() {
     const cid = Number(path("cid"))
     const crid = Number(path("crid"))
     const rid = Number(path("rid"))
