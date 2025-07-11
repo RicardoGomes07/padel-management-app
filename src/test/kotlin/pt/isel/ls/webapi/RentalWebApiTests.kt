@@ -89,16 +89,17 @@ class RentalWebApiTests {
                     .body(
                         Json.encodeToString<RentalCreationInput>(
                             RentalCreationInput(
-                                date = LocalDate.parse("2025-06-15"),
+                                date = LocalDate.parse("2026-06-15"),
                                 initialHour = 10u,
                                 finalHour = 12u,
                             ),
                         ),
                     ),
             )
+        println(rental.body)
         assertEquals(Status.CREATED, rental.status)
         val rentalDetails = Json.decodeFromString<RentalDetailsOutput>(rental.bodyString())
-        assertEquals(rentalDetails.date, LocalDate.parse("2025-06-15"))
+        assertEquals(rentalDetails.date, LocalDate.parse("2026-06-15"))
         assertEquals(rentalDetails.initialHour, 10)
         assertEquals(rentalDetails.finalHour, 12)
     }
@@ -108,7 +109,7 @@ class RentalWebApiTests {
         val token = createUser()
         val club = createClub(token)
         val court = createCourt(token, club.cid.toInt())
-        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val rental = createRental(token, club, court, LocalDate.parse("2026-06-15"), 10u, 12u)
         val getRentalInfoRequest =
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals/1"),
@@ -131,7 +132,7 @@ class RentalWebApiTests {
         val token = createUser()
         val club = createClub(token)
         val court = createCourt(token, club.cid.toInt())
-        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val rental = createRental(token, club, court, LocalDate.parse("2026-06-15"), 10u, 12u)
         val getAllRentalsRequest =
             rentalsRoutes(
                 Request(GET, "clubs/${rental.court.cid}/courts/${rental.court.crid}/rentals"),
@@ -174,7 +175,7 @@ class RentalWebApiTests {
         val token = createUser()
         val club = createClub(token)
         val court = createCourt(token, club.cid.toInt())
-        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val rental = createRental(token, club, court, LocalDate.parse("2026-06-15"), 10u, 12u)
 
         val updateRequest =
             rentalsRoutes(
@@ -183,7 +184,7 @@ class RentalWebApiTests {
                     .body(
                         Json.encodeToString<RentalUpdateInput>(
                             RentalUpdateInput(
-                                date = LocalDate.parse("2026-06-15"),
+                                date = LocalDate.parse("2027-06-15"),
                                 initialHour = 16,
                                 finalHour = 17,
                             ),
@@ -205,9 +206,9 @@ class RentalWebApiTests {
         val club = createClub(token)
         val court = createCourt(token, club.cid.toInt())
 
-        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val rental = createRental(token, club, court, LocalDate.parse("2026-06-15"), 10u, 12u)
         val token2 = createUser()
-        val rental2 = createRental(token2, club, court, LocalDate.parse("2025-06-15"), 12u, 14u)
+        val rental2 = createRental(token2, club, court, LocalDate.parse("2026-06-15"), 12u, 14u)
         assertNotNull(rental)
         assertNotNull(rental2)
 
@@ -218,7 +219,7 @@ class RentalWebApiTests {
                     .body(
                         Json.encodeToString<RentalUpdateInput>(
                             RentalUpdateInput(
-                                date = LocalDate.parse("2025-06-15"),
+                                date = LocalDate.parse("2026-06-15"),
                                 initialHour = 11,
                                 finalHour = 13,
                             ),
@@ -233,7 +234,7 @@ class RentalWebApiTests {
         val token = createUser()
         val club = createClub(token)
         val court = createCourt(token, club.cid.toInt())
-        val rental = createRental(token, club, court, LocalDate.parse("2025-06-15"), 10u, 12u)
+        val rental = createRental(token, club, court, LocalDate.parse("2026-06-15"), 10u, 12u)
         assertNotNull(rental)
 
         val deleteRequest =
@@ -256,7 +257,7 @@ class RentalWebApiTests {
         val token = createUser()
         val club = createClub(token)
         val court = createCourt(token, club.cid.toInt())
-        val date = LocalDate.parse("2025-06-15")
+        val date = LocalDate.parse("2026-06-15")
         val start = 10u
         val end = 12u
 
