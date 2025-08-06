@@ -1,4 +1,5 @@
-export const API_BASE_URL = "https://service-ls-2425-2-42d-g10-3mlh.onrender.com/"// To run locally use this uri "http://localhost:9000/"
+
+export const API_BASE_URL = "http://localhost:9000/"
 
 const uriManager = {
     homeUri: () => `#home`,

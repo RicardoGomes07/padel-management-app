@@ -73,3 +73,28 @@ fun currentHour() =
         .now()
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .hour
+
+/**
+ * Function that validates if a rental is in the future.
+ * @param date Day of the rental to check
+ * @param startHour Start hour of the rental to check
+ * @return True if it's in the future, otherwise false
+ */
+
+fun isInTheFuture(
+    date: LocalDate,
+    startHour: Int,
+): Boolean {
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val currentHour =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .hour
+
+    return when {
+        date > today -> true
+        date < today -> false
+        else -> startHour > currentHour
+    }
+}

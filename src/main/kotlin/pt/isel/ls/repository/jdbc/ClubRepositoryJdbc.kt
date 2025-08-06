@@ -6,15 +6,15 @@ import pt.isel.ls.domain.*
 import pt.isel.ls.repository.ClubRepository
 import pt.isel.ls.services.ClubError
 import pt.isel.ls.services.ensureOrThrow
-import java.sql.Connection
 import java.sql.ResultSet
+import javax.sql.DataSource
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for clubs related actions
- * @param connection The database connection for the SQL queries
+ * @param dataSource to extract the database connection for the SQL queries
  */
 class ClubRepositoryJdbc(
-    private val connection: Connection,
+    private val dataSource: DataSource,
 ) : ClubRepository {
     /**
      * Function responsible for the creation of a club.
@@ -27,43 +27,45 @@ class ClubRepositoryJdbc(
         name: Name,
         ownerId: UInt,
     ): Club =
-        connection.executeMultipleQueries {
-            val sqlCheckFK =
-                """
-                ${userSqlReturnFormat()}
-                WHERE u.uid = ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlCheckFK =
+                    """
+                    ${userSqlReturnFormat()}
+                    WHERE u.uid = ?
+                    """.trimIndent()
 
-            val owner =
-                connection.prepareStatement(sqlCheckFK).use { stmt ->
-                    stmt.setInt(1, ownerId.toInt())
+                val owner =
+                    connection.prepareStatement(sqlCheckFK).use { stmt ->
+                        stmt.setInt(1, ownerId.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = ClubError.OwnerNotFound(ownerId),
+                            )
+                            rs.mapUser()
+                        }
+                    }
+
+                val sqlInsert =
+                    """
+                    INSERT INTO clubs (name, owner)
+                    VALUES (?, ?)
+                    ON CONFLICT (name) DO NOTHING
+                    RETURNING ${renameClubRows()}
+                    """.trimIndent()
+
+                connection.prepareStatement(sqlInsert).use { stmt ->
+                    stmt.setString(1, name.value)
+                    stmt.setInt(2, ownerId.toInt())
+
                     stmt.executeQuery().use { rs ->
                         ensureOrThrow(
                             condition = rs.next(),
-                            exception = ClubError.OwnerNotFound(ownerId),
+                            exception = ClubError.ClubAlreadyExists(name.value),
                         )
-                        rs.mapUser()
+                        rs.mapClub(owner)
                     }
-                }
-
-            val sqlInsert =
-                """
-                INSERT INTO clubs (name, owner)
-                VALUES (?, ?)
-                ON CONFLICT (name) DO NOTHING
-                RETURNING ${renameClubRows()}
-                """.trimIndent()
-
-            connection.prepareStatement(sqlInsert).use { stmt ->
-                stmt.setString(1, name.value)
-                stmt.setInt(2, ownerId.toInt())
-
-                stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = ClubError.ClubAlreadyExists(name.value),
-                    )
-                    rs.mapClub(owner)
                 }
             }
         }
@@ -73,40 +75,42 @@ class ClubRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Club> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${clubSqlReturnFormat()}
-                WHERE c.name ILIKE ?
-                ORDER BY c.cid DESC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${clubSqlReturnFormat()}
+                    WHERE c.name ILIKE ?
+                    ORDER BY c.cid DESC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val clubs =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setString(1, "%${name.value}%")
-                    stmt.setInt(2, limit)
-                    stmt.setInt(3, offset)
+                val clubs =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setString(1, "%${name.value}%")
+                        stmt.setInt(2, limit)
+                        stmt.setInt(3, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val clubs = mutableListOf<Club>()
-                        while (rs.next()) {
-                            clubs.add(rs.mapClub())
+                        stmt.executeQuery().use { rs ->
+                            val clubs = mutableListOf<Club>()
+                            while (rs.next()) {
+                                clubs.add(rs.mapClub())
+                            }
+                            clubs
                         }
-                        clubs
                     }
-                }
 
-            val sqlCount = "SELECT COUNT(*) FROM clubs WHERE name ILIKE ?"
-            val count =
-                connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.setString(1, "%${name.value}%")
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.getInt(1) else 0
+                val sqlCount = "SELECT COUNT(*) FROM clubs WHERE name ILIKE ?"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.setString(1, "%${name.value}%")
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
                     }
-                }
 
-            return@executeMultipleQueries PaginationInfo(clubs, count)
+                return@executeMultipleQueries PaginationInfo(clubs, count)
+            }
         }
 
     /**
@@ -124,11 +128,13 @@ class ClubRepositoryJdbc(
                 owner = EXCLUDED.owner;
             """.trimIndent()
 
-        connection.prepareStatement(sqlSave).use { stmt ->
-            stmt.setString(1, element.name.value)
-            stmt.setInt(2, element.owner.uid.toInt())
+        dataSource.connection.use {
+            it.prepareStatement(sqlSave).use { stmt ->
+                stmt.setString(1, element.name.value)
+                stmt.setInt(2, element.owner.uid.toInt())
 
-            stmt.executeUpdate()
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -138,7 +144,7 @@ class ClubRepositoryJdbc(
      * @return Club if found, otherwise null
      */
     override fun findByIdentifier(id: UInt): Club? =
-        connection.executeMultipleQueries {
+        dataSource.connection.use { connection ->
             val sqlSelect =
                 """
                 ${clubSqlReturnFormat()}
@@ -149,7 +155,7 @@ class ClubRepositoryJdbc(
                 stmt.setInt(1, id.toInt())
 
                 stmt.executeQuery().use { rs ->
-                    if (rs.next()) rs.mapClub() else return@executeMultipleQueries null
+                    if (rs.next()) rs.mapClub() else return null
                 }
             }
         }
@@ -164,31 +170,39 @@ class ClubRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Club> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${clubSqlReturnFormat()}
-                ORDER BY c.cid DESC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${clubSqlReturnFormat()}
+                    ORDER BY c.cid DESC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val clubs =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, limit)
-                    stmt.setInt(2, offset)
+                val clubs =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, limit)
+                        stmt.setInt(2, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val clubs = mutableListOf<Club>()
-                        while (rs.next()) {
-                            clubs.add(rs.mapClub())
+                        stmt.executeQuery().use { rs ->
+                            val clubs = mutableListOf<Club>()
+                            while (rs.next()) {
+                                clubs.add(rs.mapClub())
+                            }
+                            clubs
                         }
-                        clubs
                     }
-                }
 
-            val count = count()
+                val sqlCount = "SELECT COUNT(*) FROM clubs"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
+                    }
 
-            return@executeMultipleQueries PaginationInfo(clubs, count)
+                return@executeMultipleQueries PaginationInfo(clubs, count)
+            }
         }
 
     /**
@@ -198,9 +212,11 @@ class ClubRepositoryJdbc(
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM clubs c WHERE c.cid = ?"
 
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.setInt(1, id.toInt())
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.setInt(1, id.toInt())
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -210,16 +226,20 @@ class ClubRepositoryJdbc(
      */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE clubs RESTART IDENTITY CASCADE"
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.executeUpdate()
+            }
         }
     }
 
     override fun count(): Int {
         val sqlCount = "SELECT COUNT(*) FROM clubs"
-        return connection.prepareStatement(sqlCount).use { stmt ->
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.getInt(1) else 0
+        return dataSource.connection.use {
+            it.prepareStatement(sqlCount).use { stmt ->
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.getInt(1) else 0
+                }
             }
         }
     }

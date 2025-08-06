@@ -5,7 +5,6 @@ import errorsViews from "./views/errorsview.js"
 import { createPaginationManager } from "../managers/paginationManager.js";
 import auxiliaryFuns from "./auxFuns.js";
 import uriManager from "../managers/uriManager.js";
-import { ELEMS_PER_PAGE } from "./views/pagination.js";
 import { authenticated } from "../managers/userAuthenticationManager.js";
 import errorManager from "../managers/errorManager.js";
 import { redirectTo } from "../router.js";
@@ -20,6 +19,7 @@ const { isValidDate, parseHourFromString } = auxiliaryFuns
 const { getCourtDetailsUri, getAvailableHoursByDateUri, loginUri, listClubCourtsUri } = uriManager
 
 const courtsOfClubPagination = createPaginationManager(fetchCourtsByClub, "courts")
+const rentalsOfCourtPagination = createPaginationManager(fetchCourtRentals, "rentals")
 
 async function getCourtsByClub(contentHeader, content) {
     const cid = path("cid")
@@ -27,7 +27,6 @@ async function getCourtsByClub(contentHeader, content) {
 
     const [courts, count] = await courtsOfClubPagination
         .reqParams(Number(cid))
-        .resetCacheIfNeeded("cid", Number(cid))
         .getPage(
             page,
             (message) => { errorManager.store(errorView(message)).render() }
@@ -63,16 +62,15 @@ async function getCourtRentals(contentHeader, content) {
     const crid = path("crid")
     const page = Number(query("page")) || 1
 
-    const skip = (page - 1) * ELEMS_PER_PAGE
-
-    const rsp = await fetchCourtRentals(cid, crid, skip, ELEMS_PER_PAGE)
-    if (rsp.status !== 200){
-        errorManager.store(errorView(rsp.data))
-        redirectTo(getCourtDetailsUri(cid, crid))
-    }
-
-    const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
-    const count = rsp.data.count
+    const [rentals, count] = await rentalsOfCourtPagination
+            .reqParams(cid, crid)
+            .getPage(
+                page,
+                (message) => {
+                    errorManager.store(errorView(message))
+                    redirectTo(getCourtDetailsUri(cid, crid))
+                }
+            )
 
     renderCourtRentalsView(
         contentHeader,

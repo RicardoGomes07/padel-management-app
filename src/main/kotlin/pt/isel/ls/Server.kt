@@ -10,6 +10,7 @@ import org.http4k.routing.routes
 import org.http4k.routing.singlePageApp
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
+import org.postgresql.ds.PGSimpleDataSource
 import org.slf4j.LoggerFactory
 import pt.isel.ls.repository.jdbc.TransactionManagerJdbc
 import pt.isel.ls.services.ClubService
@@ -20,7 +21,6 @@ import pt.isel.ls.webapi.ClubWebApi
 import pt.isel.ls.webapi.CourtWebApi
 import pt.isel.ls.webapi.RentalWebApi
 import pt.isel.ls.webapi.UserWebApi
-import java.sql.DriverManager
 
 private val logger = LoggerFactory.getLogger("HTTPServer")
 
@@ -28,8 +28,8 @@ val DB_URL = System.getenv("JDBC_DATABASE_URL") ?: throw Exception("Missing DB_U
 val SERVER_PORT = System.getenv("PORT")?.toIntOrNull() ?: 9000
 
 fun main() {
-    val connection = DriverManager.getConnection(DB_URL)
-    val trxManagerJdbc = TransactionManagerJdbc(connection)
+    val dataSource = PGSimpleDataSource().also { it.setUrl(DB_URL) }
+    val trxManagerJdbc = TransactionManagerJdbc(dataSource)
 
     val userApi = UserWebApi(UserService(trxManagerJdbc))
     val clubApi =
@@ -90,8 +90,6 @@ fun main() {
 
     readln()
     jettyServer.stop()
-
-    connection.close()
 
     logger.info("leaving Main")
 }

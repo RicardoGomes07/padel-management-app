@@ -1,7 +1,7 @@
 import classnames from "../handlers/views/classnames.js";
 const { listClassName, listElemClassName, linksClassName,
     textInfoClassName, centerDivClassName, h1ClassName,
-    h2ClassName} = classnames
+    h2ClassName, selectedLink} = classnames
 
 
 function createElement(tag, props = {}, ...children) {
@@ -146,6 +146,7 @@ function button(text, onClick = () => {}, options = {}) {
 
 function span(...children) {
     return createElement("span", {}, ...children)
+    return createElement("span", { className: selectedLink, 'aria-current': 'page' }, ...children)
 }
 
 function hourSelect(id, initialValue, onChange = () => {}, className = "form-select", required = false) {

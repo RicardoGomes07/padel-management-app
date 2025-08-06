@@ -8,15 +8,16 @@ import pt.isel.ls.repository.RentalRepository
 import pt.isel.ls.repository.jdbc.dao.mapRentalDb
 import pt.isel.ls.services.RentalError
 import pt.isel.ls.services.ensureOrThrow
-import java.sql.Connection
+import pt.isel.ls.webapi.isInTheFuture
 import java.sql.ResultSet
+import javax.sql.DataSource
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for rentals related actions
- * @param connection The database connection for the SQL queries
+ * @param dataSource to extract the database connection for the SQL queries
  */
 class RentalRepositoryJdbc(
-    private val connection: Connection,
+    private val dataSource: DataSource,
 ) : RentalRepository {
     /**
      * Function responsible for the creation of a club.
@@ -33,71 +34,73 @@ class RentalRepositoryJdbc(
         renterId: UInt,
         courtId: UInt,
     ): Rental =
-        connection.executeMultipleQueries {
-            ensureOrThrow(
-                condition = isInTheFuture(date, rentTime.start.toInt()),
-                exception = RentalError.RentalDateInThePast(date),
-            )
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                ensureOrThrow(
+                    condition = isInTheFuture(date, rentTime.start.toInt()),
+                    exception = RentalError.RentalDateInThePast(date),
+                )
 
-            val sqlSelectRenter =
-                """
-                ${userSqlReturnFormat()}
-                WHERE uid = ?
-                """.trimIndent()
+                val sqlSelectRenter =
+                    """
+                    ${userSqlReturnFormat()}
+                    WHERE uid = ?
+                    """.trimIndent()
 
-            val renter =
-                connection.prepareStatement(sqlSelectRenter).use { stmt ->
-                    stmt.setInt(1, renterId.toInt())
-                    stmt.executeQuery().use { rs ->
-                        ensureOrThrow(
-                            condition = rs.next(),
-                            exception = RentalError.RenterNotFound(renterId),
-                        )
-                        rs.mapUser()
+                val renter =
+                    connection.prepareStatement(sqlSelectRenter).use { stmt ->
+                        stmt.setInt(1, renterId.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = RentalError.RenterNotFound(renterId),
+                            )
+                            rs.mapUser()
+                        }
                     }
-                }
 
-            val sqlSelectCourt =
-                """
-                ${courtSqlReturnFormat()}
-                WHERE cr.crid = ?
-                """.trimIndent()
+                val sqlSelectCourt =
+                    """
+                    ${courtSqlReturnFormat()}
+                    WHERE cr.crid = ?
+                    """.trimIndent()
 
-            val court =
-                connection.prepareStatement(sqlSelectCourt).use { stmt ->
-                    stmt.setInt(1, courtId.toInt())
-                    stmt.executeQuery().use { rs ->
-                        ensureOrThrow(
-                            condition = rs.next(),
-                            exception = RentalError.MissingCourt(courtId),
-                        )
-                        rs.mapCourt()
+                val court =
+                    connection.prepareStatement(sqlSelectCourt).use { stmt ->
+                        stmt.setInt(1, courtId.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = RentalError.MissingCourt(courtId),
+                            )
+                            rs.mapCourt()
+                        }
                     }
-                }
 
-            val availableHours = retrieveAvailableHoursInCourtForDate(courtId, date)
+                val availableHours = retrieveAvailableHoursInCourtForDate(courtId, date)
 
-            ensureOrThrow(
-                condition = (rentTime.start until rentTime.end).all { it in availableHours },
-                exception = RentalError.OverlapInTimeSlot(date, rentTime),
-            )
+                ensureOrThrow(
+                    condition = (rentTime.start until rentTime.end).all { it in availableHours },
+                    exception = RentalError.OverlapInTimeSlot(date, rentTime),
+                )
 
-            val sqlInsert =
-                """
-                INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id) values (?, ?, ?, ?, ?)
-                RETURNING ${renameRentalRows()}
-                """.trimIndent()
+                val sqlInsert =
+                    """
+                    INSERT INTO rentals (date_, rd_start, rd_end, renter_id, court_id) values (?, ?, ?, ?, ?)
+                    RETURNING ${renameRentalRows()}
+                    """.trimIndent()
 
-            connection.prepareStatement(sqlInsert).use { stmt ->
-                stmt.setInt(1, date.toEpochDays())
-                stmt.setInt(2, rentTime.start.toInt())
-                stmt.setInt(3, rentTime.end.toInt())
-                stmt.setInt(4, renterId.toInt())
-                stmt.setInt(5, courtId.toInt())
+                connection.prepareStatement(sqlInsert).use { stmt ->
+                    stmt.setInt(1, date.toEpochDays())
+                    stmt.setInt(2, rentTime.start.toInt())
+                    stmt.setInt(3, rentTime.end.toInt())
+                    stmt.setInt(4, renterId.toInt())
+                    stmt.setInt(5, courtId.toInt())
 
-                stmt.executeQuery().use { rs ->
-                    rs.next()
-                    rs.mapRental(renter, court)
+                    stmt.executeQuery().use { rs ->
+                        rs.next()
+                        rs.mapRental(renter, court)
+                    }
                 }
             }
         }
@@ -112,26 +115,28 @@ class RentalRepositoryJdbc(
         crid: UInt,
         date: LocalDate,
     ): List<UInt> =
-        connection.executeMultipleQueries {
-            val sqlCheckFk =
-                """
-                ${courtSqlReturnFormat()}
-                WHERE cr.crid = ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlCheckFk =
+                    """
+                    ${courtSqlReturnFormat()}
+                    WHERE cr.crid = ?
+                    """.trimIndent()
 
-            connection.prepareStatement(sqlCheckFk).use { stmt ->
-                stmt.setInt(1, crid.toInt())
+                connection.prepareStatement(sqlCheckFk).use { stmt ->
+                    stmt.setInt(1, crid.toInt())
 
-                stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = RentalError.MissingCourt(crid),
-                    )
-                    rs.mapCourt()
+                    stmt.executeQuery().use { rs ->
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = RentalError.MissingCourt(crid),
+                        )
+                        rs.mapCourt()
+                    }
                 }
-            }
 
-            retrieveAvailableHoursInCourtForDate(crid, date)
+                retrieveAvailableHoursInCourtForDate(crid, date)
+            }
         }
 
     /**
@@ -148,59 +153,61 @@ class RentalRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Rental> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${rentalSqlReturnFormat()}
-                WHERE r.court_id = ?
-                ${(
-                    if (date != null) {
-                        """
-                        AND r.date_ = ?
-                        """.trimIndent()
-                    } else {
-                        ""
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${rentalSqlReturnFormat()}
+                    WHERE r.court_id = ?
+                    ${
+                        (
+                            if (date != null) {
+                                """ AND r.date_ = ?""".trimIndent()
+                            } else {
+                                ""
+                            }
+                        )
                     }
-                )}
-                ORDER BY r.date_ ASC, r.rd_start ASC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+                    ORDER BY r.date_ ASC, r.rd_start ASC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val rentals =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, crid.toInt())
-                    val paramPosition =
-                        if (date != null) {
-                            stmt.setInt(2, date.toEpochDays())
-                            3
-                        } else {
-                            2
+                val rentals =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, crid.toInt())
+                        val paramPosition =
+                            if (date != null) {
+                                stmt.setInt(2, date.toEpochDays())
+                                3
+                            } else {
+                                2
+                            }
+
+                        stmt.run {
+                            setInt(paramPosition, limit)
+                            setInt(paramPosition + 1, offset)
                         }
 
-                    stmt.run {
-                        setInt(paramPosition, limit)
-                        setInt(paramPosition + 1, offset)
-                    }
-
-                    stmt.executeQuery().use { rs ->
-                        val rentals = mutableListOf<Rental>()
-                        while (rs.next()) {
-                            rentals.add(rs.mapRental())
+                        stmt.executeQuery().use { rs ->
+                            val rentals = mutableListOf<Rental>()
+                            while (rs.next()) {
+                                rentals.add(rs.mapRental())
+                            }
+                            rentals
                         }
-                        rentals
                     }
-                }
 
-            val sqlCount = "SELECT COUNT(*) FROM rentals WHERE court_id = ?"
-            val count =
-                connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.setInt(1, crid.toInt())
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.getInt(1) else 0
+                val sqlCount = "SELECT COUNT(*) FROM rentals WHERE court_id = ?"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.setInt(1, crid.toInt())
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
                     }
-                }
 
-            return@executeMultipleQueries PaginationInfo(rentals, count)
+                return@executeMultipleQueries PaginationInfo(rentals, count)
+            }
         }
 
     override fun numRentalsOfCourt(
@@ -214,14 +221,16 @@ class RentalRepositoryJdbc(
                 "SELECT COUNT(*) FROM rentals WHERE court_id = ?"
             }
 
-        return connection.prepareStatement(sql).use { stmt ->
-            stmt.setInt(1, crid.toInt())
-            if (date != null) {
-                stmt.setObject(2, date.toEpochDays())
-            }
+        return dataSource.connection.use {
+            it.prepareStatement(sql).use { stmt ->
+                stmt.setInt(1, crid.toInt())
+                if (date != null) {
+                    stmt.setObject(2, date.toEpochDays())
+                }
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.getInt(1) else 0
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.getInt(1) else 0
+                }
             }
         }
     }
@@ -238,48 +247,52 @@ class RentalRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Rental> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${rentalSqlReturnFormat()}
-                WHERE r.renter_id = ?
-                ORDER BY r.date_ DESC, r.rd_start ASC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${rentalSqlReturnFormat()}
+                    WHERE r.renter_id = ?
+                    ORDER BY r.date_ DESC, r.rd_start ASC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val rentals =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, renter.toInt())
-                    stmt.setInt(2, limit)
-                    stmt.setInt(3, offset)
+                val rentals =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, renter.toInt())
+                        stmt.setInt(2, limit)
+                        stmt.setInt(3, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val rentals = mutableListOf<Rental>()
-                        while (rs.next()) {
-                            rentals.add(rs.mapRental())
+                        stmt.executeQuery().use { rs ->
+                            val rentals = mutableListOf<Rental>()
+                            while (rs.next()) {
+                                rentals.add(rs.mapRental())
+                            }
+                            rentals
                         }
-                        rentals
                     }
-                }
 
-            val sqlCount = "SELECT COUNT(*) FROM rentals WHERE renter_id = ?"
-            val count =
-                connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.setInt(1, renter.toInt())
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.getInt(1) else 0
+                val sqlCount = "SELECT COUNT(*) FROM rentals WHERE renter_id = ?"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.setInt(1, renter.toInt())
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
                     }
-                }
 
-            return@executeMultipleQueries PaginationInfo(rentals, count)
+                return@executeMultipleQueries PaginationInfo(rentals, count)
+            }
         }
 
     override fun numRentalsOfUser(renter: UInt): Int {
         val sql = "SELECT COUNT(*) FROM rentals WHERE renter_id = ?"
-        return connection.prepareStatement(sql).use { stmt ->
-            stmt.setInt(1, renter.toInt())
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.getInt(1) else 0
+        return dataSource.connection.use {
+            it.prepareStatement(sql).use { stmt ->
+                stmt.setInt(1, renter.toInt())
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.getInt(1) else 0
+                }
             }
         }
     }
@@ -288,81 +301,79 @@ class RentalRepositoryJdbc(
         rid: UInt,
         date: LocalDate,
         rentTime: TimeSlot,
-    ): Rental {
-        ensureOrThrow(
-            condition = isInTheFuture(date, rentTime.start.toInt()),
-            exception = RentalError.RentalDateInThePast(date),
-        )
+    ): Rental =
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlUpdate =
+                    """
+                    UPDATE rentals SET
+                        date_ = ?,
+                        rd_start = ?,
+                        rd_end = ?
+                    WHERE rid = ?
+                    RETURNING ${renameRentalRows()}
+                    """.trimIndent()
 
-        val sqlUpdate =
-            """
-            UPDATE rentals SET
-                date_ = ?,
-                rd_start = ?,
-                rd_end = ?
-            WHERE rid = ?
-            RETURNING ${renameRentalRows()}
-            """.trimIndent()
+                val updatedRental =
+                    connection.prepareStatement(sqlUpdate).use { stmt ->
+                        stmt.setInt(1, date.toEpochDays())
+                        stmt.setInt(2, rentTime.start.toInt())
+                        stmt.setInt(3, rentTime.end.toInt())
+                        stmt.setInt(4, rid.toInt())
 
-        val updatedRental =
-            connection.prepareStatement(sqlUpdate).use { stmt ->
-                stmt.setInt(1, date.toEpochDays())
-                stmt.setInt(2, rentTime.start.toInt())
-                stmt.setInt(3, rentTime.end.toInt())
-                stmt.setInt(4, rid.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = RentalError.RentalUpdateFailed(rid),
+                            )
+                            rs.mapRentalDb()
+                        }
+                    }
 
-                stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = RentalError.RentalUpdateFailed(rid),
-                    )
-                    rs.mapRentalDb()
-                }
+                val sqlSelectRenter =
+                    """
+                    SELECT * FROM users WHERE uid = ?
+                    """.trimIndent()
+
+                val renter =
+                    connection.prepareStatement(sqlSelectRenter).use { stmt ->
+                        stmt.setInt(1, updatedRental.renter.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = RentalError.RenterNotFound(updatedRental.renter),
+                            )
+                            rs.mapUser()
+                        }
+                    }
+
+                val sqlSelectCourt =
+                    """
+                    ${courtSqlReturnFormat()}
+                    WHERE cr.crid = ?
+                    """.trimIndent()
+
+                val court =
+                    connection.prepareStatement(sqlSelectCourt).use { stmt ->
+                        stmt.setInt(1, updatedRental.court.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = RentalError.MissingCourt(updatedRental.court),
+                            )
+                            rs.mapCourt()
+                        }
+                    }
+
+                return@executeMultipleQueries Rental(
+                    rid = updatedRental.rid,
+                    date = updatedRental.date,
+                    rentTime = updatedRental.rentTime,
+                    renter = renter,
+                    court = court,
+                )
             }
-
-        val sqlSelectRenter =
-            """
-            SELECT * FROM users WHERE uid = ?
-            """.trimIndent()
-
-        val renter =
-            connection.prepareStatement(sqlSelectRenter).use { stmt ->
-                stmt.setInt(1, updatedRental.renter.toInt())
-                stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = RentalError.RenterNotFound(updatedRental.renter),
-                    )
-                    rs.mapUser()
-                }
-            }
-
-        val sqlSelectCourt =
-            """
-            ${courtSqlReturnFormat()}
-            WHERE cr.crid = ?
-            """.trimIndent()
-
-        val court =
-            connection.prepareStatement(sqlSelectCourt).use { stmt ->
-                stmt.setInt(1, updatedRental.court.toInt())
-                stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = RentalError.MissingCourt(updatedRental.court),
-                    )
-                    rs.mapCourt()
-                }
-            }
-
-        return Rental(
-            rid = updatedRental.rid,
-            date = updatedRental.date,
-            rentTime = updatedRental.rentTime,
-            renter = renter,
-            court = court,
-        )
-    }
+        }
 
     /**
      * Function that creates a new rental or updates, with the information given, if one with the rid already exists.
@@ -382,14 +393,16 @@ class RentalRepositoryJdbc(
                 court_id = EXCLUDED.court_id;
             """.trimIndent()
 
-        connection.prepareStatement(sqlSave).use { stmt ->
-            stmt.setInt(1, element.date.toEpochDays())
-            stmt.setInt(2, element.rentTime.start.toInt())
-            stmt.setInt(3, element.rentTime.end.toInt())
-            stmt.setInt(4, element.renter.uid.toInt())
-            stmt.setInt(5, element.court.crid.toInt())
+        dataSource.connection.use {
+            it.prepareStatement(sqlSave).use { stmt ->
+                stmt.setInt(1, element.date.toEpochDays())
+                stmt.setInt(2, element.rentTime.start.toInt())
+                stmt.setInt(3, element.rentTime.end.toInt())
+                stmt.setInt(4, element.renter.uid.toInt())
+                stmt.setInt(5, element.court.crid.toInt())
 
-            stmt.executeUpdate()
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -406,11 +419,13 @@ class RentalRepositoryJdbc(
             ORDER BY r.date_ DESC, r.rd_start ASC
             """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, id.toInt())
+        return dataSource.connection.use {
+            it.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setInt(1, id.toInt())
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.mapRental() else null
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.mapRental() else null
+                }
             }
         }
     }
@@ -425,37 +440,39 @@ class RentalRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Rental> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${rentalSqlReturnFormat()}
-                ORDER BY r.date_ DESC, r.rd_start ASC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${rentalSqlReturnFormat()}
+                    ORDER BY r.date_ DESC, r.rd_start ASC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val rentals =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, limit)
-                    stmt.setInt(2, offset)
+                val rentals =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, limit)
+                        stmt.setInt(2, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val rentals = mutableListOf<Rental>()
-                        while (rs.next()) {
-                            rentals.add(rs.mapRental())
+                        stmt.executeQuery().use { rs ->
+                            val rentals = mutableListOf<Rental>()
+                            while (rs.next()) {
+                                rentals.add(rs.mapRental())
+                            }
+                            rentals
                         }
-                        rentals
                     }
-                }
 
-            val sqlCount = "SELECT COUNT(*) FROM rentals"
-            val count =
-                connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.getInt(1) else 0
+                val sqlCount = "SELECT COUNT(*) FROM rentals"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
                     }
-                }
 
-            return@executeMultipleQueries PaginationInfo(rentals, count)
+                return@executeMultipleQueries PaginationInfo(rentals, count)
+            }
         }
 
     /**
@@ -465,9 +482,11 @@ class RentalRepositoryJdbc(
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM rentals WHERE rid = ?"
 
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.setInt(1, id.toInt())
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.setInt(1, id.toInt())
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -477,8 +496,10 @@ class RentalRepositoryJdbc(
      */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE rentals RESTART IDENTITY CASCADE"
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -494,16 +515,18 @@ class RentalRepositoryJdbc(
             """.trimIndent()
 
         val rentalsOnDate =
-            connection.prepareStatement(sqlSelect).use { stmt ->
-                stmt.setInt(1, date.toEpochDays())
-                stmt.setInt(2, crid.toInt())
+            dataSource.connection.use {
+                it.prepareStatement(sqlSelect).use { stmt ->
+                    stmt.setInt(1, date.toEpochDays())
+                    stmt.setInt(2, crid.toInt())
 
-                stmt.executeQuery().use { rs ->
-                    val rentals = mutableListOf<Rental>()
-                    while (rs.next()) {
-                        rentals.add(rs.mapRental())
+                    stmt.executeQuery().use { rs ->
+                        val rentals = mutableListOf<Rental>()
+                        while (rs.next()) {
+                            rentals.add(rs.mapRental())
+                        }
+                        rentals
                     }
-                    rentals
                 }
             }
 
@@ -515,30 +538,6 @@ class RentalRepositoryJdbc(
                     hour in rental.rentTime.start..<rental.rentTime.end
                 }
             }
-    }
-}
-
-/**
- * Function that validates if a rental is in the future.
- * @param date Day of the rental to check
- * @param startHour Start hour of the rental to check
- * @return True if it's in the future, otherwise false
- */
-private fun isInTheFuture(
-    date: LocalDate,
-    startHour: Int,
-): Boolean {
-    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-    val currentHour =
-        Clock.System
-            .now()
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-            .hour
-
-    return when {
-        date > today -> true
-        date < today -> false
-        else -> startHour > currentHour
     }
 }
 

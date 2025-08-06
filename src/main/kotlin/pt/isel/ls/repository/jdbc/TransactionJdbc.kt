@@ -3,13 +3,13 @@
 package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.repository.*
-import java.sql.Connection
+import javax.sql.DataSource
 
 class TransactionJdbc(
-    connection: Connection,
+    dataSource: DataSource,
 ) : Transaction {
-    override val userRepo: UserRepository = UserRepositoryJdbc(connection)
-    override val clubRepo: ClubRepository = ClubRepositoryJdbc(connection)
-    override val courtRepo: CourtRepository = CourtRepositoryJdbc(connection)
-    override val rentalRepo: RentalRepository = RentalRepositoryJdbc(connection)
+    override val userRepo: UserRepository = UserRepositoryJdbc(DataSource)
+    override val clubRepo: ClubRepository = ClubRepositoryJdbc(DataSource)
+    override val courtRepo: CourtRepository = CourtRepositoryJdbc(DataSource)
+    override val rentalRepo: RentalRepository = RentalRepositoryJdbc(DataSource)
 }

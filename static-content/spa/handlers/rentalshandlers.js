@@ -1,5 +1,4 @@
 import { redirectTo, request } from "../router.js"
-import {ELEMS_PER_PAGE} from "./views/pagination.js";
 import rentalsViews from "./views/rentalsviews.js"
 import rentalsRequests from "./requests/rentalsrequests.js"
 import errorsViews from "./views/errorsview.js";
@@ -18,6 +17,7 @@ const { renderCourtRentalsView } = courtsViews
 const { listCourtRentalsUri, getRentalDetailsUri, loginUri} = uriManager
 const { parseHourFromString } = auxfuns
 
+const rentalsOfCourtPagination = createPaginationManager(courtsRequests.fetchCourtRentals, "rentals")
 
 async function getRentalDetails(contentHeader, content) {
     const clubId = Number(path("cid"))
@@ -138,20 +138,16 @@ function searchRentals(contentHeader, content) {
     const crid = path("crid")
 
     const page = Number(query("page")) || 1
-    const skip = (page - 1) * ELEMS_PER_PAGE
 
     const handleSubmit = async function(e){
         e.preventDefault()
         const validDate = e.target.querySelector("#date").value
 
-        const rsp = await courtsRequests.fetchCourtRentalsByDate(cid, crid, skip, ELEMS_PER_PAGE, validDate)
-        if (rsp.status !== 200){
-            errorManager.store(errorView(rsp.data)).render()
-            return
-        }
-
-        const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
-        const count = rsp.data.count
+        const [rentals, count] = await rentalsOfCourtPagination
+            .reqParams(cid, crid, validDate)
+            .getPage(page,
+               (message) => { errorManager.store(errorView(message)).render() }
+            )
 
         renderCourtRentalsView(
             contentHeader,

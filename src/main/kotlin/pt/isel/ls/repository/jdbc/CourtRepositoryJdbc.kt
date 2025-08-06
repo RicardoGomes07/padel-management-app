@@ -6,15 +6,15 @@ import pt.isel.ls.domain.*
 import pt.isel.ls.repository.CourtRepository
 import pt.isel.ls.services.CourtError
 import pt.isel.ls.services.ensureOrThrow
-import java.sql.Connection
 import java.sql.ResultSet
+import javax.sql.DataSource
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for courts related actions
- * @param connection The database connection for the SQL queries
+ * @param dataSource to extract the database connection for the SQL queries
  */
 class CourtRepositoryJdbc(
-    private val connection: Connection,
+    private val dataSource: DataSource,
 ) : CourtRepository {
     /**
      * Function responsible for the creation of a court.
@@ -27,46 +27,48 @@ class CourtRepositoryJdbc(
         name: Name,
         clubId: UInt,
     ): Court =
-        connection.executeMultipleQueries {
-            val sqlCheckFk =
-                """
-                ${clubSqlReturnFormat()}
-                WHERE c.cid = ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlCheckFk =
+                    """
+                    ${clubSqlReturnFormat()}
+                    WHERE c.cid = ?
+                    """.trimIndent()
 
-            val club =
-                connection.prepareStatement(sqlCheckFk).use { stmt ->
-                    stmt.setInt(1, clubId.toInt())
-                    stmt.executeQuery().use { rs ->
-                        ensureOrThrow(
-                            condition = rs.next(),
-                            exception = CourtError.MissingClub(clubId),
-                        )
-                        rs.mapClub()
+                val club =
+                    connection.prepareStatement(sqlCheckFk).use { stmt ->
+                        stmt.setInt(1, clubId.toInt())
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = CourtError.MissingClub(clubId),
+                            )
+                            rs.mapClub()
+                        }
                     }
-                }
 
-            val sqlInsert =
-                """
-                INSERT INTO courts (name, club_id)
-                VALUES (?, ?)
-                RETURNING ${renameCourtRows()}
-                """.trimIndent()
+                val sqlInsert =
+                    """
+                    INSERT INTO courts (name, club_id)
+                    VALUES (?, ?)
+                    RETURNING ${renameCourtRows()}
+                    """.trimIndent()
 
-            val newCourt =
-                connection.prepareStatement(sqlInsert).use { stmt ->
-                    stmt.setString(1, name.value)
-                    stmt.setInt(2, clubId.toInt())
+                val newCourt =
+                    connection.prepareStatement(sqlInsert).use { stmt ->
+                        stmt.setString(1, name.value)
+                        stmt.setInt(2, clubId.toInt())
 
-                    stmt.executeQuery().use { rs ->
-                        ensureOrThrow(
-                            condition = rs.next(),
-                            exception = RuntimeException("Error inserting court"),
-                        )
-                        rs.mapCourt(club)
+                        stmt.executeQuery().use { rs ->
+                            ensureOrThrow(
+                                condition = rs.next(),
+                                exception = RuntimeException("Error inserting court"),
+                            )
+                            rs.mapCourt(club)
+                        }
                     }
-                }
-            newCourt
+                newCourt
+            }
         }
 
     /**
@@ -81,33 +83,41 @@ class CourtRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Court> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${courtSqlReturnFormat()}
-                WHERE cr.club_id = ?
-                ORDER BY cr.crid DESC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${courtSqlReturnFormat()}
+                    WHERE cr.club_id = ?
+                    ORDER BY cr.crid DESC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val courts =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, cid.toInt())
-                    stmt.setInt(2, limit)
-                    stmt.setInt(3, offset)
+                val courts =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, cid.toInt())
+                        stmt.setInt(2, limit)
+                        stmt.setInt(3, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val courts = mutableListOf<Court>()
-                        while (rs.next()) {
-                            courts.add(rs.mapCourt())
+                        stmt.executeQuery().use { rs ->
+                            val courts = mutableListOf<Court>()
+                            while (rs.next()) {
+                                courts.add(rs.mapCourt())
+                            }
+                            courts
                         }
-                        courts
                     }
-                }
 
-            val count = count(cid)
-
-            return@executeMultipleQueries PaginationInfo(courts, count)
+                val sqlCount = "SELECT COUNT(*) FROM courts where club_id = ?"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.setInt(1, cid.toInt())
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
+                    }
+                return@executeMultipleQueries PaginationInfo(courts, count)
+            }
         }
 
     /**
@@ -125,11 +135,13 @@ class CourtRepositoryJdbc(
                 club_id = EXCLUDED.club_id;
             """.trimIndent()
 
-        connection.prepareStatement(sqlSave).use { stmt ->
-            stmt.setString(1, element.name.value)
-            stmt.setInt(2, element.club.cid.toInt())
+        dataSource.connection.use {
+            it.prepareStatement(sqlSave).use { stmt ->
+                stmt.setString(1, element.name.value)
+                stmt.setInt(2, element.club.cid.toInt())
 
-            stmt.executeUpdate()
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -145,11 +157,13 @@ class CourtRepositoryJdbc(
             WHERE cr.crid = ?
             """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setInt(1, id.toInt())
+        return dataSource.connection.use {
+            it.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setInt(1, id.toInt())
 
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.mapCourt() else null
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.mapCourt() else null
+                }
             }
         }
     }
@@ -164,37 +178,39 @@ class CourtRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<Court> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${courtSqlReturnFormat()}
-                ORDER BY cr.crid DESC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${courtSqlReturnFormat()}
+                    ORDER BY cr.crid DESC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val courts =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, limit)
-                    stmt.setInt(2, offset)
+                val courts =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, limit)
+                        stmt.setInt(2, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val courts = mutableListOf<Court>()
-                        while (rs.next()) {
-                            courts.add(rs.mapCourt())
+                        stmt.executeQuery().use { rs ->
+                            val courts = mutableListOf<Court>()
+                            while (rs.next()) {
+                                courts.add(rs.mapCourt())
+                            }
+                            courts
                         }
-                        courts
                     }
-                }
 
-            val sqlCount = "SELECT COUNT(*) FROM courts"
-            val count =
-                connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.getInt(1) else 0
+                val sqlCount = "SELECT COUNT(*) FROM courts"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
                     }
-                }
 
-            return@executeMultipleQueries PaginationInfo(courts, count)
+                return@executeMultipleQueries PaginationInfo(courts, count)
+            }
         }
 
     /**
@@ -204,9 +220,11 @@ class CourtRepositoryJdbc(
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM courts WHERE crid = ?"
 
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.setInt(1, id.toInt())
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.setInt(1, id.toInt())
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -216,17 +234,21 @@ class CourtRepositoryJdbc(
      */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE courts RESTART IDENTITY CASCADE"
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.executeUpdate()
+            }
         }
     }
 
     override fun count(cid: UInt): Int {
         val sqlCount = "SELECT COUNT(*) FROM courts where club_id = ?"
-        return connection.prepareStatement(sqlCount).use { stmt ->
-            stmt.setInt(1, cid.toInt())
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.getInt(1) else 0
+        return dataSource.connection.use {
+            it.prepareStatement(sqlCount).use { stmt ->
+                stmt.setInt(1, cid.toInt())
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.getInt(1) else 0
+                }
             }
         }
     }

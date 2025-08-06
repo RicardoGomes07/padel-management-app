@@ -22,7 +22,6 @@ async function getClubs(contentHeader, content) {
 
     const [clubs, count] = await clubsPagination
         .reqParams(name)
-        .resetCacheIfNeeded("name", name)
         .getPage(
             page,
             (message) => { errorManager.store(errorView(message)).render() }

@@ -19,7 +19,7 @@ function fetchCourtRentals(cid, crid, skip, limit) {
         .then(handleResponse)
 }
 
-function fetchCourtRentalsByDate(cid, crid, skip, limit, date) {
+function fetchCourtRentalsByDate(cid, crid, date, skip, limit) {
     return fetch(`${API_BASE_URL}clubs/${cid}/courts/${crid}/rentals?skip=${skip}&limit=${limit}&date=${date}`)
         .then(handleResponse)
 }

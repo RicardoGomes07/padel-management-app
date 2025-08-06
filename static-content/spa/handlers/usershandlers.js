@@ -1,5 +1,4 @@
 import { request } from "../router.js"
-import {ELEMS_PER_PAGE} from "./views/pagination.js"
 import usersViews from "./views/usersviews.js"
 import usersRequests from "./requests/usersrequests.js"
 import errorsViews from "./views/errorsview.js";
@@ -8,6 +7,7 @@ import uriManager from "../managers/uriManager.js";
 import errorManager from "../managers/errorManager.js";
 import { hashPassword } from "../managers/passwordCodificationManager.js";
 import { redirectTo } from "../router.js";
+import {createPaginationManager} from "../managers/paginationManager.js";
 
 const { path, query } = request
 const { renderUserRentalsView, renderUserDetailsView, renderSignUpView, renderLoginView } = usersViews
@@ -15,21 +15,21 @@ const { fetchUserRentals, fetchUserDetails, createUser, loginUser} = usersReques
 const { errorView } = errorsViews
 const { homeUri } = uriManager
 
+const userRentalsPagination = createPaginationManager(fetchUserRentals, "rentals")
 
 async function getUserRentals(contentHeader, content) {
     const uid = path("uid")
     const page = Number(query("page")) || 1
-    const skip = (page - 1) * ELEMS_PER_PAGE
 
-    const rsp = await fetchUserRentals(uid, skip, ELEMS_PER_PAGE)
-
-    if (rsp.status !== 200) {
-        errorManager.store(errorView(rsp.data))
-        redirectTo(homeUri())
-        return
-    }
-    const rentals = rsp.data.items.rentals.slice(0, ELEMS_PER_PAGE) ?? []
-    const count = rsp.count
+    const [rentals, count] = await userRentalsPagination
+            .reqParams(uid)
+            .getPage(
+                page,
+                (message) => {
+                    errorManager.store(errorView(message))
+                    redirectTo(homeUri())
+                }
+            )
 
     const rspUser = await fetchUserDetails(uid)
     const userName = rspUser.data.name

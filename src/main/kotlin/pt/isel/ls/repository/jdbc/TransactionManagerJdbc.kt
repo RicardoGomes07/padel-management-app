@@ -2,10 +2,10 @@ package pt.isel.ls.repository.jdbc
 
 import pt.isel.ls.repository.Transaction
 import pt.isel.ls.repository.TransactionManager
-import java.sql.Connection
+import javax.sql.DataSource
 
 class TransactionManagerJdbc(
-    private val connection: Connection,
+    private val dataSource: DataSource,
 ) : TransactionManager {
-    override fun <R> run(block: (Transaction) -> R): R = block(TransactionJdbc(connection))
+    override fun <R> run(block: (Transaction) -> R): R = block(TransactionJdbc(dataSource))
 }

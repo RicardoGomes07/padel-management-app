@@ -6,15 +6,15 @@ import pt.isel.ls.domain.*
 import pt.isel.ls.repository.UserRepository
 import pt.isel.ls.services.UserError
 import pt.isel.ls.services.ensureOrThrow
-import java.sql.Connection
 import java.sql.ResultSet
+import javax.sql.DataSource
 
 /**
  * Repository in jdbc responsible for direct interactions with the database for users related actions
  * @param connection The database connection for the SQL queries
  */
 class UserRepositoryJdbc(
-    private val connection: Connection,
+    private val dataSource: DataSource,
 ) : UserRepository {
     /**
      * Function responsible for the creation of a user.
@@ -36,17 +36,19 @@ class UserRepositoryJdbc(
             RETURNING ${renameUserRows()};
             """.trimIndent()
 
-        return connection.prepareStatement(sqlInsert).use { stmt ->
-            stmt.setString(1, name.value)
-            stmt.setString(2, email.value)
-            stmt.setString(3, password.value)
+        return dataSource.connection.use {
+            it.prepareStatement(sqlInsert).use { stmt ->
+                stmt.setString(1, name.value)
+                stmt.setString(2, email.value)
+                stmt.setString(3, password.value)
 
-            stmt.executeQuery().use { rs ->
-                ensureOrThrow(
-                    condition = rs.next(),
-                    exception = UserError.UserAlreadyExists(email.value),
-                )
-                rs.mapUser()
+                stmt.executeQuery().use { rs ->
+                    ensureOrThrow(
+                        condition = rs.next(),
+                        exception = UserError.UserAlreadyExists(email.value),
+                    )
+                    rs.mapUser()
+                }
             }
         }
     }
@@ -55,38 +57,40 @@ class UserRepositoryJdbc(
         email: Email,
         password: Password,
     ): User =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${userSqlReturnFormat()}
-                WHERE u.email = ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${userSqlReturnFormat()}
+                    WHERE u.email = ?
+                    """.trimIndent()
 
-            val user =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setString(1, email.value)
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.mapUser() else null
+                val user =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setString(1, email.value)
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.mapUser() else null
+                        }
                     }
-                }
-            requireNotNull(user)
+                requireNotNull(user)
 
-            require(password == user.password)
+                require(password == user.password)
 
-            val token = generateToken()
+                val token = generateToken()
 
-            val sqlUpdate = "UPDATE users SET token = ? WHERE email = ? RETURNING ${renameUserRows()}"
+                val sqlUpdate = "UPDATE users SET token = ? WHERE email = ? RETURNING ${renameUserRows()}"
 
-            return@executeMultipleQueries connection.prepareStatement(sqlUpdate).use { stmt ->
-                stmt.setString(1, token.toString())
-                stmt.setString(2, email.value)
-                stmt.executeQuery().use { rs ->
-                    ensureOrThrow(
-                        condition = rs.next(),
-                        exception = UserError.UserFailedLogin(),
-                    )
+                return@executeMultipleQueries connection.prepareStatement(sqlUpdate).use { stmt ->
+                    stmt.setString(1, token.toString())
+                    stmt.setString(2, email.value)
+                    stmt.executeQuery().use { rs ->
+                        ensureOrThrow(
+                            condition = rs.next(),
+                            exception = UserError.UserFailedLogin(),
+                        )
 
-                    rs.mapUser()
+                        rs.mapUser()
+                    }
                 }
             }
         }
@@ -94,9 +98,11 @@ class UserRepositoryJdbc(
     override fun logout(email: Email) {
         val sqlUpdate = "UPDATE users SET token = NULL WHERE email = ?"
 
-        connection.prepareStatement(sqlUpdate).use { stmt ->
-            stmt.setString(1, email.value)
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlUpdate).use { stmt ->
+                stmt.setString(1, email.value)
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -112,10 +118,12 @@ class UserRepositoryJdbc(
             WHERE u.token = ?
             """
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
-            stmt.setString(1, token.toString())
-            stmt.executeQuery().use { rs ->
-                if (rs.next()) rs.mapUser() else null
+        return dataSource.connection.use {
+            it.prepareStatement(sqlSelect).use { stmt ->
+                stmt.setString(1, token.toString())
+                stmt.executeQuery().use { rs ->
+                    if (rs.next()) rs.mapUser() else null
+                }
             }
         }
     }
@@ -137,13 +145,15 @@ class UserRepositoryJdbc(
                 token = EXCLUDED.token;
             """.trimIndent()
 
-        connection.prepareStatement(sqlSave).use { stmt ->
-            stmt.setString(1, element.name.value)
-            stmt.setString(2, element.email.value)
-            stmt.setString(3, element.password.value)
-            stmt.setString(4, element.token.toString())
+        dataSource.connection.use {
+            it.prepareStatement(sqlSave).use { stmt ->
+                stmt.setString(1, element.name.value)
+                stmt.setString(2, element.email.value)
+                stmt.setString(3, element.password.value)
+                stmt.setString(4, element.token.toString())
 
-            stmt.executeUpdate()
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -159,7 +169,7 @@ class UserRepositoryJdbc(
             WHERE u.uid = ?
             """.trimIndent()
 
-        return connection.prepareStatement(sqlSelect).use { stmt ->
+        return dataSource.connection.prepareStatement(sqlSelect).use { stmt ->
             stmt.setInt(1, id.toInt())
 
             stmt.executeQuery().use { rs ->
@@ -178,37 +188,39 @@ class UserRepositoryJdbc(
         limit: Int,
         offset: Int,
     ): PaginationInfo<User> =
-        connection.executeMultipleQueries {
-            val sqlSelect =
-                """
-                ${userSqlReturnFormat()}
-                ORDER BY u.uid DESC
-                LIMIT ? OFFSET ?
-                """.trimIndent()
+        dataSource.connection.use { connection ->
+            connection.executeMultipleQueries {
+                val sqlSelect =
+                    """
+                    ${userSqlReturnFormat()}
+                    ORDER BY u.uid DESC
+                    LIMIT ? OFFSET ?
+                    """.trimIndent()
 
-            val users =
-                connection.prepareStatement(sqlSelect).use { stmt ->
-                    stmt.setInt(1, limit)
-                    stmt.setInt(2, offset)
+                val users =
+                    connection.prepareStatement(sqlSelect).use { stmt ->
+                        stmt.setInt(1, limit)
+                        stmt.setInt(2, offset)
 
-                    stmt.executeQuery().use { rs ->
-                        val users = mutableListOf<User>()
-                        while (rs.next()) {
-                            users.add(rs.mapUser())
+                        stmt.executeQuery().use { rs ->
+                            val users = mutableListOf<User>()
+                            while (rs.next()) {
+                                users.add(rs.mapUser())
+                            }
+                            users
                         }
-                        users
                     }
-                }
 
-            val sqlCount = "SELECT COUNT(*) FROM users"
-            val count =
-                connection.prepareStatement(sqlCount).use { stmt ->
-                    stmt.executeQuery().use { rs ->
-                        if (rs.next()) rs.getInt(1) else 0
+                val sqlCount = "SELECT COUNT(*) FROM users"
+                val count =
+                    connection.prepareStatement(sqlCount).use { stmt ->
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) rs.getInt(1) else 0
+                        }
                     }
-                }
 
-            return@executeMultipleQueries PaginationInfo(users, count)
+                return@executeMultipleQueries PaginationInfo(users, count)
+            }
         }
 
     /**
@@ -218,9 +230,11 @@ class UserRepositoryJdbc(
     override fun deleteByIdentifier(id: UInt) {
         val sqlDelete = "DELETE FROM users WHERE uid = ?"
 
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.setInt(1, id.toInt())
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.setInt(1, id.toInt())
+                stmt.executeUpdate()
+            }
         }
     }
 
@@ -230,8 +244,10 @@ class UserRepositoryJdbc(
      */
     override fun clear() {
         val sqlDelete = "TRUNCATE TABLE users RESTART IDENTITY CASCADE"
-        connection.prepareStatement(sqlDelete).use { stmt ->
-            stmt.executeUpdate()
+        dataSource.connection.use {
+            it.prepareStatement(sqlDelete).use { stmt ->
+                stmt.executeUpdate()
+            }
         }
     }
 }
